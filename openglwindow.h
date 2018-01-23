@@ -15,6 +15,7 @@ protected:
     void resizeGL(int w, int h)override;
     void paintGL()override;
 
+
 };
 
 #endif // OPENGLWINDOW_H
