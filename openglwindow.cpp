@@ -8,246 +8,282 @@
 #include <QVector3D>
 #include <QTimer>
 
-OpenGLWidget::OpenGLWidget(QWidget *parent):
-    QOpenGLWidget(parent),
-    m_vshader(0),
-    m_fshader(0),
-    m_program(0),
-    m_mousePressed(false),
-    m_eye(QVector3D(0,0,10)),
-    m_center(QVector3D(0,0,0)),
-    m_up(QVector3D(0,1,0)),
-    m_verticalAngle(45.f){
+OpenGLWidget::OpenGLWidget(QWidget *parent) :
+	QOpenGLWidget(parent),
+	m_vshader(0),
+	m_fshader(0),
+	m_program(0),
+	m_mousePressed(false),
+	m_eye(QVector3D(0, 0, 1)),
+	m_center(QVector3D(0, 0, 0)),
+	m_up(QVector3D(0, 1, 0)),
+	m_lightPos(QVector3D(0, 10, 0)),
+	m_lightColor(QVector3D(1.0f, 1.0f, 1.0f)),
+	m_objectColor(QVector3D(1.0f, 0.5f, 0.31f)),
+	m_verticalAngle(45.f) {
 
+	setFocusPolicy(Qt::StrongFocus);
+	m_modelUpdated = false;
+	setMinimumSize(500, 500);
+	//matrix initialization
+	m_model.setToIdentity();
+	m_view.lookAt(m_eye, m_center, m_up),
+	m_projection.perspective(m_verticalAngle, aspectRatio(), 0.01f, 100.0f);
 
-    m_modelUpdated = false;
-    setMinimumSize(300,300);
-    //matrix initialization
-    m_model.setToIdentity();
-    m_view.lookAt(m_eye,m_center,m_up),
-    m_projection.perspective(m_verticalAngle,aspectRatio(),0.01f,100.0f);
-
-    m_timer = new QTimer(this);
-    m_timer->setInterval(10);
-    connect(m_timer,&QTimer::timeout,this,QOverload<>::of(&QWidget::update));
+	m_timer = new QTimer(this);
+	m_timer->setInterval(10);
+	connect(m_timer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));
 
 
 }
 OpenGLWidget::~OpenGLWidget()
 {
-//    makeCurrent();
-//    delete m_program;
-//    delete m_vshader;
-//    delete m_fshader;
-//    m_vbo.destroy();
-//    m_vao.destroy();
-//    doneCurrent();
+	makeCurrent();
+	//delete m_program;
+	//delete m_vshader;
+	//delete m_fshader;
+	//m_vbo.destroy();
+	//m_vao.destroy();
+	doneCurrent();
 }
 
 void OpenGLWidget::initializeGL()
 {
 
-   qDebug()<<"initializeGL()";
-   initializeOpenGLFunctions();
-   glEnable(GL_DEPTH_TEST);
+	initializeOpenGLFunctions();
+	glEnable(GL_DEPTH_TEST);
 
-   glClearColor(.2f,.3f,.3f,1.0f);
+	glClearColor(.2f, .3f, .3f, 1.0f);
 
-    //Initialized program shader
-   m_vshader = new QOpenGLShader(QOpenGLShader::Vertex);
-   const char * vcode =
-          "#version 330 core \
-           layout (location = 0) in vec3 aPos;\
-           layout (location = 1) in vec3 aNor; \
-           uniform mat4 model; \
-           uniform mat4 view; \
-           uniform mat4 projection;\
-           out vec3 Normal;\
-           out vec3 FragPos;\
-           void main() \
-           {            \
-               gl_Position = projection*view*model*vec4(aPos,1.0);\
-               Normal = aNor;\
-               FragPos = vec3(model*vec4(aPos,1.0));\
-           }";
-   m_vshader->compileSourceCode(vcode);
+	//Initialized program shader
+	m_vshader = new QOpenGLShader(QOpenGLShader::Vertex);
+	
+	m_vshader->compileSourceFile("C:\\Users\\ysl\\Code\\opengllearning\\phongshadingvertexshader.glsl");
+	m_fshader = new QOpenGLShader(QOpenGLShader::Fragment);
+	m_fshader->compileSourceFile("C:\\Users\\ysl\\Code\\opengllearning\\phongshadingfragmentshader.glsl");
+	m_program = new QOpenGLShaderProgram();
+	m_program->addShader(m_vshader);
+	m_program->addShader(m_fshader);
+	m_program->link();
+	m_program->bind();
 
-   m_fshader = new QOpenGLShader(QOpenGLShader::Fragment);
-   const char * fcode =
-          "#version 330 core \
-           out vec4 FragColor;  \
-           in vec3 Normal;\
-           in vec3 FragPos;\
-           void main()\
-           { \
-               FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\
-           } ";
+	//   m_modelAttriLocation = m_program->attributeLocation("model");
+	//   m_viewAttriLocation = m_program->attributeLocation("view");
+	//   m_projectAttriLocation = m_program->attributeLocation("projection");
 
-   m_fshader->compileSourceCode(fcode);
-   m_program = new QOpenGLShaderProgram();
-   m_program->addShader(m_vshader);
-   m_program->addShader(m_fshader);
-   m_program->link();
-   m_program->bind();
-
-   m_attriPos = m_program->attributeLocation("aPos");
-//   m_modelAttriLocation = m_program->attributeLocation("model");
-//   m_viewAttriLocation = m_program->attributeLocation("view");
-//   m_projectAttriLocation = m_program->attributeLocation("projection");
-
-//    m_vertices<<QVector3D(-0.5f,-0.5f,0.0f)
-//           <<QVector3D(0.5f,-0.5f,0.0f)
-//          <<QVector3D(0.0f,0.5f,0.0f)
-//         <<QVector3D(-0.5f,0.5f,0.0f)
-//        <<QVector3D(0.5f,0.5f,0.0f)
-//       <<QVector3D(0.0f,-0.5f,0.0f);
+	//    m_vertices<<QVector3D(-0.5f,-0.5f,0.0f)
+	//           <<QVector3D(0.5f,-0.5f,0.0f)
+	//          <<QVector3D(0.0f,0.5f,0.0f)
+	//         <<QVector3D(-0.5f,0.5f,0.0f)
+	//        <<QVector3D(0.5f,0.5f,0.0f)
+	//       <<QVector3D(0.0f,-0.5f,0.0f);
+	//m_program->setUniformValue("light_pos", m_lightPos);
+	//m_program->setUniformValue("light_color", m_lightColor);
+	//m_program->setUniformValue("view_pos", m_eye);
+	//m_program->setUniformValue("object_color", m_objectColor);
+	//create VAO
+	m_vao.create();
+	m_vao.bind();
 
 
+	//create VBO
+	m_vbo.create();
+	m_vbo.bind();
+	m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+	int totalBytes = m_vertices.count() * sizeof(GLfloat) * 3 + m_normals.count() * sizeof(GLfloat) * 3;
+	m_vbo.allocate(totalBytes);
+	m_vbo.write(0,m_vertices.constData(), m_vertices.count() * 3 * sizeof(float));
+	m_vbo.write(m_vertices.count() * 3 * sizeof(GLfloat), m_normals.constData(), m_normals.count() * 3 * sizeof(GLfloat));
 
-     //create VAO
-    m_vao.create();
-    m_vao.bind();
 
+	m_program->enableAttributeArray(0);
+	m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3);
+	m_program->enableAttributeArray(1);
+	m_program->setAttributeBuffer(1, GL_FLOAT, m_vertices.size()*3*sizeof(GLfloat),3,0);
 
-     //create VBO
-    m_vbo.create();
-    qDebug()<<m_vbo.bind();
-    m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    m_vbo.allocate(m_vertices.constData(),m_vertices.count()*3*sizeof(float));
-
-    m_program->enableAttributeArray(0);
-    m_program->setAttributeBuffer(0,GL_FLOAT,0,3);
-
-    //m_vbo.release();
-    //m_vao.release();
-    m_program->release();
+	//m_vbo.release();
+	//m_vao.release();
+	m_program->release();
 
 }
-void OpenGLWidget::resizeGL(int w, int h){
+void OpenGLWidget::resizeGL(int w, int h) {
 
-    //Updating m_projection matrix here
-    m_projection.setToIdentity();
-    m_projection.perspective(45.0f,w/float(h),0.01f,100.0f);
+	//Updating m_projection matrix here
+	m_projection.setToIdentity();
+	m_projection.perspective(45.0f, w / float(h), 0.01f, 100.0f);
 
 }
-void OpenGLWidget::paintGL(){
-    //glClearColor(.2f,.3f,.3f,1.0f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-//    m_program->bind();
-//    {
-//        m_program->setUniformValue("projection",m_projection);
-//        m_program->setUniformValue("view",m_view);
-//        m_program->setUniformValue("model",m_model);
-//        m_vao.bind();
-//        glDrawArrays(GL_TRIANGLES,0,3);
-//        m_vao.release();
-//    }
-//    m_program->release();
-    paintModel();
+void OpenGLWidget::paintGL() {
+	//glClearColor(.2f,.3f,.3f,1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//    m_program->bind();
+	//    {
+	//        m_program->setUniformValue("projection",m_projection);
+	//        m_program->setUniformValue("view",m_view);
+	//        m_program->setUniformValue("model",m_model);
+	//        m_vao.bind();
+	//        glDrawArrays(GL_TRIANGLES,0,3);
+	//        m_vao.release();
+	//    }
+	//    m_program->release();
+	paintModel();
 }
 
 void OpenGLWidget::mousePressEvent(QMouseEvent *event)
 {
-    m_mousePressed = true;
-    m_prevXPos = event->x();
-    m_prevYPos = event->y();
+	m_mousePressed = true;
+	m_prevXPos = event->x();
+	m_prevYPos = event->y();
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    if(m_mousePressed == true){
-        //update matrix here
-        int deltaX = event->x()-m_prevXPos;
-        int deltaY = event->y()-m_prevXPos;
-        updateCameraVectors(deltaX,deltaY);
-    }
+	if (m_mousePressed == true) {
+		//update matrix here
+		int deltaX = event->x() - m_prevXPos;
+		int deltaY = m_prevYPos - event->y();
+		m_prevXPos = event->x();
+		m_prevYPos = event->y();
+		//updateCameraVectors(deltaX, deltaY);
+		m_camera.ProcessMouseMovement(deltaX, deltaY);
+	}
+
+
 }
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-   m_mousePressed = false;
+	m_mousePressed = false;
+}
+
+void OpenGLWidget::keyPressEvent(QKeyEvent * event)
+{
+	switch (event->key())
+	{
+	case Qt::Key_W:
+		m_camera.ProcessKeyboard(FORWARD, 0.1);
+		break;
+	case Qt::Key_A:
+		m_camera.ProcessKeyboard(LEFT, 0.1);
+		break;
+	case Qt::Key_S:
+		m_camera.ProcessKeyboard(BACKWARD, 0.1);
+		break;
+	case Qt::Key_D:
+		m_camera.ProcessKeyboard(RIGHT, 0.1);
+		break;
+	default:
+		break;
+	}
 }
 
 void OpenGLWidget::wheelEvent(QWheelEvent *event)
 {
-   updateCameraVectors(0,0,event->angleDelta().y());
+	//updateCameraVectors(0, 0, event->angleDelta().y());
 }
 
 void OpenGLWidget::updateCameraVectors(int deltaX, int deltaY, int deltaWheel)
 {
-     float eyeLength = m_eye.length();
-     QVector3D d = 0.01*static_cast<float>(deltaWheel)*m_eye.normalized();
-    if(eyeLength < 2.0 && deltaWheel > 0){
-        m_eye+=d;
-    }else if(eyeLength >20.0 && deltaWheel < 0){
-        m_eye += d;
-    }else if(eyeLength >= 2.0 && eyeLength < 20.0){
-        m_eye += d;
-    }
+	float eyeLength = m_eye.length();
+	QVector3D d = 0.01*static_cast<float>(deltaWheel)*m_eye.normalized();
+	if (eyeLength < 2.0 && deltaWheel > 0) {
+		m_eye += d;
+	}
+	else if (eyeLength > 20.0 && deltaWheel < 0) {
+		m_eye += d;
+	}
+	else if (eyeLength >= 2.0 && eyeLength < 20.0) {
+		m_eye += d;
+	}
 
-    //rotatation
-    QMatrix4x4 rotate;
-    rotate.setToIdentity();
-    rotate.rotate(0.2*deltaX,QVector3D(0,1,0));
-    m_eye = m_eye*rotate;
+	//rotatation
+	QMatrix4x4 rotate;
+	rotate.setToIdentity();
+	rotate.rotate(0.2*deltaX, QVector3D(0, 1, 0));
+	m_eye = m_eye * rotate;
 
-    QVector3D direction = m_center-m_eye;
-    QVector3D right = QVector3D::crossProduct(direction,m_up);
-    rotate.setToIdentity();
-    rotate.rotate(0.2*deltaY,right);
-    qDebug()<<deltaY;
-    m_eye = m_eye*rotate;
-    m_up = QVector3D::crossProduct(right,direction);
-    m_view.setToIdentity();
-    m_view.lookAt(m_eye,m_center,m_up);
+	QVector3D direction = m_center - m_eye;
+	QVector3D right = QVector3D::crossProduct(direction, m_up);
+	rotate.setToIdentity();
+	rotate.rotate(0.2*deltaY, right);
+	qDebug() << deltaY;
+	m_eye = m_eye * rotate;
+	m_up = QVector3D::crossProduct(right, direction);
+	m_view.setToIdentity();
+	m_view.lookAt(m_eye, m_center, m_up);
 }
 
 float OpenGLWidget::aspectRatio()
 {
-    return width()/static_cast<float>(height());
+	return width() / static_cast<float>(height());
 }
 
 void OpenGLWidget::paintModel()
 {
-   if(m_modelUpdated == true){
-       m_modelUpdated = false;
-   }else{
-       m_program->bind();
-       {
-           m_vao.bind();
-           m_program->setUniformValue("projection",m_projection);
-           m_program->setUniformValue("view",m_view);
-           m_program->setUniformValue("model",m_model);
-           glDrawArrays(GL_TRIANGLES,0,m_vertices.count());
-           m_vao.release();
-       }
-       m_program->release();
-   }
+	if (m_modelUpdated == true) {
+		m_modelUpdated = false;
+	}
+	else {
+		m_program->bind();
+		{
+			m_vao.bind();
+	 	//	m_program->setUniformValue("projection_matrix", m_projection);
+			//m_program->setUniformValue("view_matrix", m_view);
+			//m_program->setUniformValue("model_matrix", m_model);
+			//m_program->setUniformValue("light_pos", m_eye);
+			//m_program->setUniformValue("light_color", m_lightColor);
+			//m_program->setUniformValue("view_pos", m_eye);
+			//m_program->setUniformValue("object_color", m_objectColor);
+
+			m_program->setUniformValue("projection_matrix",m_projection);
+			m_program->setUniformValue("view_matrix", m_camera.GetViewMatrix());
+			qDebug() << m_camera.GetViewMatrix();
+			qDebug() << m_view;
+			//m_program->setUniformValue("view_matrix", m_view);
+			m_program->setUniformValue("model_matrix", m_model);
+			m_program->setUniformValue("light_pos", m_camera.Position);
+			m_program->setUniformValue("light_color", m_lightColor);
+			m_program->setUniformValue("view_pos", m_camera.Position);
+			m_program->setUniformValue("object_color", m_objectColor);
+
+			//m_program->setUniformValue("projection", m_projection);
+			//m_program->setUniformValue("view", m_view);
+			//m_program->setUniformValue("model", m_model);
+			glDrawArrays(GL_TRIANGLES, 0, m_vertices.count());
+			m_vao.release();
+		}
+		m_program->release();
+	}
 }
 
 void OpenGLWidget::setAnimation(bool enable)
 {
-    if(enable == true){
-        m_timer->start();
-    }
-    else {
-        m_timer->stop();
-    }
+	if (enable == true) {
+		m_timer->start();
+	}
+	else {
+		m_timer->stop();
+	}
 }
 
 
 
-void OpenGLWidget::updateModel(const QVector<QVector3D> &model)
+void OpenGLWidget::updateModel(const QVector<QVector3D> &vertices,const QVector<QVector3D> & normals)
 {
-   m_vertices = model;
-   if(isValid() == false)
-       return;
-   makeCurrent();
-   m_vao.bind();
-   m_vbo.bind();
-   m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-   m_vbo.allocate(m_vertices.constData(),m_vertices.count()*3*sizeof(float));
-   m_vbo.release();
-   m_vao.release();
-   doneCurrent();
+	m_vertices = vertices;
+	m_normals = normals;
+	if (isValid() == false)
+		return;
+	makeCurrent();
+	m_vao.bind();
+	m_vbo.bind();
+	m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+	int totalBytes = vertices.count() * 3 * sizeof(GLfloat) + m_normals.count() * 3 * sizeof(GLfloat);
+	m_vbo.allocate(totalBytes);
+	//m_vbo.allocate(m_vertices.constData(), m_vertices.count() * 3 * sizeof(float));
+	m_vbo.write(0, vertices.constData(), vertices.count() * 3*sizeof(GLfloat));
+	m_vbo.write(vertices.count() * sizeof(GLfloat) * 3, normals.constData(), normals.count() * 3 * sizeof(GLfloat));
+	m_vbo.release();
+	m_vao.release();
+	doneCurrent();
 }

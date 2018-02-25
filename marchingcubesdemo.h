@@ -34,31 +34,32 @@ private:
     QLabel * m_mcISOValueLabel;
     QSlider * m_mcISOValueSlider;
     QScopedArrayPointer<unsigned char> m_rawData;
+	QVector<QVector3D> m_gradient;
 
     QPushButton * m_testButton;
 
     int m_dataWidth;
     int m_dataHeight;
     int m_dataDepth;
-    int m_dataXSpace;
-    int m_dataYSpace;
-    int m_dataZSpace;
+    float m_dataXSpace;
+    float m_dataYSpace;
+    float m_dataZSpace;
 
 
 
     constexpr static int m_edgeToVertex[12][6]={
-        {0,0,0,0,0,1},
-        {0,0,1,0,1,1},
         {0,1,0,0,1,1},
-        {0,0,0,0,1,0},
+        {0,1,0,0,0,0},
+        {0,0,0,0,0,1},
+        {0,1,1,0,0,1},
+        {1,1,1,1,1,0},
+        {1,1,0,1,0,0},
         {1,0,0,1,0,1},
-        {1,0,1,1,1,1},
-        {1,1,0,1,1,1},
-        {1,0,0,1,1,0},
-        {0,0,0,1,0,0},
-        {0,0,1,1,0,1},
+        {1,1,1,1,0,1},
         {0,1,1,1,1,1},
-        {0,1,0,1,1,0}
+        {0,1,0,1,1,0},
+        {0,0,0,1,0,0},
+        {0,0,1,1,0,1}
     };
 
 
@@ -321,12 +322,13 @@ private:
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 };
 private:
-    inline int toIndex(int z, int y, int x);
-    inline int toIndex(const std::tuple<int,int,int> & point);
-    inline std::tuple<int,int,int> toPoint(int index);
-
+	void calculateGradient();
+	inline unsigned char getValue(int x, int y, int z);
+    inline int toIndex(int x, int y, int z);
+	inline int toIndexAt(int x, int y, int z);
+	std::tuple<int, int, int> toPoint(int index);
     inline bool greaterThanISO(int index, unsigned char iso);
-    QVector<QVector3D> MarcingCubes(int isoValue);
+    QPair<QVector<QVector3D>,QVector<QVector3D>> MarcingCubes(int isoValue);
     inline QVector3D interpulation(int x1,int y1,int z1,int x2,int y2,int z2,int value1,int value2,int iso);
 public slots:
     void onOpenFile();

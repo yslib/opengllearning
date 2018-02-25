@@ -17,5 +17,4 @@ private:
     QWidget * m_displayWidget;
     QWidget * m_controlWidget;
 };
-
 #endif // ABSTRACTDEMOWIDGET_H
