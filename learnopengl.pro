@@ -44,3 +44,7 @@ HEADERS += \
 
 FORMS += \
         mainwindow.ui
+
+DISTFILES += \
+    phongshadingvertexshader.glsl \
+    phongshadingfragmentshader.glsl
