@@ -26,11 +26,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    openglwindow.cpp
+    openglwindow.cpp \
+    framebuffer.cpp \
+    model.cpp \
+    marchingcubesdemo.cpp \
+    basedemowidget.cpp \
+    test.cpp
 
 HEADERS += \
         mainwindow.h \
-    openglwindow.h
+    openglwindow.h \
+    framebuffer.h \
+    model.h \
+    marchingcubesdemo.h \
+    basedemowidget.h \
+    test.h
 
 FORMS += \
         mainwindow.ui

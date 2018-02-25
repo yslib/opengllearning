@@ -2,11 +2,22 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QtGui>
 
-namespace Ui {
-class MainWindow;
-}
+
+class QGridLayout;
+class QLabel;
+class QSlider;
+class QPushButton;
+class QHBoxLayout;
+class QVBoxLayout;
+class QComboBox;
+class QLineEdit;
+class QGroupBox;
+class MarchingCubesDemo;
+class BaseDemoWidget;
+
+
+class OpenGLWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -15,9 +26,11 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
 private:
-    Ui::MainWindow *ui;
+    QGridLayout * m_mainLayout;
+    MarchingCubesDemo * m_mcDemo;
+private:
+    void setWidget(BaseDemoWidget * widget);
 };
 
 #endif // MAINWINDOW_H
