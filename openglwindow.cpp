@@ -161,16 +161,16 @@ void OpenGLWidget::keyPressEvent(QKeyEvent * event)
 	switch (event->key())
 	{
 	case Qt::Key_W:
-		m_camera.ProcessKeyboard(FORWARD, 0.1);
+		m_camera.ProcessKeyboard(Camera_Movement::FORWARD, 0.1);
 		break;
 	case Qt::Key_A:
-		m_camera.ProcessKeyboard(LEFT, 0.1);
+		m_camera.ProcessKeyboard(Camera_Movement::LEFT, 0.1);
 		break;
 	case Qt::Key_S:
-		m_camera.ProcessKeyboard(BACKWARD, 0.1);
+		m_camera.ProcessKeyboard(Camera_Movement::BACKWARD, 0.1);
 		break;
 	case Qt::Key_D:
-		m_camera.ProcessKeyboard(RIGHT, 0.1);
+		m_camera.ProcessKeyboard(Camera_Movement::RIGHT, 0.1);
 		break;
 	default:
 		break;

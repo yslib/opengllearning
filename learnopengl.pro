@@ -31,7 +31,9 @@ SOURCES += \
     model.cpp \
     marchingcubesdemo.cpp \
     basedemowidget.cpp \
-    test.cpp
+    test.cpp \
+    loopsubdivisionsurfacedemo.cpp \
+    core.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -40,7 +42,9 @@ HEADERS += \
     model.h \
     marchingcubesdemo.h \
     basedemowidget.h \
-    test.h
+    test.h \
+    loopsubdivisionsurfacedemo.h \
+    core.h
 
 FORMS += \
         mainwindow.ui
