@@ -22,6 +22,17 @@ OpenGLWidget::OpenGLWidget(QWidget *parent) :
 	m_objectColor(QVector3D(1.0f, 0.5f, 0.31f)),
 	m_verticalAngle(45.f) {
 
+
+
+	QSurfaceFormat fmt;
+	fmt.setDepthBufferSize(24);
+	fmt.setStencilBufferSize(8);
+	fmt.setVersion(3, 3);
+	fmt.setProfile(QSurfaceFormat::CoreProfile);
+	QSurfaceFormat::setDefaultFormat(fmt);
+	setFormat(fmt);
+
+
 	setFocusPolicy(Qt::StrongFocus);
 	m_modelUpdated = false;
 	setMinimumSize(500, 500);
@@ -237,8 +248,8 @@ void OpenGLWidget::paintModel()
 
 			m_program->setUniformValue("projection_matrix",m_projection);
 			m_program->setUniformValue("view_matrix", m_camera.GetViewMatrix());
-			qDebug() << m_camera.GetViewMatrix();
-			qDebug() << m_view;
+            //qDebug() << m_camera.GetViewMatrix();
+            //qDebug() << m_view;
 			//m_program->setUniformValue("view_matrix", m_view);
 			m_program->setUniformValue("model_matrix", m_model);
 			m_program->setUniformValue("light_pos", m_camera.Position);

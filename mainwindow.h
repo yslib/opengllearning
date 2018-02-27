@@ -15,6 +15,10 @@ class QLineEdit;
 class QGroupBox;
 class MarchingCubesDemo;
 class BaseDemoWidget;
+class LoopSubdivisionSurfaceDemo;
+class QMenu;
+class QAction;
+class QMenuBar;
 
 
 class OpenGLWidget;
@@ -29,8 +33,15 @@ public:
 private:
     QGridLayout * m_mainLayout;
     MarchingCubesDemo * m_mcDemo;
+	LoopSubdivisionSurfaceDemo * m_loopSubdivisionDemo;
+	QMenu * m_modeMenu;
+	QAction * m_marchingCubesDemoAction;
+	QAction * m_loopSubdivisionDemoAction;
+	QMenuBar * m_menuBar;
 private:
     void setWidget(BaseDemoWidget * widget);
+	private slots:
+	void onMenuActions(QAction * action);
 };
 
 #endif // MAINWINDOW_H

@@ -12,27 +12,61 @@
 #include <QFileDialog>
 #include <QString>
 #include <marchingcubesdemo.h>
+#include "loopsubdivisionsurfacedemo.h"
+#include <QMenu>
+#include <QAction>
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent)
+    QMainWindow(parent),m_mcDemo(nullptr),m_loopSubdivisionDemo(nullptr)
 {
-     m_mainLayout = new QGridLayout(this);
-     QWidget * center = new QWidget(this);
-     setCentralWidget(center);
-     center->setLayout(m_mainLayout);
+    //set main window size
+    setMinimumSize(600,400);
 
+     //create menu
+     m_modeMenu = menuBar()->addMenu(tr("mode"));
+     m_marchingCubesDemoAction = m_modeMenu->addAction(tr("MarchingCubes"));
+     m_loopSubdivisionDemoAction = m_modeMenu->addAction(tr("LoopSubdivision"));
+
+     connect(m_modeMenu,&QMenu::triggered,this,&MainWindow::onMenuActions);
 
      //MC Demos
-     m_mcDemo = new MarchingCubesDemo(this);
 
-     setWidget(m_mcDemo);
+     //setCentralWidget(m_mcDemo);
 }
+
+
 
 void MainWindow::setWidget(BaseDemoWidget *widget)
 {
-    m_mainLayout->addWidget(widget->displayWidget(),0,0);
-    m_mainLayout->addWidget(widget->controlWidget(),0,1);
+    //m_mainLayout->addWidget(new QWidget(this),0,1);
+    //m_mainLayout->addWidget(new OpenGLWidget(this),0,0);
+    m_mainLayout->addWidget(widget->displayWidget(),1,0);
+    m_mainLayout->addWidget(widget->controlWidget(),1,1);
 }
 
+void MainWindow::onMenuActions(QAction * action)
+{
+
+	if (action == m_marchingCubesDemoAction) {
+		qDebug() << "MarchingCubesDemos will be created\n";
+        if(m_mcDemo == nullptr){
+            m_mcDemo = new MarchingCubesDemo(this);
+        }
+		if (centralWidget()->parent() != nullptr) {
+			centralWidget()->setParent(0);
+		}
+        setCentralWidget(m_mcDemo);
+	}
+	else if (action == m_loopSubdivisionDemoAction) {
+		qDebug() << "LoopSubdivisionDemo will be created\n";
+        if(m_loopSubdivisionDemo == nullptr){
+            m_loopSubdivisionDemo = new LoopSubdivisionSurfaceDemo(this);
+        }
+		if (centralWidget()->parent() != nullptr) {
+			centralWidget()->setParent(0);
+		}
+        setCentralWidget(m_loopSubdivisionDemo);
+	}
+}
 MainWindow::~MainWindow(){
 }

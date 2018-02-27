@@ -40,7 +40,7 @@ m_dataHeight(0), m_dataWidth(0)
 	{0.5f,  0.5f, -0.5f},
 	{0.5f,  0.5f, -0.5f} ,
 	{-0.5f,  0.5f, -0.5f} ,
-	{-0.5f, -0.5f, -0.5f}  ,
+    {-0.5f, -0.5f, -0.5f} ,
 
 	{-0.5f, -0.5f,  0.5f},
 	{0.5f, -0.5f,  0.5f},
@@ -121,7 +121,7 @@ m_dataHeight(0), m_dataWidth(0)
 	displayWidget->updateModel(a,b);
 	//
 	setDisplayWidget(displayWidget);
-	m_layout->addWidget(displayWidget, 0, 0);
+    //m_layout->addWidget(displayWidget, 0, 0);
 
 
 	//controal widget
