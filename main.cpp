@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc,argv);
     MainWindow mainwindow;
-    mainwindow.show();
+	mainwindow.show();
 //    OpenGLWidget window;
 //    QSurfaceFormat fmt;
 //    fmt.setDepthBufferSize(24);

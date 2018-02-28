@@ -62,8 +62,8 @@ bool Model::load(const std::string & fileName)
         }
         ss.clear();
     }
-    //_toVerticesFlatArray();
-    //_toFacesIndicesFlatArray();
+	_toVerticesFlatArray();
+	_toFacesIndicesFlatArray();
     return (ok);
 }
 
@@ -109,14 +109,14 @@ void Model::scale(float sx, float sy, float sz)
 
 void Model::_toVerticesFlatArray()
 {
-    //std::size_t elemCount = m_vertices.size() * 3;
-    //m_verticesFlatArray = new float[elemCount];
-    //std::size_t count = m_vertices.size();
-    //for (std::size_t i = 0; i < count; i++) {
-    //	m_verticesFlatArray[3 * i] = std::get<0>(m_vertices[i]);
-    //	m_verticesFlatArray[3 * i + 1] = std::get<1>(m_vertices[i]);
-    //	m_verticesFlatArray[3 * i + 2] = std::get<2>(m_vertices[i]);
-    //}
+	std::size_t elemCount = m_vertices.size() * 3;
+	m_verticesFlatArray = new float[elemCount];
+	std::size_t count = m_vertices.size();
+	for (std::size_t i = 0; i < count; i++) {
+		m_verticesFlatArray[3 * i] = std::get<0>(m_vertices[i]);
+		m_verticesFlatArray[3 * i + 1] = std::get<1>(m_vertices[i]);
+		m_verticesFlatArray[3 * i + 2] = std::get<2>(m_vertices[i]);
+	}
 
 }
 
@@ -132,14 +132,14 @@ void Model::_toTexturesFlayArray()
 
 void Model::_toFacesIndicesFlatArray()
 {
-    //std::size_t elemCount = m_facesIndices.size() * 3;
-    //m_facesIndicesFlatArray = new int[elemCount];
-    //std::size_t count = m_facesIndices.size();
-    //for (std::size_t i = 0; i < count; i++) {
-    //	m_facesIndicesFlatArray[3 * i] = m_facesIndices[i][0];
-    //	m_facesIndicesFlatArray[3 * i + 1] = m_facesIndices[i][1];
-    //	m_facesIndicesFlatArray[3 * i + 2] = m_facesIndices[i][2];
-    //}
+	std::size_t elemCount = m_facesIndices.size() * 3;
+	m_facesIndicesFlatArray = new int[elemCount];
+	std::size_t count = m_facesIndices.size();
+	for (std::size_t i = 0; i < count; i++) {
+		m_facesIndicesFlatArray[3 * i] = m_facesIndices[i][0];
+		m_facesIndicesFlatArray[3 * i + 1] = m_facesIndices[i][1];
+		m_facesIndicesFlatArray[3 * i + 2] = m_facesIndices[i][2];
+	}
 }
 
 void Model::_toFormalsIndicesFlayArray()

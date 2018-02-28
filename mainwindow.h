@@ -19,6 +19,7 @@ class LoopSubdivisionSurfaceDemo;
 class QMenu;
 class QAction;
 class QMenuBar;
+class QStackedWidget;
 
 
 class OpenGLWidget;
@@ -34,6 +35,7 @@ private:
     QGridLayout * m_mainLayout;
     MarchingCubesDemo * m_mcDemo;
 	LoopSubdivisionSurfaceDemo * m_loopSubdivisionDemo;
+	QStackedWidget * m_stackedWidget;
 	QMenu * m_modeMenu;
 	QAction * m_marchingCubesDemoAction;
 	QAction * m_loopSubdivisionDemoAction;

@@ -15,33 +15,37 @@
 #include "loopsubdivisionsurfacedemo.h"
 #include <QMenu>
 #include <QAction>
+#include <QStackedWidget>
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),m_mcDemo(nullptr),m_loopSubdivisionDemo(nullptr)
+	QMainWindow(parent), m_mcDemo(nullptr), m_loopSubdivisionDemo(nullptr)
 {
-    //set main window size
-    setMinimumSize(600,400);
+	//set main window size
+	setMinimumSize(600, 400);
 
-     //create menu
-     m_modeMenu = menuBar()->addMenu(tr("mode"));
-     m_marchingCubesDemoAction = m_modeMenu->addAction(tr("MarchingCubes"));
-     m_loopSubdivisionDemoAction = m_modeMenu->addAction(tr("LoopSubdivision"));
+	m_stackedWidget = new QStackedWidget;
 
-     connect(m_modeMenu,&QMenu::triggered,this,&MainWindow::onMenuActions);
 
-     //MC Demos
+	//create menu
+	m_modeMenu = menuBar()->addMenu(tr("mode"));
+	m_marchingCubesDemoAction = m_modeMenu->addAction(tr("MarchingCubes"));
+	m_loopSubdivisionDemoAction = m_modeMenu->addAction(tr("LoopSubdivision"));
 
-     //setCentralWidget(m_mcDemo);
+	connect(m_modeMenu, &QMenu::triggered, this, &MainWindow::onMenuActions);
+
+	//MC Demos
+
+	setCentralWidget(m_stackedWidget);
 }
 
 
 
 void MainWindow::setWidget(BaseDemoWidget *widget)
 {
-    //m_mainLayout->addWidget(new QWidget(this),0,1);
-    //m_mainLayout->addWidget(new OpenGLWidget(this),0,0);
-    m_mainLayout->addWidget(widget->displayWidget(),1,0);
-    m_mainLayout->addWidget(widget->controlWidget(),1,1);
+	//m_mainLayout->addWidget(new QWidget(this),0,1);
+	//m_mainLayout->addWidget(new OpenGLWidget(this),0,0);
+	m_mainLayout->addWidget(widget->displayWidget(), 1, 0);
+	m_mainLayout->addWidget(widget->controlWidget(), 1, 1);
 }
 
 void MainWindow::onMenuActions(QAction * action)
@@ -49,24 +53,20 @@ void MainWindow::onMenuActions(QAction * action)
 
 	if (action == m_marchingCubesDemoAction) {
 		qDebug() << "MarchingCubesDemos will be created\n";
-        if(m_mcDemo == nullptr){
-            m_mcDemo = new MarchingCubesDemo(this);
-        }
-		if (centralWidget()->parent() != nullptr) {
-			centralWidget()->setParent(0);
+		if (m_mcDemo == nullptr) {
+			m_mcDemo = new MarchingCubesDemo(this);
+			m_stackedWidget->addWidget(m_mcDemo);
 		}
-        setCentralWidget(m_mcDemo);
+		m_stackedWidget->setCurrentWidget(m_mcDemo);
 	}
 	else if (action == m_loopSubdivisionDemoAction) {
 		qDebug() << "LoopSubdivisionDemo will be created\n";
-        if(m_loopSubdivisionDemo == nullptr){
-            m_loopSubdivisionDemo = new LoopSubdivisionSurfaceDemo(this);
-        }
-		if (centralWidget()->parent() != nullptr) {
-			centralWidget()->setParent(0);
+		if (m_loopSubdivisionDemo == nullptr) {
+			m_loopSubdivisionDemo = new LoopSubdivisionSurfaceDemo(this);
+			m_stackedWidget->addWidget(m_loopSubdivisionDemo);
 		}
-        setCentralWidget(m_loopSubdivisionDemo);
+		m_stackedWidget->setCurrentWidget(m_loopSubdivisionDemo);
 	}
 }
-MainWindow::~MainWindow(){
+MainWindow::~MainWindow() {
 }

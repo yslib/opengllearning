@@ -58,10 +58,10 @@ public:
 
     //std::size_t getNormalsCount()const { return m_normals.size(); }
 
-    float * getVerticesFlatArray()const { return m_verticesFlatArray; }
+	float * getVerticesFlatArray()const {  return m_verticesFlatArray; }
     //float * getNormalsSFlatArray()const { return m_normalsFlatArray; }
     //float * getTexturesFlayArray()const { return m_texturesFlatArray; }
-    int * getFacesIndicesFlatArray()const { return m_facesIndicesFlatArray; }
+	int * getFacesIndicesFlatArray()const { return m_facesIndicesFlatArray; }
     //int * getNormalsIndicesFlayArray()const { return m_normalsIndicesFlatArray; }
     //int * getTextureIndicesFlayArray()const { return m_textureIndicesFlatArray; }
 
