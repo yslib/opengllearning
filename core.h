@@ -13,7 +13,7 @@ typedef float Float;
 #include <cmath>
 #include <cassert>
 #include <list>
-
+#include <QDebug>
 template<typename T>
 class Vector3D {
 	T m_x, m_y, m_z;
@@ -177,7 +177,7 @@ public:
 	void setF0(SDFace * f0) { m_faces[0] = f0; }
 	SDFace * f1()const { return m_faces[1]; }
 	void setF1(SDFace * f1) { m_faces[1] = f1; }
-	void setEdgeNum(int n) { f0edgeNum = n; }
+	void setEdgeNum(int n) { assert(n >=0&&n<3); f0edgeNum = n; }
 	int edgeNum() { return f0edgeNum; }
 
 	bool operator<(const SDEdge & e)const
@@ -202,24 +202,74 @@ inline int PREV(int i) { return (i - 1 + 3) % 3; }
 
 class SDFace{
 public:
-	SDFace(const std::vector<SDVertex *> & vertices = std::vector<SDVertex*>(),
-		const std::vector<SDFace *> faces = std::vector<SDFace*>()):m_vertices(vertices),m_faces(faces){
-		assert(vertices.size() == 3);
-		assert(faces.size() == 3);
+	//SDFace(const std::vector<SDVertex *> & vertices = std::vector<SDVertex*>(),
+	//	const std::vector<SDFace *> faces = std::vector<SDFace*>()):m_vertices(vertices),m_faces(faces){
+	//	assert(vertices.size() ==3||vertices.size() ==0);
+	//	assert(faces.size() == 3 || faces.size() == 0);
+	//	m_faces.resize(3);
+	//	m_vertices.resize(3);
+	//	m_children.resize(4);
+	//}
+
+	SDFace * f[3];
+	SDVertex * v[3];
+	SDFace * children[4];
+
+	SDFace(SDVertex *v0 = nullptr,
+		SDVertex * v1 = nullptr,
+		SDVertex * v2 = nullptr,
+		SDFace * f0 = nullptr,
+		SDFace *f1 = nullptr,
+		SDFace * f2 = nullptr,
+		SDFace * c0 = nullptr,
+		SDFace * c1 = nullptr,
+		SDFace * c2 = nullptr,
+		SDFace * c3 = nullptr
+		)
+	{
+		f[0] = f0;
+		f[1] = f1;
+		f[2] = f2;
+		v[0] = v0;
+		v[1] = v1;
+		v[2] = v2;
+		children[0] = c0;
+		children[1] = c1;
+		children[2] = c2;
+		children[3] = c3;
 
 	}
-	std::vector<SDVertex*> vertices()const { return m_vertices; }
-	std::vector<SDFace*> adjacentFaces()const { return m_faces; }
-	std::vector<SDFace*> childrenFaces()const { return m_children;}
-	void setChildrenFaces(const std::vector<SDFace*> & children)
-	{
-		assert(children.size() == 4);
-		m_children = children;
-	}
+
+
+	//std::vector<SDVertex*> getVertexPointers()const
+	//{
+	//	return m_vertices;
+	//}
+	//void setVertexPointers(const std::vector<SDVertex*> & vertices)
+	//{
+	//	m_vertices = vertices;
+	//}
+	//std::vector<SDFace*> getAdjacentFacesPointers()const
+	//{
+	//	return m_faces;
+	//}
+	//std::vector<SDFace*> getChildrenFacesPointers()const
+	//{
+	//	return m_children;
+	//}
+	//void setAdjacentFacePointers(const std::vector<SDFace *> & faces)
+	//{
+	//	m_faces = faces;
+	//}
+	//void setChildrenFacePointers(const std::vector<SDFace*> & children)
+	//{
+	//	assert(children.size() == 4);
+	//	m_children = children;
+	//}
 	int indexOfVertex(const SDVertex * vert)const {
-		for(int i=0;i<m_vertices.size();i++)
+		for(int i=0;i<3;i++)
 		{
-			if(m_vertices[i] == vert)
+			if(v[i] == vert)
 			{
 				return i;
 			}
@@ -228,36 +278,36 @@ public:
 	}
 	SDFace * nextFace(const SDVertex * vert)
 	{
-		return m_faces[indexOfVertex(vert)];
+		int index = indexOfVertex(vert);
+		qDebug()<<index;
+		return f[index];
 	}
 	SDFace * prevFace(const SDVertex * vert){
 		//return m_faces[(indexOfVertex(vert) - 1 + m_vertices.size()) % m_vertices.size()];
-		return m_faces[PREV(indexOfVertex(vert))];
+		int index = indexOfVertex(vert);
+		return f[PREV(index)];
 	}
 	SDVertex * nextVert(const SDVertex * vert)
 	{
-		return m_vertices[NEXT(indexOfVertex(vert))];
+		return v[NEXT(indexOfVertex(vert))];
 	}
 	SDVertex * prevVert(const SDVertex * vert)
 	{
-		return m_vertices[PREV(indexOfVertex(vert))];
+		return v[PREV(indexOfVertex(vert))];
 	}
 	SDVertex * otherVertex(const SDVertex * vert0,const SDVertex * vert1)const
 	{
 		for(int i=0;i<3;i++)
 		{
-			if (m_vertices[i] != vert0 && m_vertices[i] != vert1)
-				return m_vertices[i];
+			if (v[i] != vert0 && v[i] != vert1)
+				return v[i];
 		}
 		return nullptr;
 	}
-
-
-
-private:
-	std::vector<SDVertex*> m_vertices;
-	std::vector<SDFace*> m_faces;
- 	std::vector<SDFace*> m_children;
+//private:
+//	std::vector<SDVertex*> m_vertices;
+//	std::vector<SDFace*> m_faces;
+// 	std::vector<SDFace*> m_children;
 };
 
 class SDVertex {
@@ -289,7 +339,7 @@ public:
 	void regular(bool val) { m_regular = val; }
 
 
-	SDVertex * Child() const { return m_child; }
+	SDVertex * child() const { return m_child; }
 	void setChild(SDVertex * val) { m_child = val; }
 
 	bool isBoundary() const { return m_boundary; }
@@ -352,30 +402,8 @@ inline Float beta(int valence)
 }
 
 
-Point3Df weightOneRing(SDVertex * vert,Float beta)
-{
-	std::vector<Point3Df> verticesOnTheRing(vert->valence());
-	vert->oneRing(verticesOnTheRing.data());
-	Point3Df p = (1 - vert->valence()*beta)*vert->point();
-
-	for(int i=0;i<verticesOnTheRing.size();i++)
-	{
-		p+=beta * verticesOnTheRing[i];
-	}
-	return p;
-}
-
-Point3Df weightBoundary(SDVertex * vert,Float beta)
-{
-	std::vector<Point3Df> verticesOnTheRing(vert->valence());
-	vert->oneRing(verticesOnTheRing.data());
-	Point3Df p = (1 - 2*beta)*vert->point();
-	p += beta * verticesOnTheRing.front();
-	p += beta * verticesOnTheRing.back();
-	return p;
-}
-
-
+Point3Df weightOneRing(SDVertex * vert, Float beta);
+Point3Df weightBoundary(SDVertex * vert, Float beta);
 /////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
 //Memory.h

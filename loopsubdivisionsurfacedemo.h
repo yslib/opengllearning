@@ -8,6 +8,7 @@
 #include "core.h"
 #include <QVector>
 #include <QVector3D>
+#include <QPair>
 
 
 class QPushButton;
@@ -31,10 +32,11 @@ private:
 	QScopedPointer<Model> m_model;
 
 private:
-	QVector<QVector3D> LoopSubdivision(const std::vector<int> & vertexIndices,const std::vector<Point3Df> & vertices);
+	QPair<QVector<QVector3D>,QVector<QVector3D>> LoopSubdivision(const std::vector<int> & vertexIndices,const std::vector<Point3Df> & vertices,int LEVEL = 3);
 private slots:
 	void onOpenFile();
 	void onRecursionsCountChanged(int value);
+	void onTestButton(int level);
 };
 
 #endif // LOOPSUBDIVISIONSURFACEDEMO_H

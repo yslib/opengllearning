@@ -63,7 +63,7 @@ void OpenGLWidget::initializeGL()
 
 	initializeOpenGLFunctions();
 	glEnable(GL_DEPTH_TEST);
-
+	
 	glClearColor(.2f, .3f, .3f, 1.0f);
 
 	//Initialized program shader
@@ -260,7 +260,10 @@ void OpenGLWidget::paintModel()
 			//m_program->setUniformValue("projection", m_projection);
 			//m_program->setUniformValue("view", m_view);
 			//m_program->setUniformValue("model", m_model);
+			//glPolygonMode(GL_FRONT, GL_LINE);
+			//glLineWidth(5);
 			glDrawArrays(GL_TRIANGLES, 0, m_vertices.count());
+			
 			m_vao.release();
 		}
 		m_program->release();
