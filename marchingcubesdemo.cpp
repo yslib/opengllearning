@@ -32,98 +32,9 @@ m_dataHeight(0), m_dataWidth(0)
 	displayWidget->setFormat(fmt);
 	displayWidget->setAnimation(true);
 
-	//test model
-	QVector<QVector3D> a =
-	{
-	{-0.5f, -0.5f, -0.5f},
-	{0.5f, -0.5f, -0.5f },
-	{0.5f,  0.5f, -0.5f},
-	{0.5f,  0.5f, -0.5f} ,
-	{-0.5f,  0.5f, -0.5f} ,
-    {-0.5f, -0.5f, -0.5f} ,
-
-	{-0.5f, -0.5f,  0.5f},
-	{0.5f, -0.5f,  0.5f},
-	{0.5f,  0.5f,  0.5f},
-	{0.5f,  0.5f,  0.5f},
-	{-0.5f,  0.5f,  0.5f},
-	{-0.5f, -0.5f,  0.5f},
-
-	{-0.5f,  0.5f,  0.5f},
-	{-0.5f,  0.5f, -0.5f},
-	{-0.5f, -0.5f, -0.5f},
-	{-0.5f, -0.5f, -0.5f},
-	{-0.5f, -0.5f,  0.5f},
-	{-0.5f,  0.5f,  0.5f},
-	{0.5f,  0.5f,  0.5f},
-	{0.5f,  0.5f, -0.5f},
-	{0.5f, -0.5f, -0.5f} ,
-	{0.5f, -0.5f, -0.5f} ,
-	{0.5f, -0.5f,  0.5f} ,
-	{0.5f,  0.5f,  0.5f} ,
-	{-0.5f, -0.5f, -0.5f},
-	{0.5f, -0.5f, -0.5f},
-	{0.5f, -0.5f,  0.5f},
-	{0.5f, -0.5f,  0.5f} ,
-	{-0.5f, -0.5f,  0.5f} ,
-	{-0.5f, -0.5f, -0.5f}  ,
-
-	{-0.5f,  0.5f, -0.5f}  ,
-	{0.5f,  0.5f, -0.5f}  ,
-	{0.5f,  0.5f,  0.5f}  ,
-	{0.5f,  0.5f,  0.5f} ,
-	{-0.5f,  0.5f,  0.5f} ,
-	{-0.5f,  0.5f, -0.5f}  ,
-	};
-	QVector<QVector3D> b = {
-		{0.0f,  0.0f, -1.0f},
-	{0.0f,  0.0f, -1.0f},
-	{0.0f,  0.0f, -1.0f},
-	{0.0f,  0.0f, -1.0f},
-	{0.0f,  0.0f, -1.0f},
-	{0.0f,  0.0f, -1.0f},
-
-	{0.0f,  0.0f,  1.0f},
-	{0.0f,  0.0f,  1.0f},
-	{0.0f,  0.0f,  1.0f},
-	{0.0f,  0.0f,  1.0f},
-	{0.0f,  0.0f,  1.0f},
-	{0.0f,  0.0f,  1.0f},
-
-	{-1.0f,  0.0f,  0.0f},
-	{-1.0f,  0.0f,  0.0f},
-	{-1.0f,  0.0f,  0.0f},
-	{-1.0f,  0.0f,  0.0f},
-	{-1.0f,  0.0f,  0.0f},
-	{-1.0f,  0.0f,  0.0f},
-
-	{1.0f,  0.0f,  0.0f},
-	{1.0f,  0.0f,  0.0f},
-	{1.0f,  0.0f,  0.0f},
-	{1.0f,  0.0f,  0.0f},
-	{1.0f,  0.0f,  0.0f},
-	{1.0f,  0.0f,  0.0f},
-
-	{0.0f, -1.0f,  0.0f},
-	{0.0f, -1.0f,  0.0f},
-	{0.0f, -1.0f,  0.0f},
-	{0.0f, -1.0f,  0.0f},
-	{ 0.0f, -1.0f,  0.0f},
-	{0.0f, -1.0f,  0.0f},
-
-	{0.0f,  1.0f,  0.0f},
-	{0.0f,  1.0f,  0.0f},
-	{0.0f,  1.0f,  0.0f},
-	{0.0f,  1.0f,  0.0f},
-	{0.0f,  1.0f,  0.0f},
-	{0.0f,  1.0f,  0.0f}
-	};
-	displayWidget->updateModel(a,b);
 	//
 	setDisplayWidget(displayWidget);
     //m_layout->addWidget(displayWidget, 0, 0);
-
-
 	//controal widget
 	QGridLayout * controlWidgetLayout = new QGridLayout(this);
 	QWidget * controlWidget = new QWidget(this);
@@ -336,6 +247,8 @@ void MarchingCubesDemo::onOpenFile()
 	}
 	qint64 length = m_dataWidth * m_dataHeight*m_dataDepth;
 	unsigned char * tmp = new unsigned char[length];
+
+
 	qDebug() << "FileLength:" << length;
 	qint64 readLength = dataFile.read((char*)(tmp), length);
 	if (readLength != length) {
@@ -351,10 +264,15 @@ void MarchingCubesDemo::onOpenFile()
 	//Calculating gradient for normal vectors
 	calculateGradient();
 
+	m_mcFileNameLabel->setText(path);
+
+	//onISOValueChanged(128);
+	m_mcISOValueSlider->setSliderPosition(128);
+
 }
 void MarchingCubesDemo::onISOValueChanged(int value)
 {
-	OpenGLWidget * widget = dynamic_cast<OpenGLWidget *>(displayWidget());
+	OpenGLWidget * widget = static_cast<OpenGLWidget *>(displayWidget());
 	if (widget != nullptr) {
 		QPair<QVector<QVector3D>, QVector<QVector3D>> res = MarcingCubes(value);
 		 widget->updateModel(res.first,res.second);

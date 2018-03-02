@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent), m_mcDemo(nullptr), m_loopSubdivisionDemo(nullptr)
 {
 	//set main window size
-	setMinimumSize(600, 400);
+	setMinimumSize(1000,700);
 
 	m_stackedWidget = new QStackedWidget;
 
@@ -52,7 +52,6 @@ void MainWindow::onMenuActions(QAction * action)
 {
 
 	if (action == m_marchingCubesDemoAction) {
-		qDebug() << "MarchingCubesDemos will be created\n";
 		if (m_mcDemo == nullptr) {
 			m_mcDemo = new MarchingCubesDemo(this);
 			m_stackedWidget->addWidget(m_mcDemo);
@@ -60,7 +59,6 @@ void MainWindow::onMenuActions(QAction * action)
 		m_stackedWidget->setCurrentWidget(m_mcDemo);
 	}
 	else if (action == m_loopSubdivisionDemoAction) {
-		qDebug() << "LoopSubdivisionDemo will be created\n";
 		if (m_loopSubdivisionDemo == nullptr) {
 			m_loopSubdivisionDemo = new LoopSubdivisionSurfaceDemo(this);
 			m_stackedWidget->addWidget(m_loopSubdivisionDemo);

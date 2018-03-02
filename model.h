@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <memory>
+#include "core.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -58,18 +60,16 @@ public:
 
     //std::size_t getNormalsCount()const { return m_normals.size(); }
 
-	float * getVerticesFlatArray()const {  return m_verticesFlatArray; }
+	const float * getVerticesFlatArray()const {  return &m_verticesFlatArray[0]; }
     //float * getNormalsSFlatArray()const { return m_normalsFlatArray; }
     //float * getTexturesFlayArray()const { return m_texturesFlatArray; }
-	int * getFacesIndicesFlatArray()const { return m_facesIndicesFlatArray; }
+	const int * getFacesIndicesFlatArray()const { return &m_facesIndicesFlatArray[0]; }
     //int * getNormalsIndicesFlayArray()const { return m_normalsIndicesFlatArray; }
     //int * getTextureIndicesFlayArray()const { return m_textureIndicesFlatArray; }
-
     virtual ~Model();
 
 private:
     void _init();
-    void _destroy();
 private:
     void _toVerticesFlatArray();
     void _toNormalsSFlatArray();
@@ -78,24 +78,25 @@ private:
     void _toFormalsIndicesFlayArray();
     void _toTextureIndicesFlayArray();
 
-
     bool m_loaded;
-
     std::vector<std::tuple<float, float, float>> m_normals;
     std::vector<std::tuple<float, float, float>> m_vertices;
     std::vector<std::tuple<float, float>> m_textures;
     std::vector<std::vector<int>> m_facesIndices;
     std::vector<std::vector<int>> m_normalsIndices;
     std::vector<std::vector<int>> m_texturesIndices;
+    //float * m_verticesFlatArray;
+    //float * m_normalsFlatArray;
+    //float * m_texturesFlatArray;
+    //int * m_facesIndicesFlatArray;
+    //int * m_normalsIndicesFlatArray;
+    //int * m_textureIndicesFlatArray;
 
-
-
-
-    float * m_verticesFlatArray;
-    float * m_normalsFlatArray;
-    float * m_texturesFlatArray;
-    int * m_facesIndicesFlatArray;
-    int * m_normalsIndicesFlatArray;
-    int * m_textureIndicesFlatArray;
+	std::unique_ptr<float[]> m_verticesFlatArray;
+	std::unique_ptr<float[]> m_normalsFlatArray;
+	std::unique_ptr<float[]> m_texturesFlatArray;
+	std::unique_ptr<int[]> m_facesIndicesFlatArray;
+	std::unique_ptr<int[]> m_normalsIndicesFlatArray;
+	std::unique_ptr<int[]> m_textureIndicesFlatArray;
 };
 #endif

@@ -21,9 +21,6 @@ OpenGLWidget::OpenGLWidget(QWidget *parent) :
 	m_lightColor(QVector3D(1.0f, 1.0f, 1.0f)),
 	m_objectColor(QVector3D(1.0f, 0.5f, 0.31f)),
 	m_verticalAngle(45.f) {
-
-
-
 	QSurfaceFormat fmt;
 	fmt.setDepthBufferSize(24);
 	fmt.setStencilBufferSize(8);
@@ -31,11 +28,10 @@ OpenGLWidget::OpenGLWidget(QWidget *parent) :
 	fmt.setProfile(QSurfaceFormat::CoreProfile);
 	QSurfaceFormat::setDefaultFormat(fmt);
 	setFormat(fmt);
-
-
 	setFocusPolicy(Qt::StrongFocus);
 	m_modelUpdated = false;
-	setMinimumSize(500, 500);
+	//setMinimumSize(500, 500);
+	setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	//matrix initialization
 	m_model.setToIdentity();
 	m_view.lookAt(m_eye, m_center, m_up),
@@ -77,7 +73,6 @@ void OpenGLWidget::initializeGL()
 	m_program->addShader(m_fshader);
 	m_program->link();
 	m_program->bind();
-
 	//   m_modelAttriLocation = m_program->attributeLocation("model");
 	//   m_viewAttriLocation = m_program->attributeLocation("view");
 	//   m_projectAttriLocation = m_program->attributeLocation("projection");
@@ -172,16 +167,16 @@ void OpenGLWidget::keyPressEvent(QKeyEvent * event)
 	switch (event->key())
 	{
 	case Qt::Key_W:
-		m_camera.ProcessKeyboard(Camera_Movement::FORWARD, 0.1);
+		m_camera.ProcessKeyboard(CameraMovement::Forward, 0.1);
 		break;
 	case Qt::Key_A:
-		m_camera.ProcessKeyboard(Camera_Movement::LEFT, 0.1);
+		m_camera.ProcessKeyboard(CameraMovement::Left, 0.1);
 		break;
 	case Qt::Key_S:
-		m_camera.ProcessKeyboard(Camera_Movement::BACKWARD, 0.1);
+		m_camera.ProcessKeyboard(CameraMovement::Backward, 0.1);
 		break;
 	case Qt::Key_D:
-		m_camera.ProcessKeyboard(Camera_Movement::RIGHT, 0.1);
+		m_camera.ProcessKeyboard(CameraMovement::Right, 0.1);
 		break;
 	default:
 		break;
@@ -260,8 +255,7 @@ void OpenGLWidget::paintModel()
 			//m_program->setUniformValue("projection", m_projection);
 			//m_program->setUniformValue("view", m_view);
 			//m_program->setUniformValue("model", m_model);
-			//glPolygonMode(GL_FRONT, GL_LINE);
-			//glLineWidth(5);
+
 			glDrawArrays(GL_TRIANGLES, 0, m_vertices.count());
 			
 			m_vao.release();
@@ -291,12 +285,20 @@ void OpenGLWidget::updateModel(const QVector<QVector3D> &vertices,const QVector<
 	makeCurrent();
 	m_vao.bind();
 	m_vbo.bind();
+	m_program->bind();
 	m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
 	int totalBytes = vertices.count() * 3 * sizeof(GLfloat) + m_normals.count() * 3 * sizeof(GLfloat);
 	m_vbo.allocate(totalBytes);
 	//m_vbo.allocate(m_vertices.constData(), m_vertices.count() * 3 * sizeof(float));
 	m_vbo.write(0, vertices.constData(), vertices.count() * 3*sizeof(GLfloat));
 	m_vbo.write(vertices.count() * sizeof(GLfloat) * 3, normals.constData(), normals.count() * 3 * sizeof(GLfloat));
+	
+	
+	m_program->enableAttributeArray(0);
+	m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3);
+	m_program->enableAttributeArray(1);
+	m_program->setAttributeBuffer(1, GL_FLOAT, vertices.size() * 3 * sizeof(GLfloat), 3, 0);
+	m_program->release();
 	m_vbo.release();
 	m_vao.release();
 	doneCurrent();

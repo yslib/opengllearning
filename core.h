@@ -279,7 +279,6 @@ public:
 	SDFace * nextFace(const SDVertex * vert)
 	{
 		int index = indexOfVertex(vert);
-		qDebug()<<index;
 		return f[index];
 	}
 	SDFace * prevFace(const SDVertex * vert){
@@ -392,9 +391,6 @@ public:
 		}
 	}
 };
-
-
-
 inline Float beta(int valence)
 {
 	if (valence == 3)return 3.f / 16.f;
@@ -404,8 +400,10 @@ inline Float beta(int valence)
 
 Point3Df weightOneRing(SDVertex * vert, Float beta);
 Point3Df weightBoundary(SDVertex * vert, Float beta);
-/////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 //Memory.h
 #define ARENA_ALLOC(arena, Type) new ((arena).Alloc(sizeof(Type))) Type
 void *AllocAligned(size_t size);

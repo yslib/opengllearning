@@ -21,11 +21,11 @@ private:
 
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-enum class Camera_Movement {
-	FORWARD,
-	BACKWARD,
-	LEFT,
-	RIGHT
+enum class CameraMovement {
+	Forward,
+	Backward,
+	Left,
+	Right
 };
 
 // Default camera values
@@ -83,16 +83,16 @@ public:
 	}
 
 	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-	void ProcessKeyboard(Camera_Movement direction, float deltaTime)
+	void ProcessKeyboard(CameraMovement direction, float deltaTime)
 	{
 		float velocity = MovementSpeed * deltaTime;
-		if (direction == Camera_Movement::FORWARD)
+		if (direction == CameraMovement::Forward)
 			Position += Front * velocity;
-		if (direction == Camera_Movement::BACKWARD)
+		if (direction == CameraMovement::Backward)
 			Position -= Front * velocity;
-		if (direction == Camera_Movement::LEFT)
+		if (direction == CameraMovement::Left)
 			Position -= Right * velocity;
-		if (direction == Camera_Movement::RIGHT)
+		if (direction == CameraMovement::Right)
 			Position += Right * velocity;
 	}
 

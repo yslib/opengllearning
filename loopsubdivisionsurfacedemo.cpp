@@ -11,38 +11,55 @@
 #include <QString>
 #include <QFileDialog>
 #include <QMessageBox>
-LoopSubdivisionSurfaceDemo::LoopSubdivisionSurfaceDemo(QWidget * parent /*= nullptr*/):BaseDemoWidget(parent)
+#include <QTextEdit>
+#include <chrono>
+#define MEMORY_ARENA
+
+QDebug operator<<(QDebug d,const Point3Df &f)
+{
+	QDebugStateSaver saver(d);
+	d.nospace() << "(" << f.x() << "," << f.y() << "," << f.z() << ")";
+	return d;
+}
+
+
+LoopSubdivisionSurfaceDemo::LoopSubdivisionSurfaceDemo(QWidget * parent /*= nullptr*/) :BaseDemoWidget(parent)
 {
 	//create control widget 
 	QWidget * controlWidget = new QWidget(this);
 	QGridLayout * controlLayout = new QGridLayout;
+
+	//button
 	m_openFileButton = new QPushButton;
+	m_openFileButton->setText(QString("Open..."));
+	//lineedit
 	m_fileNamesLineEdit = new QLineEdit;
+	//label
 	m_label = new QLabel;
 	m_label->setText(tr("File:"));
 	m_fileNamesLineEdit->setReadOnly(true);
 
-	controlLayout->addWidget(m_label, 0, 0);
+	controlLayout->addWidget(m_label, 0, 0,1,1,Qt::AlignRight);
 	controlLayout->addWidget(m_fileNamesLineEdit, 0, 1);
 	controlLayout->addWidget(m_openFileButton, 0, 2);
 
-	m_sliderLabel = new QLabel(tr("Recursions Count:"));
+	//slider label
+	m_sliderLabel = new QLabel(tr("Level:"));
+	//slider
 	m_slider = new QSlider(Qt::Horizontal);
 	m_slider->setMaximum(10);
+	m_slider->setEnabled(false);
+	controlLayout->addWidget(m_sliderLabel, 1, 0,1,1,Qt::AlignRight);
+	controlLayout->addWidget(m_slider, 1, 1, 1, 2);
 
-	controlLayout->addWidget(m_sliderLabel, 1, 0);
-	controlLayout->addWidget(m_slider, 1, 1,1,2);
+	//text edit
+	m_textEdit = new QTextEdit;
+	m_textEdit->setReadOnly(true);
+	controlLayout->addWidget(m_textEdit, 2, 0, 1, 3);
+
 
 	controlWidget->setLayout(controlLayout);
 	setControlWidget(controlWidget);
-
-	//Test Button
-	QPushButton * testButton = new QPushButton(this);
-	testButton->setText("Test");
-	controlLayout->addWidget(testButton, 2, 0,1,3);
-
-	//
-
 
 	//create display widget
 	m_displayWidget = new OpenGLWidget(this);
@@ -52,10 +69,8 @@ LoopSubdivisionSurfaceDemo::LoopSubdivisionSurfaceDemo(QWidget * parent /*= null
 	//signals and slots
 	connect(m_openFileButton, SIGNAL(clicked()), this, SLOT(onOpenFile()));
 	connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(onRecursionsCountChanged(int)));
-	//connect(testButton, SIGNAL(clicked()), this, SLOT(onTestButton()));
 
 }
-
 QPair<QVector<QVector3D>,QVector<QVector3D>> 
 LoopSubdivisionSurfaceDemo::LoopSubdivision(
 	const std::vector<int>& vertexIndices,
@@ -82,7 +97,7 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 		SDFace * face = &SDFacesContainer[i];
 		for (int j = 0; j < 3; j++) {
 			SDVertex * v = &SDVerticesContainer[vertexIndices[f + j]];
-			qDebug() << f + j;
+			//qDebug() << f + j;
 			SDFacesContainer[i].v[j] = v;
 			//There must be setting a initial face for a vertex,any is ok.
 			v->setStartFace(&SDFacesContainer[i]);
@@ -125,13 +140,11 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 	{
 		SDVertex * vert = SDVertices[i];
 		SDFace * face = vert->startFace();
-		qDebug() << face;
 		//find the vertex if it is a boundary vertex
 		//while (face != nullptr && (face = face->nextFace(vert)) != vert->startFace());
 		do
 		{
 			face = face->nextFace(vert);
-			qDebug() << face;
 		} while (face != nullptr && face != vert->startFace());
 		vert->boundary(face == nullptr);
 
@@ -146,17 +159,40 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 			vert->regular(false);
 		}
 	}
-	MemoryArena arena;
 
+
+#ifdef MEMORY_ARENA
+	MemoryArena arena;
+#endif
+
+
+	//The following two unique_ptr vectors is to
+	// hold the newly created vertices and vertex
+
+	std::vector<std::unique_ptr<SDFace>> facesContainers;
+	std::vector<std::unique_ptr<SDVertex>> verticesContainers;
 
 	for(int level=0;level<LEVEL;level++)
 	{
+		//qDebug() << "Level:" << level;
 		std::vector<SDFace *> newFaces;
 		std::vector<SDVertex *> newVertices;
+
+		std::vector<std::unique_ptr<SDFace>> newFacesContainers;
+		std::vector<std::unique_ptr<SDVertex>> newVerticesContainers;
+
 		//allocae next level of children in mesh tree
 		for(auto vert:SDVertices)
 		{
+
+#ifndef MEMORY_ARENA
+			std::unique_ptr<SDVertex> vptr(new SDVertex);
+			vert->setChild(vptr.get());
+			newVerticesContainers.push_back(std::move(vptr));
+#else
 			vert->setChild(arena.Alloc<SDVertex>());
+#endif// !MEMORY_ARENA
+
 			vert->child()->regular(vert->isRegular());//
 			vert->child()->boundary(vert->isBoundary());
 			newVertices.push_back(vert->child());
@@ -166,32 +202,46 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 			std::vector<SDFace *> childrens;
 			for(int i=0;i<4;i++)
 			{
+#ifndef MEMORY_ARENA
+				std::unique_ptr<SDFace> fptr(new SDFace);
+				face->children[i] = fptr.get();
+				newFacesContainers.push_back(std::move(fptr));
+#else
 				face->children[i] = arena.Alloc<SDFace>();
+#endif
 				newFaces.push_back(face->children[i]);
 			}
 		}
 
 		//Updating vertex position for even vertices
+		//qDebug() << "update position for event vertices";
 		for(auto vert:SDVertices)
 		{
 			if(vert->isBoundary() == true)
 			{
 				//Only two points are involved
-				vert->child()->setPoint(weightBoundary(vert, 1.f/8.f));
+				Point3Df p = weightBoundary(vert, 1.f / 8.f);
+				vert->child()->setPoint(p);
+				//qDebug() <<"Boundary:"<< p;
 			}
 			else {
 				if(vert->isRegular() == true)
 				{
-					//A desired and common case
+					//A desired and common caseweightBoundary(vert, 1.f/8.f)
+					Point3Df p = weightOneRing(vert, 1.f / 16.f);
 					vert->child()->setPoint(weightOneRing(vert, 1.f / 16.f));
+					//qDebug() << p;
 					
 				}else
 				{
+					Point3Df p = weightOneRing(vert, beta(vert->valence()));
 					vert->child()->setPoint(weightOneRing(vert, beta(vert->valence())));
+					//qDebug() << p<< beta(vert->valence());
 				}
 			}
 		}
 		//Compute the positions of the odd vertices
+		//qDebug() << "Compute the Position of the odd vertices:";
 		std::map<SDEdge, SDVertex *> edgeVerts;// Value SDVertex * is the generated vertex on edge
 		for(auto face:SDFaces)
 		{
@@ -204,7 +254,13 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 
 				}else
 				{
+#ifndef MEMORY_ARENA
+					std::unique_ptr<SDVertex> vptr(new SDVertex);
+					newVertOnEdge = vptr.get();
+					newVerticesContainers.push_back(std::move(vptr));
+#else
 					newVertOnEdge = arena.Alloc<SDVertex>();
+#endif
 					newVertices.push_back(newVertOnEdge);
 
 					/*Why: the number of adjacent vertices of the 
@@ -218,17 +274,21 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 					if(newVertOnEdge->isBoundary() == true)
 					{
 						//two vertices are involved
-						newVertOnEdge->setPoint(0.5f*e.v0()->point()+
-							0.5f*e.v1()->point());
+						
+						Point3Df p = 0.5f*e.v0()->point() +
+							0.5f*e.v1()->point();
+						newVertOnEdge->setPoint(p);
+						//qDebug() <<"Boundary:"<< p;
 	
 					}else
 					{
-						newVertOnEdge->setPoint(
-							3.f / 8.f *e.v0()->point() +
-							3.f / 8.f*e.v1()->point() +
-							face->otherVertex(e.v0(), e.v1())->point() +
-							face->f[i]->otherVertex(e.v0(), e.v1())->point()
-						);
+						Point3Df p = (3.f / 8.f)*e.v0()->point() +
+							(3.f / 8.f)*e.v1()->point() +
+							(1.f/8.f)*face->otherVertex(e.v0(), e.v1())->point() +
+							(1.f/8.f)*face->f[i]->otherVertex(e.v0(), e.v1())->point();
+						newVertOnEdge->setPoint(p);
+						//qDebug() <<"Interior"<< p;
+						
 					}
 
 					edgeVerts[e] = newVertOnEdge;
@@ -281,9 +341,15 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 
 		SDVertices = newVertices;
 		SDFaces = newFaces;
+#ifndef MEMORY_ARENA
+		facesContainers = std::move(newFacesContainers);
+		verticesContainers = std::move(newVerticesContainers);
+#endif
+
 
 	}
 
+	//Transform vertices to triangles and create normal vectors
 	QVector<QVector3D> v,n;
 	for(auto face :SDFaces)
 	{
@@ -308,213 +374,67 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 
 void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 {
-	onTestButton(value);
-}
-
-void LoopSubdivisionSurfaceDemo::onTestButton(int level)
-{
-	std::vector<Point3Df> vertices =
+	auto indices = m_model->getFaceIndices();
+	auto vertices = m_model->getVertices();
+	std::vector<int> idxs;
+	for (auto & v : indices)
 	{
-	{ -0.5f, -0.5f, -0.5f },
-	{ 0.5f, -0.5f, -0.5f },
-	{ 0.5f,  0.5f, -0.5f },
-	{ 0.5f,  0.5f, -0.5f } ,
-	{ -0.5f,  0.5f, -0.5f } ,
-	{ -0.5f, -0.5f, -0.5f } ,
+		for (auto i : v)
+		{
+			idxs.push_back(i);
+		}
+	}
 
-	{ -0.5f, -0.5f,  0.5f },
-	{ 0.5f, -0.5f,  0.5f },
-	{ 0.5f,  0.5f,  0.5f },
-	{ 0.5f,  0.5f,  0.5f },
-	{ -0.5f,  0.5f,  0.5f },
-	{ -0.5f, -0.5f,  0.5f },
-
-	{ -0.5f,  0.5f,  0.5f },
-	{ -0.5f,  0.5f, -0.5f },
-	{ -0.5f, -0.5f, -0.5f },
-	{ -0.5f, -0.5f, -0.5f },
-	{ -0.5f, -0.5f,  0.5f },
-	{ -0.5f,  0.5f,  0.5f },
-	{ 0.5f,  0.5f,  0.5f },
-	{ 0.5f,  0.5f, -0.5f },
-	{ 0.5f, -0.5f, -0.5f } ,
-	{ 0.5f, -0.5f, -0.5f } ,
-	{ 0.5f, -0.5f,  0.5f } ,
-	{ 0.5f,  0.5f,  0.5f } ,
-	{ -0.5f, -0.5f, -0.5f },
-	{ 0.5f, -0.5f, -0.5f },
-	{ 0.5f, -0.5f,  0.5f },
-	{ 0.5f, -0.5f,  0.5f } ,
-	{ -0.5f, -0.5f,  0.5f } ,
-	{ -0.5f, -0.5f, -0.5f }  ,
-
-	{ -0.5f,  0.5f, -0.5f }  ,
-	{ 0.5f,  0.5f, -0.5f }  ,
-	{ 0.5f,  0.5f,  0.5f }  ,
-	{ 0.5f,  0.5f,  0.5f } ,
-	{ -0.5f,  0.5f,  0.5f } ,
-	{ -0.5f,  0.5f, -0.5f }  ,
-	};
-
-	QVector<QVector3D> a =
+	std::vector<Point3Df> vert;
+	for (auto & v : vertices)
 	{
-		{ -0.5f, -0.5f, -0.5f },
-	{ 0.5f, -0.5f, -0.5f },
-	{ 0.5f,  0.5f, -0.5f },
-	{ 0.5f,  0.5f, -0.5f } ,
-	{ -0.5f,  0.5f, -0.5f } ,
-	{ -0.5f, -0.5f, -0.5f } ,
+		vert.push_back({ std::get<0>(v),std::get<1>(v),std::get<2>(v) });
+	}
+	auto star = std::chrono::system_clock::now();
 
-	{ -0.5f, -0.5f,  0.5f },
-	{ 0.5f, -0.5f,  0.5f },
-	{ 0.5f,  0.5f,  0.5f },
-	{ 0.5f,  0.5f,  0.5f },
-	{ -0.5f,  0.5f,  0.5f },
-	{ -0.5f, -0.5f,  0.5f },
+	auto res = LoopSubdivision(idxs, vert, value);
 
-	{ -0.5f,  0.5f,  0.5f },
-	{ -0.5f,  0.5f, -0.5f },
-	{ -0.5f, -0.5f, -0.5f },
-	{ -0.5f, -0.5f, -0.5f },
-	{ -0.5f, -0.5f,  0.5f },
-	{ -0.5f,  0.5f,  0.5f },
-	{ 0.5f,  0.5f,  0.5f },
-	{ 0.5f,  0.5f, -0.5f },
-	{ 0.5f, -0.5f, -0.5f } ,
-	{ 0.5f, -0.5f, -0.5f } ,
-	{ 0.5f, -0.5f,  0.5f } ,
-	{ 0.5f,  0.5f,  0.5f } ,
-	{ -0.5f, -0.5f, -0.5f },
-	{ 0.5f, -0.5f, -0.5f },
-	{ 0.5f, -0.5f,  0.5f },
-	{ 0.5f, -0.5f,  0.5f } ,
-	{ -0.5f, -0.5f,  0.5f } ,
-	{ -0.5f, -0.5f, -0.5f }  ,
-
-	{ -0.5f,  0.5f, -0.5f }  ,
-	{ 0.5f,  0.5f, -0.5f }  ,
-	{ 0.5f,  0.5f,  0.5f }  ,
-	{ 0.5f,  0.5f,  0.5f } ,
-	{ -0.5f,  0.5f,  0.5f } ,
-	{ -0.5f,  0.5f, -0.5f }  ,
-	};
-	QVector<QVector3D> b = {
-		{ 0.0f,  0.0f, -1.0f },
-	{ 0.0f,  0.0f, -1.0f },
-	{ 0.0f,  0.0f, -1.0f },
-	{ 0.0f,  0.0f, -1.0f },
-	{ 0.0f,  0.0f, -1.0f },
-	{ 0.0f,  0.0f, -1.0f },
-
-	{ 0.0f,  0.0f,  1.0f },
-	{ 0.0f,  0.0f,  1.0f },
-	{ 0.0f,  0.0f,  1.0f },
-	{ 0.0f,  0.0f,  1.0f },
-	{ 0.0f,  0.0f,  1.0f },
-	{ 0.0f,  0.0f,  1.0f },
-
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-
-	{ 1.0f,  0.0f,  0.0f },
-	{ 1.0f,  0.0f,  0.0f },
-	{ 1.0f,  0.0f,  0.0f },
-	{ 1.0f,  0.0f,  0.0f },
-	{ 1.0f,  0.0f,  0.0f },
-	{ 1.0f,  0.0f,  0.0f },
-
-	{ 0.0f, -1.0f,  0.0f },
-	{ 0.0f, -1.0f,  0.0f },
-	{ 0.0f, -1.0f,  0.0f },
-	{ 0.0f, -1.0f,  0.0f },
-	{ 0.0f, -1.0f,  0.0f },
-	{ 0.0f, -1.0f,  0.0f },
-
-	{ 0.0f,  1.0f,  0.0f },
-	{ 0.0f,  1.0f,  0.0f },
-	{ 0.0f,  1.0f,  0.0f },
-	{ 0.0f,  1.0f,  0.0f },
-	{ 0.0f,  1.0f,  0.0f },
-	{ 0.0f,  1.0f,  0.0f }
-	};
-
-
-	// tetrahedron
-	std::vector<Point3Df> c1 = {
-	{0.f,0.f,0.f},
-	{0.5f,0.f,0.0f},
-	{0.f,0.f,-0.5f},
-	{0.f,0.5f,0.0f}
-	};
-	std::vector<int> i1 = {0,1,3,1,0,2,2,3,1,3,2,0};
-
-
-	//triangle
-	std::vector<Point3Df> c = {
-		{-.5f,.0f,.0f},
-	{0.5f,.0f,0.0f},
-	{0.0f,0.866f,0.0f}
-	};
-	std::vector<int> i = {0,1,2};
-
-	//two triangle
-
-	std::vector<Point3Df> c2 = {
-		{0.0f,0.0f,0.0f},
-	{1.f,0.f,0.f},
-	{0.f,1.0f,0.f},
-	{0.0f,0.0f,-1.0f}
-	};
-	std::vector<int> i2 = {0,1,2,3,0,2};
-
-
-	std::vector<Point3Df> c3 = {
-		{0.f,0.f,0.f},
-	{1.f,1.f,0.f},
-	{0.f,2.f,0.f},
-	{-1.f ,1.f,0.f}
-	};
-	std::vector<int> i3 = {0,1,2,0,2,3};
-
-	
-	std::vector<Point3Df> c4 = {
-		{ 0.f,0.f,0.f },
-	{ 1.f,1.f,0.f },
-	{ 0.f,2.f,0.f }
-	
-	};
-	std::vector<int> i4 = { 0,1,2 };
-
-	auto res = LoopSubdivision(i4,c4,level);
-	qDebug() << res.first.size();
-	OpenGLWidget * widget = dynamic_cast<OpenGLWidget*>(displayWidget());
-	if(widget != nullptr)
+	auto end = std::chrono::system_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - star);
+	OpenGLWidget * widget = static_cast<OpenGLWidget*>(displayWidget());
+	if (widget != nullptr)
 	{
-		widget->updateModel(res.first,res.second);
+		widget->updateModel(res.first, res.second);
+
+		QString resInfo;
+		resInfo += "There is " + QString::number(res.first.size()) + " face(s) in total.\n";
+		int sec = (duration.count())*std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
+		resInfo += "Time Cost:" + QString::number(sec) + " s.";
+		m_textEdit->setText(resInfo);
 	}
 }
 
+//QVector<QVector3D> toLine(const QVector<QVector3D> & triangles)
+//{
+//	QVector<QVector3D> res;
+//	assert(triangles.size()%3 == 0);
+//	for(int i=0;i<triangles.size();i+=3)
+//	{
+//		res.push_back(triangles[i]);
+//		res.push_back(triangles[i+1]);
+//		res.push_back(triangles[i+1]);
+//		res.push_back(triangles[i+2]);
+//		res.push_back(triangles[i+2]);
+//		res.push_back(triangles[i]);
+//	}
+//	return res;
+//}
 void LoopSubdivisionSurfaceDemo::onOpenFile()
 {
 	QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj (*.obj)"));
 	if (fileName.isEmpty() == true)
 		return;
+	m_fileNamesLineEdit->setText(fileName);
 	m_model.reset(new Model(fileName.toStdString()));
-	if(m_model->isLoaded() == false)
+	if (m_model->isLoaded() == false)
 	{
 		QMessageBox::critical(this, QString("Error"), QString(".obj file can not be loaded"), QMessageBox::Ok, QMessageBox::Ok);
 	}
-
-
-
+	m_slider->setEnabled(true);
+	onRecursionsCountChanged(0);
 }
-
-//void LoopSubdivisionSurfaceDemo::onOpenFile()
-//{
-//
-//}
-//

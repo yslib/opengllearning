@@ -16,6 +16,7 @@ class QLabel;
 class QLineEdit;
 class QSlider;
 class Model;
+class QTextEdit;
 class LoopSubdivisionSurfaceDemo:public BaseDemoWidget
 {
 	Q_OBJECT
@@ -28,15 +29,13 @@ private:
 	OpenGLWidget * m_displayWidget;
 	QLabel * m_sliderLabel;
 	QSlider * m_slider;
-
+	QTextEdit * m_textEdit;
 	QScopedPointer<Model> m_model;
-
 private:
 	QPair<QVector<QVector3D>,QVector<QVector3D>> LoopSubdivision(const std::vector<int> & vertexIndices,const std::vector<Point3Df> & vertices,int LEVEL = 3);
 private slots:
 	void onOpenFile();
 	void onRecursionsCountChanged(int value);
-	void onTestButton(int level);
 };
 
 #endif // LOOPSUBDIVISIONSURFACEDEMO_H
