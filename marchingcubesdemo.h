@@ -18,6 +18,7 @@ class QComboBox;
 class QLineEdit;
 class QGroupBox;
 class OpenGLWidget;
+class QTextEdit;
 
 class MarchingCubesDemo:public BaseDemoWidget
 {
@@ -37,6 +38,8 @@ private:
 	QVector<QVector3D> m_gradient;
 
     QPushButton * m_testButton;
+
+    QTextEdit * m_textEdit;
 
     int m_dataWidth;
     int m_dataHeight;

@@ -13,7 +13,7 @@
 #include <QMessageBox>
 #include <QTextEdit>
 #include <chrono>
-#define MEMORY_ARENA
+//#define MEMORY_ARENA
 
 QDebug operator<<(QDebug d,const Point3Df &f)
 {
@@ -63,7 +63,15 @@ LoopSubdivisionSurfaceDemo::LoopSubdivisionSurfaceDemo(QWidget * parent /*= null
 
 	//create display widget
 	m_displayWidget = new OpenGLWidget(this);
-	m_displayWidget->setAnimation(true);
+//    QSurfaceFormat fmt;
+//    fmt.setDepthBufferSize(24);
+//    fmt.setStencilBufferSize(8);
+//    fmt.setVersion(3, 3);
+//    fmt.setProfile(QSurfaceFormat::CoreProfile);
+//    QSurfaceFormat::setDefaultFormat(fmt);
+//    m_displayWidget->setFormat(fmt);
+
+    m_displayWidget->setAnimation(true);
 	setDisplayWidget(m_displayWidget);
 
 	//signals and slots
@@ -402,9 +410,9 @@ void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 		widget->updateModel(res.first, res.second);
 
 		QString resInfo;
-		resInfo += "There is " + QString::number(res.first.size()) + " face(s) in total.\n";
+        resInfo += QString::number(res.first.size()) + " face(s) in total.\n";
 		int sec = (duration.count())*std::chrono::microseconds::period::num / std::chrono::microseconds::period::den;
-		resInfo += "Time Cost:" + QString::number(sec) + " s.";
+        resInfo += "Time Cost: " + QString::number(sec) + " s.";
 		m_textEdit->setText(resInfo);
 	}
 }

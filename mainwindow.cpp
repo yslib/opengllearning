@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	//set main window size
 	setMinimumSize(1000,700);
+    setWindowTitle(QString("Geometry Modeling"));
 
 	m_stackedWidget = new QStackedWidget;
 

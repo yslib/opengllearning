@@ -10,7 +10,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QFileInfo>
-
+#include <QTextEdit>
 
 constexpr int MarchingCubesDemo::m_triangleTable[256][16];
 constexpr int MarchingCubesDemo::m_edgeToVertex[12][6];
@@ -56,8 +56,17 @@ m_dataHeight(0), m_dataWidth(0)
 	m_mcISOValueSlider->setMinimum(0);
 	m_mcISOValueSlider->setMaximum(255);
 	m_mcISOValueSlider->setEnabled(false);
+
+    m_textEdit = new QTextEdit;
+    m_textEdit->setReadOnly(true);
+    controlWidgetLayout->addWidget(m_textEdit,2,0,1,3);
+
 	controlWidgetLayout->addWidget(m_mcISOValueLabel, 1, 0);
 	controlWidgetLayout->addWidget(m_mcISOValueSlider, 1, 1, 1, 2);
+
+
+
+
 	//Connect signals and slots
 	connect(m_mcOpenFileButton, SIGNAL(clicked()), this, SLOT(onOpenFile()));
 	connect(m_mcISOValueSlider, SIGNAL(valueChanged(int)), this, SLOT(onISOValueChanged(int)));
@@ -264,7 +273,7 @@ void MarchingCubesDemo::onOpenFile()
 	//Calculating gradient for normal vectors
 	calculateGradient();
 
-	m_mcFileNameLabel->setText(path);
+    m_mcFileNameLineEdit->setText(path);
 
 	//onISOValueChanged(128);
 	m_mcISOValueSlider->setSliderPosition(128);
@@ -276,8 +285,10 @@ void MarchingCubesDemo::onISOValueChanged(int value)
 	if (widget != nullptr) {
 		QPair<QVector<QVector3D>, QVector<QVector3D>> res = MarcingCubes(value);
 		 widget->updateModel(res.first,res.second);
-	}
-
+         QString info;
+         info+=QString::number(res.first.size())+" triangle(s) in totol.";
+         m_textEdit->setText(info);
+         }
 }
 
 void MarchingCubesDemo::onTestChanged()

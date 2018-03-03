@@ -14,12 +14,15 @@ typedef float Float;
 #include <cassert>
 #include <list>
 #include <QDebug>
+
+
+#include <memory>
 template<typename T>
 class Vector3D {
 	T m_x, m_y, m_z;
 public:
 	Vector3D(const T &x = T(),const T &y = T(),const T& z= T()):m_x(x),m_y(y),m_z(z) {}
-	Vector3D(const Vector3D<T> & v) :m_x(T(p.m_x)), m_y(T(p.m_y)), m_z(T(p.m_z)) {}
+    Vector3D(const Vector3D<T> & v) :m_x(T(v.m_x)), m_y(T(v.m_y)), m_z(T(v.m_z)) {}
 	Vector3D<T> operator+(const Vector3D<T> & v)const {
 		return Vector3D<T>(m_x + v.m_x, m_y + v.m_y, m_z + v.m_z);
 	}

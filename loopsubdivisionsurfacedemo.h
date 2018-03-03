@@ -9,6 +9,7 @@
 #include <QVector>
 #include <QVector3D>
 #include <QPair>
+#include "model.h"
 
 
 class QPushButton;

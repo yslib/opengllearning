@@ -19,14 +19,14 @@ OpenGLWidget::OpenGLWidget(QWidget *parent) :
 	m_up(QVector3D(0, 1, 0)),
 	m_lightPos(QVector3D(0, 10, 0)),
 	m_lightColor(QVector3D(1.0f, 1.0f, 1.0f)),
-	m_objectColor(QVector3D(1.0f, 0.5f, 0.31f)),
+    m_objectColor(QVector3D(.7f, 0.8f, 0.7f)),
 	m_verticalAngle(45.f) {
 	QSurfaceFormat fmt;
 	fmt.setDepthBufferSize(24);
 	fmt.setStencilBufferSize(8);
 	fmt.setVersion(3, 3);
 	fmt.setProfile(QSurfaceFormat::CoreProfile);
-	QSurfaceFormat::setDefaultFormat(fmt);
+    QSurfaceFormat::setDefaultFormat(fmt);
 	setFormat(fmt);
 	setFocusPolicy(Qt::StrongFocus);
 	m_modelUpdated = false;
@@ -65,9 +65,9 @@ void OpenGLWidget::initializeGL()
 	//Initialized program shader
 	m_vshader = new QOpenGLShader(QOpenGLShader::Vertex);
 	
-	m_vshader->compileSourceFile("C:\\Users\\ysl\\Code\\opengllearning\\phongshadingvertexshader.glsl");
+    m_vshader->compileSourceFile("/Users/Ysl/Code/opengllearning/phongshadingvertexshader.glsl");
 	m_fshader = new QOpenGLShader(QOpenGLShader::Fragment);
-	m_fshader->compileSourceFile("C:\\Users\\ysl\\Code\\opengllearning\\phongshadingfragmentshader.glsl");
+    m_fshader->compileSourceFile("/Users/Ysl/Code/opengllearning/phongshadingfragmentshader.glsl");
 	m_program = new QOpenGLShaderProgram();
 	m_program->addShader(m_vshader);
 	m_program->addShader(m_fshader);
