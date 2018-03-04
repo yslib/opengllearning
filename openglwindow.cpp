@@ -65,9 +65,9 @@ void OpenGLWidget::initializeGL()
 	//Initialized program shader
 	m_vshader = new QOpenGLShader(QOpenGLShader::Vertex);
 	
-    m_vshader->compileSourceFile("/Users/Ysl/Code/opengllearning/phongshadingvertexshader.glsl");
+    m_vshader->compileSourceFile(":new/shaders/phongshadingvertexshader.glsl");
 	m_fshader = new QOpenGLShader(QOpenGLShader::Fragment);
-    m_fshader->compileSourceFile("/Users/Ysl/Code/opengllearning/phongshadingfragmentshader.glsl");
+    m_fshader->compileSourceFile(":new/shaders/phongshadingfragmentshader.glsl");
 	m_program = new QOpenGLShaderProgram();
 	m_program->addShader(m_vshader);
 	m_program->addShader(m_fshader);

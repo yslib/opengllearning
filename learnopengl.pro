@@ -52,3 +52,6 @@ FORMS += \
 DISTFILES += \
     phongshadingvertexshader.glsl \
     phongshadingfragmentshader.glsl
+
+RESOURCES += \
+    resources.qrc

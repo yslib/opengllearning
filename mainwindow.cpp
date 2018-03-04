@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 	//create menu
-	m_modeMenu = menuBar()->addMenu(tr("mode"));
+    m_modeMenu = menuBar()->addMenu(tr("Mode"));
 	m_marchingCubesDemoAction = m_modeMenu->addAction(tr("MarchingCubes"));
 	m_loopSubdivisionDemoAction = m_modeMenu->addAction(tr("LoopSubdivision"));
 

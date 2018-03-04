@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/new/shaders">
+        <file>phongshadingfragmentshader.glsl</file>
+        <file>phongshadingvertexshader.glsl</file>
+    </qresource>
+</RCC>
