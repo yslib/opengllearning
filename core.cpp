@@ -1,14 +1,14 @@
 #include "core.h"
 
  //Memory Allocation Functions
-void *AllocAligned(size_t size) {
-    return malloc(size);
-}
+//void *AllocAligned(size_t size) {
+//    return malloc(size);
+//}
 
-void FreeAligned(void *ptr) {
-	if (!ptr) return;
-    free(ptr);
-}
+//void FreeAligned(void *ptr) {
+//	if (!ptr) return;
+//    free(ptr);
+//}
 
 
 Point3Df weightOneRing(SDVertex * vert, Float beta)

@@ -14,26 +14,118 @@ typedef float Float;
 #include <cassert>
 #include <list>
 #include <QDebug>
-
-
 #include <memory>
+
+
+/*
+ * Vector2D
+*/
+
+
+template<typename T>
+class Vector2D{
+private:
+    T m_x;
+    T m_y;
+public:
+    explicit Vector2D(const T & x = T(),const T & y = T()):m_x(x),m_y(y){}
+    explicit Vector2D(const Vector2D<T> & v):m_x(v.m_x),m_y(v.m_y){}
+    Vector2D<T> operator+(const Vector2D<T> & v){
+        return Vector2D<T>(m_x+v.m_x,m_y+v.m_y);
+    }
+    Vector2D<T> & operator+=(const Vector2D<T> & v){
+        m_x += v.m_x;
+        m_y += v.m_y;
+        return *this;
+    }
+    Vector2D<T> operator-(const Vector2D<T> & v){
+        return Vector2D<T>(m_x-v.m_x,m_y-v.m_y);
+    }
+    Vector2D<T> & operator-=(const Vector2D<T> & v){
+        m_x -= v.m_x;
+        m_y -= v.m_y;
+        return *this;
+    }
+    Vector2D<T> operator*(const T & s){
+        return Vector2D<T>(s*m_x,s*m_y);
+    }
+    Vector2D<T> & operator*=(const T & s){
+        m_x*=s;
+        m_y*=s;
+        return *this;
+    }
+    Vector2D<T> operator -(){
+        return Vector2D<T>(-m_x,-m_y);
+    }
+
+    template<typename X> friend class Point2D; //Vector2D can be accessed by all instances of Point2D
+};
+
+
+/*
+ * Point2D
+*/
+template<typename T>
+class Point2D{
+private:
+    T m_x;
+    T m_y;
+public:
+    explicit Point2D(const T & x = T(),const T & y = T()):m_x(x),m_y(y){}
+    explicit Point2D(const Point2D<T> & v):m_x(v.m_x),m_y(v.m_y){}
+    Point2D<T> operator+(const Vector2D<T> & v){
+        return Point2D<T>(m_x+v.m_x,m_y+v.m_y);
+    }
+    Point2D<T> operator +(const Point2D<T> & p){
+        return Point2D<T>(m_x+p.m_x,m_y+p.m_y);
+    }
+
+    Point2D<T> & operator+=(const Vector2D<T> & v){
+        m_x += v.m_x;
+        m_y += v.m_y;
+        return *this;
+    }
+
+    Point2D<T> operator-(const Vector2D<T> & v){
+        return Point2D<T>(m_x-v.m_x,m_y-v.m_y);
+    }
+    Point2D<T> & operator-=(const Vector2D<T> & v){
+        m_x -= v.m_x;
+        m_y -= v.m_y;
+        return *this;
+    }
+    Point2D<T> operator*(const T & s){
+        return Point2D<T>(s*m_x,s*m_y);
+    }
+    Point2D<T> & operator*=(const T & s){
+        m_x*=s;
+        m_y*=s;
+        return *this;
+    }
+    Point2D<T> operator -(){
+        return Point2D<T>(-m_x,-m_y);
+    }
+};
+
+
+/*
+ * Vector3D
+*/
 template<typename T>
 class Vector3D {
-	T m_x, m_y, m_z;
+    T m_x, m_y, m_z;
 public:
-	Vector3D(const T &x = T(),const T &y = T(),const T& z= T()):m_x(x),m_y(y),m_z(z) {}
-    Vector3D(const Vector3D<T> & v) :m_x(T(v.m_x)), m_y(T(v.m_y)), m_z(T(v.m_z)) {}
-	Vector3D<T> operator+(const Vector3D<T> & v)const {
-		return Vector3D<T>(m_x + v.m_x, m_y + v.m_y, m_z + v.m_z);
-	}
-
+   explicit  Vector3D(const T &x = T(),const T &y = T(),const T& z= T()):m_x(x),m_y(y),m_z(z) {}
+    explicit Vector3D(const Vector3D<T> & v) :m_x(T(v.m_x)), m_y(T(v.m_y)), m_z(T(v.m_z)) {}
+    explicit Vector3D<T> operator+(const Vector3D<T> & v)const {
+        return Vector3D<T>(m_x + v.m_x, m_y + v.m_y, m_z + v.m_z);
+    }
 	Vector3D<T> & operator+=(const Vector3D<T> & v) {
 		m_x += v.m_x;
 		m_y += v.m_y;
 		m_z += v.m_z;
 		return *this;
 	}
-
 	Vector3D<T> operator*(T s)const {
 		return Vector3D<T>(s*m_x, s*m_y, s*m_z);
 	}
@@ -43,26 +135,23 @@ public:
 		m_z *= s;
 		return *this;
 	}
-
 	Vector3D<T> operator/(T f)const {
 		Float inv = static_cast<Float>(1) / f;
 		return Vector3D<T>(m_x*inv, m_y*inv, m_z*inv);
 	}
-
 	Vector3D<T> & operator/(T f) {
 		Float inv = static_cast<Float>(1) / f;
 		m_x *= inv; m_y *= inv; m_z *= inv;
 		return *this;
 	}
-
 	//unary operator
 	Vector3D<T> operator-()const {
 		return Vector3D<T>(-m_x, -m_y, -m_z);
 	}
 
-	T x()const { return m_x; }
-	T y()const { return m_y; }
-	T z()const { return m_z; }
+    const T x()const { return m_x; }
+    const T y()const { return m_y; }
+    const T z()const { return m_z; }
     void x(const T & x) { m_x =x; }
 	void y(const T & y) { m_y = y; }
 	void z(const T & z) { m_z = z; }
@@ -80,7 +169,9 @@ template<typename T> inline Vector3D<T> Abs(const Vector3D<T> & v) {
 	return Vector3D<T>(std::abs(v.x()), std::abs(v.y()), std::abs(v.z()));
 }
 
-
+/*
+ * Point3D
+*/
 
 template<typename T>
 class Point3D {
@@ -134,9 +225,9 @@ public:
 	}
 
 
-	T x()const { return m_x; }
-	T y()const { return m_y; }
-	T z()const { return m_z; }
+    const T x()const { return m_x; }
+    const T y()const { return m_y; }
+    const T z()const { return m_z; }
 	void x(const T & x) { m_x =x; }
 	void y(const T & y) { m_y = y; }
 	void z(const T & z) { m_z = z; }
@@ -154,12 +245,24 @@ typedef Point3D<int> Point3Di;
 typedef Point3D<Float> Point3Df;
 
 
+/*
+ * Ray
+*/
+
+class Ray{
+private:
+    Point3D<T> m_o;
+    Vector3D<T> m_d;
+public:
+
+};
+
+
+
+
+
 //Vertex for subdivision
 //Face for subdivision
-
-
-
-
 class SDFace;
 class SDVertex;
 class SDEdge;
@@ -404,103 +507,6 @@ inline Float beta(int valence)
 Point3Df weightOneRing(SDVertex * vert, Float beta);
 Point3Df weightBoundary(SDVertex * vert, Float beta);
 
-//////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////
-//Memory.h
-#define ARENA_ALLOC(arena, Type) new ((arena).Alloc(sizeof(Type))) Type
-void *AllocAligned(size_t size);
-template <typename T>
-T *AllocAligned(size_t count) {
-	return (T *)AllocAligned(count * sizeof(T));
-}
-
-void FreeAligned(void *);
-class
-#ifdef PBRT_HAVE_ALIGNAS
-	alignas(PBRT_L1_CACHE_LINE_SIZE)
-#endif // PBRT_HAVE_ALIGNAS
-	MemoryArena {
-public:
-	// MemoryArena Public Methods
-	MemoryArena(size_t blockSize = 262144) : blockSize(blockSize) {}
-	~MemoryArena() {
-		FreeAligned(currentBlock);
-		for (auto &block : usedBlocks) FreeAligned(block.second);
-		for (auto &block : availableBlocks) FreeAligned(block.second);
-	}
-	void *Alloc(size_t nBytes) {
-		// Round up _nBytes_ to minimum machine alignment
-#if __GNUC__ == 4 && __GNUC_MINOR__ < 9
-		// gcc bug: max_align_t wasn't in std:: until 4.9.0
-		const int align = alignof(::max_align_t);
-#elif !defined(PBRT_HAVE_ALIGNOF)
-		const int align = 16;
-#else
-		const int align = alignof(std::max_align_t);
-#endif
-#ifdef PBRT_HAVE_CONSTEXPR
-		static_assert(IsPowerOf2(align), "Minimum alignment not a power of two");
-#endif
-		nBytes = (nBytes + align - 1) & ~(align - 1);
-		if (currentBlockPos + nBytes > currentAllocSize) {
-			// Add current block to _usedBlocks_ list
-			if (currentBlock) {
-				usedBlocks.push_back(
-					std::make_pair(currentAllocSize, currentBlock));
-				currentBlock = nullptr;
-				currentAllocSize = 0;
-			}
-
-			// Get new block of memory for _MemoryArena_
-
-			// Try to get memory block from _availableBlocks_
-			for (auto iter = availableBlocks.begin();
-				iter != availableBlocks.end(); ++iter) {
-				if (iter->first >= nBytes) {
-					currentAllocSize = iter->first;
-					currentBlock = iter->second;
-					availableBlocks.erase(iter);
-					break;
-				}
-			}
-			if (!currentBlock) {
-				currentAllocSize = std::max(nBytes, blockSize);
-				currentBlock = AllocAligned<uint8_t>(currentAllocSize);
-			}
-			currentBlockPos = 0;
-		}
-		void *ret = currentBlock + currentBlockPos;
-		currentBlockPos += nBytes;
-		return ret;
-	}
-	template <typename T>
-	T *Alloc(size_t n = 1, bool runConstructor = true) {
-		T *ret = (T *)Alloc(n * sizeof(T));
-		if (runConstructor)
-			for (size_t i = 0; i < n; ++i) new (&ret[i]) T();
-		return ret;
-	}
-	void Reset() {
-		currentBlockPos = 0;
-		availableBlocks.splice(availableBlocks.begin(), usedBlocks);
-	}
-	size_t TotalAllocated() const {
-		size_t total = currentAllocSize;
-		for (const auto &alloc : usedBlocks) total += alloc.first;
-		for (const auto &alloc : availableBlocks) total += alloc.first;
-		return total;
-	}
-
-private:
-	MemoryArena(const MemoryArena &) = delete;
-	MemoryArena &operator=(const MemoryArena &) = delete;
-	// MemoryArena Private Data
-	const size_t blockSize;
-	size_t currentBlockPos = 0, currentAllocSize = 0;
-	uint8_t *currentBlock = nullptr;
-	std::list<std::pair<size_t, uint8_t *>> usedBlocks, availableBlocks;
-};
 
 
 
