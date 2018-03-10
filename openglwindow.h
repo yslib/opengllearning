@@ -8,12 +8,17 @@
 #include <QVector3D>
 #include <qmath.h>
 
+#include "core.h"
+
+
+
+
 
 class AbstractCamera {
 public:
-	AbstractCamera();
-	virtual QMatrix4x4 getViewMatrix()const = 0;
-	virtual QVector3D getPosition()const = 0;
+	virtual const Trans3DMat & getViewMat()const = 0;
+	virtual const QVector3D & getPosition()const = 0;
+        virtual const Trans3DMat & getPerspectiveMat()const = 0;
 private:
 
 };
@@ -53,7 +58,6 @@ public:
 	float MovementSpeed;
 	float MouseSensitivity;
 	float Zoom;
-
 	// Constructor with vectors
 	Camera(QVector3D position = QVector3D(0.0f, 0.0f, 0.0f), QVector3D up = QVector3D(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(Position), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
@@ -74,15 +78,13 @@ public:
 	}
 
 	// Returns the view matrix calculated using Euler Angles and the LookAt Matrix
-	QMatrix4x4 GetViewMatrix()
+	Trans3DMat view()
 	{
-		QMatrix4x4 view;
+		Trans3DMat view;
 		view.setToIdentity();
 		view.lookAt(Position, Position + Front, Up);
 		return view;
 	}
-
-	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 	void ProcessKeyboard(CameraMovement direction, float deltaTime)
 	{
 		float velocity = MovementSpeed * deltaTime;
@@ -95,8 +97,6 @@ public:
 		if (direction == CameraMovement::Right)
 			Position += Right * velocity;
 	}
-
-	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
 	void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
 	{
 		xoffset *= MouseSensitivity;
@@ -117,8 +117,6 @@ public:
 		// Update Front, Right and Up Vectors using the updated Euler angles
 		updateCameraVectors();
 	}
-
-	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 	void ProcessMouseScroll(float yoffset)
 	{
 		if (Zoom >= 1.0f && Zoom <= 45.0f)
@@ -128,9 +126,7 @@ public:
 		if (Zoom >= 45.0f)
 			Zoom = 45.0f;
 	}
-
 private:
-	// Calculates the front vector from the Camera's (updated) Euler Angles
 	void updateCameraVectors()
 	{
 		// Calculate the new Front vector
@@ -154,9 +150,10 @@ class OpenGLWidget:public QOpenGLWidget,protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
-    OpenGLWidget(QWidget * parent = nullptr);
+    OpenGLWidget(const Camera & cam = Camera(),QWidget * parent = nullptr);
     void setAnimation(bool enable);
     void updateModel(const QVector<QVector3D> & vertices,const QVector<QVector3D> & normals);
+    Trans3DMat getPerspectiveMat()const;
     ~OpenGLWidget();
 protected:
     void initializeGL()override;
@@ -165,7 +162,7 @@ protected:
     void mousePressEvent(QMouseEvent *event)override;
     void mouseMoveEvent(QMouseEvent *event)override;
     void mouseReleaseEvent(QMouseEvent *event)override;
-	void keyPressEvent(QKeyEvent *event)override;
+    void keyPressEvent(QKeyEvent *event)override;
     void wheelEvent(QWheelEvent *event)override;
 
 private:
@@ -180,16 +177,15 @@ private:
     QTimer* m_timer;
 
     //camera parameters
-	Camera m_camera;
-
+    Camera m_camera;
 
     QVector3D m_eye;
     QVector3D m_center;
     QVector3D m_up;
 
-	QVector3D m_lightPos;
-	QVector3D m_lightColor;
-	QVector3D m_objectColor;
+    QVector3D m_lightPos;
+    QVector3D m_lightColor;
+    QVector3D m_objectColor;
 
     float m_verticalAngle = 0;
 
@@ -201,9 +197,9 @@ private:
 
 
     //transform matrix
-    QMatrix4x4 m_projection;
-    QMatrix4x4 m_model;
-    QMatrix4x4 m_view;
+    Trans3DMat m_projection;
+    Trans3DMat m_model;
+    Trans3DMat m_view;
 
 
     int m_projectAttriLocation;
@@ -221,7 +217,7 @@ private:
 
     //model
     QVector<QVector3D> m_vertices;
-	QVector<QVector3D> m_normals;
+    QVector<QVector3D> m_normals;
 
 
     int m_attriPos;

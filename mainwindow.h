@@ -20,6 +20,7 @@ class QMenu;
 class QAction;
 class QMenuBar;
 class QStackedWidget;
+class PathTracingDemo;
 
 
 class OpenGLWidget;
@@ -34,16 +35,18 @@ public:
 private:
     QGridLayout * m_mainLayout;
     MarchingCubesDemo * m_mcDemo;
-	LoopSubdivisionSurfaceDemo * m_loopSubdivisionDemo;
-	QStackedWidget * m_stackedWidget;
-	QMenu * m_modeMenu;
-	QAction * m_marchingCubesDemoAction;
-	QAction * m_loopSubdivisionDemoAction;
-	QMenuBar * m_menuBar;
+    LoopSubdivisionSurfaceDemo * m_loopSubdivisionDemo;
+    PathTracingDemo * m_pathTracingDemo;
+    QStackedWidget * m_stackedWidget;
+    QMenu * m_modeMenu;
+    QAction * m_marchingCubesDemoAction;
+    QAction * m_loopSubdivisionDemoAction;
+    QAction * m_pathTracingDemoAction;
+    QMenuBar * m_menuBar;
 private:
     void setWidget(BaseDemoWidget * widget);
-	private slots:
-	void onMenuActions(QAction * action);
+    private slots:
+    void onMenuActions(QAction * action);
 };
 
 #endif // MAINWINDOW_H

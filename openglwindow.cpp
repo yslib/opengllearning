@@ -8,7 +8,7 @@
 #include <QVector3D>
 #include <QTimer>
 
-OpenGLWidget::OpenGLWidget(QWidget *parent) :
+OpenGLWidget::OpenGLWidget(const Camera & cam,QWidget *parent) :
 	QOpenGLWidget(parent),
 	m_vshader(0),
 	m_fshader(0),
@@ -20,7 +20,8 @@ OpenGLWidget::OpenGLWidget(QWidget *parent) :
 	m_lightPos(QVector3D(0, 10, 0)),
 	m_lightColor(QVector3D(1.0f, 1.0f, 1.0f)),
     m_objectColor(QVector3D(.7f, 0.8f, 0.7f)),
-	m_verticalAngle(45.f) {
+	m_verticalAngle(45.f),
+        m_camera(cam){
 	QSurfaceFormat fmt;
 	fmt.setDepthBufferSize(24);
 	fmt.setStencilBufferSize(8);
@@ -65,28 +66,14 @@ void OpenGLWidget::initializeGL()
 	//Initialized program shader
 	m_vshader = new QOpenGLShader(QOpenGLShader::Vertex);
 	
-    m_vshader->compileSourceFile(":new/shaders/phongshadingvertexshader.glsl");
+        m_vshader->compileSourceFile(":new/shaders/phongshadingvertexshader.glsl");
 	m_fshader = new QOpenGLShader(QOpenGLShader::Fragment);
-    m_fshader->compileSourceFile(":new/shaders/phongshadingfragmentshader.glsl");
+        m_fshader->compileSourceFile(":new/shaders/phongshadingfragmentshader.glsl");
 	m_program = new QOpenGLShaderProgram();
 	m_program->addShader(m_vshader);
 	m_program->addShader(m_fshader);
 	m_program->link();
 	m_program->bind();
-	//   m_modelAttriLocation = m_program->attributeLocation("model");
-	//   m_viewAttriLocation = m_program->attributeLocation("view");
-	//   m_projectAttriLocation = m_program->attributeLocation("projection");
-
-	//    m_vertices<<QVector3D(-0.5f,-0.5f,0.0f)
-	//           <<QVector3D(0.5f,-0.5f,0.0f)
-	//          <<QVector3D(0.0f,0.5f,0.0f)
-	//         <<QVector3D(-0.5f,0.5f,0.0f)
-	//        <<QVector3D(0.5f,0.5f,0.0f)
-	//       <<QVector3D(0.0f,-0.5f,0.0f);
-	//m_program->setUniformValue("light_pos", m_lightPos);
-	//m_program->setUniformValue("light_color", m_lightColor);
-	//m_program->setUniformValue("view_pos", m_eye);
-	//m_program->setUniformValue("object_color", m_objectColor);
 	//create VAO
 	m_vao.create();
 	m_vao.bind();
@@ -203,7 +190,7 @@ void OpenGLWidget::updateCameraVectors(int deltaX, int deltaY, int deltaWheel)
 	}
 
 	//rotatation
-	QMatrix4x4 rotate;
+	Trans3DMat rotate;
 	rotate.setToIdentity();
 	rotate.rotate(0.2*deltaX, QVector3D(0, 1, 0));
 	m_eye = m_eye * rotate;
@@ -233,31 +220,17 @@ void OpenGLWidget::paintModel()
 		m_program->bind();
 		{
 			m_vao.bind();
-	 	//	m_program->setUniformValue("projection_matrix", m_projection);
-			//m_program->setUniformValue("view_matrix", m_view);
-			//m_program->setUniformValue("model_matrix", m_model);
-			//m_program->setUniformValue("light_pos", m_eye);
-			//m_program->setUniformValue("light_color", m_lightColor);
-			//m_program->setUniformValue("view_pos", m_eye);
-			//m_program->setUniformValue("object_color", m_objectColor);
+	 
 
 			m_program->setUniformValue("projection_matrix",m_projection);
-			m_program->setUniformValue("view_matrix", m_camera.GetViewMatrix());
-            //qDebug() << m_camera.GetViewMatrix();
-            //qDebug() << m_view;
-			//m_program->setUniformValue("view_matrix", m_view);
+			m_program->setUniformValue("view_matrix", m_camera.view());
+       
 			m_program->setUniformValue("model_matrix", m_model);
 			m_program->setUniformValue("light_pos", m_camera.Position);
 			m_program->setUniformValue("light_color", m_lightColor);
 			m_program->setUniformValue("view_pos", m_camera.Position);
 			m_program->setUniformValue("object_color", m_objectColor);
-
-			//m_program->setUniformValue("projection", m_projection);
-			//m_program->setUniformValue("view", m_view);
-			//m_program->setUniformValue("model", m_model);
-
 			glDrawArrays(GL_TRIANGLES, 0, m_vertices.count());
-			
 			m_vao.release();
 		}
 		m_program->release();
@@ -302,4 +275,9 @@ void OpenGLWidget::updateModel(const QVector<QVector3D> &vertices,const QVector<
 	m_vbo.release();
 	m_vao.release();
 	doneCurrent();
+}
+
+Trans3DMat OpenGLWidget::getPerspectiveMat() const
+{
+    return m_projection;
 }

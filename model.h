@@ -9,6 +9,9 @@
 #include <sstream>
 #include <fstream>
 #include <cstdio>
+
+
+
 //  [12/23/2017 ysl]
 //---------------------------------
 //Only polygon is supportted in the ObjReader class
@@ -43,31 +46,18 @@ public:
     std::size_t getTextureCoordCount()const { return m_textures.size(); }
     std::size_t getFacesCount()const { return m_facesIndices.size(); }
 
-    const std::vector<Point3d<float>> & getVertices()const { return m_vertices; }
+    const std::vector<QVector3D> & getVertices()const { return m_vertices; }
     const std::vector<std::vector<int>> & getFaceIndices()const { return m_facesIndices; }
-    const std::vector<Vector3d<float>> & getNormals()const { return m_normals; }
-
-    void translateX(float x);
-    void translateY(float y);
-    void translateZ(float z);
-    void scaleX(float s);
-    void scaleY(float s);
-    void scaleZ(float s);
-
-    void translate(float x, float y, float z);
-    void scale(float sx, float sy, float sz);
-
-
+    const std::vector<QVector3D> & getNormals()const { return m_normals; }
     //std::size_t getNormalsCount()const { return m_normals.size(); }
 
-	const float * getVerticesFlatArray()const {  return &m_verticesFlatArray[0]; }
+    const float * getVerticesFlatArray()const { return &m_verticesFlatArray[0]; }
     //float * getNormalsSFlatArray()const { return m_normalsFlatArray; }
     //float * getTexturesFlayArray()const { return m_texturesFlatArray; }
-	const int * getFacesIndicesFlatArray()const { return &m_facesIndicesFlatArray[0]; }
+    const int * getFacesIndicesFlatArray()const { return &m_facesIndicesFlatArray[0]; }
     //int * getNormalsIndicesFlayArray()const { return m_normalsIndicesFlatArray; }
     //int * getTextureIndicesFlayArray()const { return m_textureIndicesFlatArray; }
     virtual ~Model();
-
 private:
     void _init();
 private:
@@ -79,9 +69,10 @@ private:
     void _toTextureIndicesFlayArray();
 
     bool m_loaded;
-    std::vector<std::tuple<float, float, float>> m_normals;
-    std::vector<std::tuple<float, float, float>> m_vertices;
-    std::vector<std::tuple<float, float>> m_textures;
+
+    std::vector<QVector3D> m_normals;
+    std::vector<QVector3D> m_vertices;
+    std::vector<QVector2D> m_textures;
     std::vector<std::vector<int>> m_facesIndices;
     std::vector<std::vector<int>> m_normalsIndices;
     std::vector<std::vector<int>> m_texturesIndices;
@@ -92,11 +83,11 @@ private:
     //int * m_normalsIndicesFlatArray;
     //int * m_textureIndicesFlatArray;
 
-	std::unique_ptr<float[]> m_verticesFlatArray;
-	std::unique_ptr<float[]> m_normalsFlatArray;
-	std::unique_ptr<float[]> m_texturesFlatArray;
-	std::unique_ptr<int[]> m_facesIndicesFlatArray;
-	std::unique_ptr<int[]> m_normalsIndicesFlatArray;
-	std::unique_ptr<int[]> m_textureIndicesFlatArray;
+    std::unique_ptr<Float[]> m_verticesFlatArray;
+    std::unique_ptr<Float[]> m_normalsFlatArray;
+    std::unique_ptr<Float[]> m_texturesFlatArray;
+    std::unique_ptr<int[]> m_facesIndicesFlatArray;
+    std::unique_ptr<int[]> m_normalsIndicesFlatArray;
+    std::unique_ptr<int[]> m_textureIndicesFlatArray;
 };
 #endif

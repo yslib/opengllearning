@@ -20,7 +20,7 @@ m_dataHeight(0), m_dataWidth(0)
 {
 	//main layout
 	m_layout = new QGridLayout(this);
-	OpenGLWidget* displayWidget = new OpenGLWidget(this);
+	OpenGLWidget* displayWidget = new OpenGLWidget(Camera(),this);
 
 
 	QSurfaceFormat fmt;
