@@ -5,14 +5,41 @@
 #include "openglwindow.h"
 #include <QVector3D>
 
+
+typedef QVector3D Point3f;
+
 class Ray
 {
-    QVector3D m_o;
-    QVector3D m_d;
-    float m_t;
+    Point3f m_o;
+    Point3f m_d;
+    Float m_t;
 public:
-    Ray(const QVector3D & d, const QVector3D & o, float t) :m_o(o), m_d(d), m_t(t) {}
+    Ray(const Point3f & d, const Point3f & o, Float t) :m_o(o), m_d(d), m_t(t) {}
     QVector3D operator()(float t) { return m_o + t * m_d; }
+    friend class AABB3;
+};
+
+/*
+ * Axis-aligned Bounding Box
+ */
+
+class AABB3
+{
+    Point3f m_min;
+    Point3f m_max;
+public:
+    AABB3(const Point3f & p0 = Point3f(),const Point3f & p1 = Point3f()):m_min(p0),m_max(p1){}
+    bool intersect(const Ray & ray, Float * t)
+    {
+        
+    }
+};
+
+class Shape
+{
+    AABB3 m_aabb;
+public:
+
 };
 
 

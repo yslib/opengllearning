@@ -257,6 +257,14 @@ typedef Point3D<Float> Point3Df;
 
 typedef QMatrix4x4 Trans3DMat;
 
+class Transform3DMatrix
+{
+public:
+
+private:
+    Float m_m[4][4];
+
+};
 
 
 
