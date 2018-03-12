@@ -62,7 +62,7 @@ LoopSubdivisionSurfaceDemo::LoopSubdivisionSurfaceDemo(QWidget * parent /*= null
 	setControlWidget(controlWidget);
 
 	//create display widget
-	m_displayWidget = new OpenGLWidget(this);
+	m_displayWidget = new OpenGLWidget(Camera(),this);
 //    QSurfaceFormat fmt;
 //    fmt.setDepthBufferSize(24);
 //    fmt.setStencilBufferSize(8);
@@ -396,7 +396,7 @@ void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 	std::vector<Point3Df> vert;
 	for (auto & v : vertices)
 	{
-		vert.push_back({ std::get<0>(v),std::get<1>(v),std::get<2>(v) });
+            vert.push_back({ v.x(),v.y(),v.z() });
 	}
 	auto star = std::chrono::system_clock::now();
 
@@ -434,7 +434,7 @@ void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 //}
 void LoopSubdivisionSurfaceDemo::onOpenFile()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj (*.obj)"));
+	QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj(*.obj)"));
 	if (fileName.isEmpty() == true)
 		return;
 	m_fileNamesLineEdit->setText(fileName);

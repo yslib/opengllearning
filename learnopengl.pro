@@ -33,7 +33,8 @@ SOURCES += \
     basedemowidget.cpp \
     test.cpp \
     loopsubdivisionsurfacedemo.cpp \
-    core.cpp
+    core.cpp \
+    PathTracingDemo.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -44,7 +45,8 @@ HEADERS += \
     basedemowidget.h \
     test.h \
     loopsubdivisionsurfacedemo.h \
-    core.h
+    core.h \
+    PathTracingDemo.h
 
 FORMS += \
         mainwindow.ui
