@@ -256,6 +256,9 @@ typedef Point3D<int> Point3Di;
 typedef Point3D<Float> Point3Df;
 
 typedef QMatrix4x4 Trans3DMat;
+typedef QVector3D Point3f;
+typedef QVector3D Vector3f;
+
 
 class Transform3DMatrix
 {
