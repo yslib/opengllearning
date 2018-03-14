@@ -7,6 +7,8 @@
 #include <cassert>
 
 #include <limits>
+#include <algorithm>
+#include <iterator>
 
 
 
@@ -140,6 +142,18 @@ public:
         if(hit1 != nullptr)*hit1 = t1;
         return true;
     }
+    Point3f center()const{
+        return (m_min+m_max)/2;
+    }
+    Vector3f diagnal()const
+    {
+        return m_max-m_min;
+    }
+    Float surfaceArea()const{
+        Vector3f d = diagnal();
+        Float area = (d[0]*d[1]+d[1]*d[2]+d[2]*d[0])*2;
+        return area;
+    }
     /*
      *Check whether a point is in the bound
      */
@@ -213,6 +227,9 @@ public:
                 std::max(m_max.z(), p.z())
             ));
     }
+
+
+    friend class BVHTreeAccelerator;
 };
 
 class Shape
@@ -221,7 +238,7 @@ public:
     
     virtual AABB bound()const = 0;
     virtual Float area()const = 0;
-    virtual bool intersect(const Ray & ray, Float * t)const = 0;
+    virtual bool intersect(const Ray & ray, Float * t)= 0;
 };
 
 class TriangleMesh {
@@ -293,69 +310,60 @@ public:
         return 0.5*Vector3f::dotProduct(v1, v2);
 
     }
-    bool intersect(const Ray & ray, Float * t)const override
+
+
+    bool intersect(const Ray & ray, Float * t)override
     {
         /*
-         * This intersection checking is based on a transformation
-         * that transforms the ray such that its origin is at (0,0,0)
-         * in the transformed coordinate system and such that its 
-         * direction is along the +z axis.
-         */
+         * This ray-triangle intersection algorithm is from
+         * "Fast, Minimum Storage Ray-Triangle Intersection"
+         * Tomas Moller & Ben Trumbore (1997) Fast, Minimum
+         * Storage Ray-Triangle Intersection, Journal of Graphics
+         * Tools, 2:1, 21-28, DOI: 10.1080/10867651.1997.10487468
+         *
+        */
+        const Point3f & p0 = m_sharedTriangles->m_vertices[m_vertexIndices[0]];
+        const Point3f & p1 = m_sharedTriangles->m_vertices[m_vertexIndices[1]];
+        const Point3f & p2 = m_sharedTriangles->m_vertices[m_vertexIndices[2]];
 
-        /*
-         * First, translate the triangle vertices to coordinate 
-         * whose original is the original of the ray
-         */
-        Point3f p0 = m_sharedTriangles->m_vertices[m_vertexIndices[0]] - ray.m_o;
-        Point3f p1 = m_sharedTriangles->m_vertices[m_vertexIndices[1]] - ray.m_o;
-        Point3f p2 = m_sharedTriangles->m_vertices[m_vertexIndices[2]] - ray.m_o;
+        const Point3f & D = ray.m_d;
+        Vector3f T;
+        Vector3f E1 = p1-p0;
+        Vector3f E2 = p2 - p0;
+        Vector3f P = Vector3f::crossProduct(D,E2);
 
-        /*
-         * Second, Find the maximum component of the direction of the ray,
-         * and let the axis be the new coordinate's +z-axis
-         */
-
-        int iz = findMaxVector3fComponent(absOfVector3f(ray.m_d));
-        int ix = (iz + 1) % 3;
-        int iy = (iz + 2) % 3;
-
-        Vector3f d = permuteVector3f(ray.m_d, ix, iy, iz);
-        p0 = permutePoint3f(p0, ix, iy, iz);
-        p1 = permutePoint3f(p1, ix, iy, iz);
-        p2 = permutePoint3f(p2, ix, iy, iz);
-
-        /*
-         * Finally, the length of the direction of the ray should 
-         * be unit length after transformation. So, a transformation 
-         * must be performed.
-         */
-        Float sx = -d.x() / d.z();
-        Float sy = -d.y() / d.z();
-        Float sz = 1.f / d.z();
-        p0.setX(sx*p0.z());
-        p0.setY(sy*p0.z());
-        p1.setX(sx*p1.z());
-        p1.setY(sy*p1.z());
-        p2.setX(sx*p2.z());
-        p2.setY(sy*p2.z());
-
-
-        Float e0 = p1.x()*p2.y() - p1.y()*p2.x();
-        Float e1 = p2.x()*p0.y() - p2.y()*p0.x();
-        Float e2 = p0.x()*p1.y() - p0.y()*p1.x();
-
-        /*
-         * the intersection point is not at the same side of all three edges 
-         */
-        if ((e0 > 0 || e1 > 0 || e2 > 0) && (e0 < 0 || e1 < 0 || e2 < 0))
-            return false;
-        Float det = e0 + e1 + e2;
-        if (det == 0)
+        Float det = Vector3f::dotProduct(P,E1);
+        if(det>0){
+            T = ray.m_o-p0;
+        }else{
+            T = p0-ray.m_o;
+            det =-det;
+        }
+        if(det < 0.0001)
             return false;
 
+        Float u,v;
+        u = Vector3f::dotProduct(P,T);
+        if(u<0.0||u>det){
+            //u > 1, invalid
+            return false;
+        }
+        Vector3f Q = Vector3f::crossProduct(T,E1);
+        v = Vector3f::dotProduct(Q,D);
+        if(v < 0.0||v>det){
+            // v > 1 ,invalid
+            return false;
+        }
 
+        if(t != nullptr)*t = Vector3f::dotProduct(E2,Q);
 
-
+        Float inv = 1.0f/det;
+        (*t)*=inv;
+        if(*t > ray.m_tMax)
+            return false;
+        u*=inv;
+        v*=inv;
+        return true;
     }
     static std::vector<std::shared_ptr<Shape>> 
     createTriangleMesh(const Point3f * vertices,int nVertex,
@@ -377,15 +385,145 @@ class Scene
     AABB m_worldBound;
     std::shared_ptr<Shape> m_shape;
 public:
+    Scene(std::shared_ptr<Shape> shape):m_shape(shape){}
     bool intersect(const Ray & ray, Float * t) {
 
     }
 };
-
 class BVHTreeAccelerator:public Shape
 {
-    
+    class BVHNode{
+    public:
+      int m_nShape;
+      int m_shapeOffset;
+      int m_splitAxis;
+      AABB m_bound;
+      std::unique_ptr<BVHNode> m_left;
+      std::unique_ptr<BVHNode> m_right;
+      BVHNode(){}
+      BVHNode(std::unique_ptr<BVHNode> left,std::unique_ptr<BVHNode> right,int shapeOffset,
+              int splitAxis,
+               int nshape,
+               const AABB & b = AABB()):
+          m_nShape(nshape),
+          m_shapeOffset(shapeOffset),
+          m_splitAxis(splitAxis),
+          m_bound(b){}
+    };
+    std::vector<std::shared_ptr<Shape>> m_shapes;
+    std::unique_ptr<BVHNode> m_root;
+    Float m_tMin;
+public:
+    BVHTreeAccelerator(const std::vector<std::shared_ptr<Shape>> & shapes):m_shapes(std::move(shapes)){
+        std::vector<std::shared_ptr<Shape>> orderedShapes;
+        m_root = recursiveBuild(m_shapes,0,m_shapes.size(),orderedShapes);
+        m_shapes.swap(orderedShapes);
+    }
+    bool intersect(const Ray & ray,Float * t)override{
+        m_tMin = MAX_Float_VALUE;
+        if(recursiveIntersect(m_root.get(),ray)){
+            if(t)*t = m_tMin;
+            return true;
+        }
+        return false;
+    }
+private:
+
+    bool recursiveIntersect(const BVHNode * root,const Ray & ray){
+        if(root == nullptr || root->m_bound.intersect(ray,nullptr,nullptr) == false)
+            return false;
+        if(root->m_nShape != -1){
+            return recursiveIntersect(root->m_left.get(),ray)||recursiveIntersect(root->m_right.get(),ray);
+        }else{
+            bool isect = false;
+            for(int i = 0;i<root->m_nShape;i++){
+                Float t;
+                if(m_shapes[i+root->m_shapeOffset]->bound().intersect(ray,&t) == true){
+                    m_tMin = std::min(m_tMin,t);
+                    isect = true;
+                }
+            }
+            return isect;
+        }
+    }
+
+    std::unique_ptr<BVHNode> recursiveBuild(std::vector<std::shared_ptr<Shape>> & shapes,
+                             int begin,int end,
+                             std::vector<std::shared_ptr<Shape>> & orderedShapes){
+        int currentNodeCount = end - begin;
+        int offset = orderedShapes.size();
+        AABB bound;
+        for(int i=begin;i<end;i++){
+            bound.unionWith(shapes[i]->bound());
+        }
+        Vector3f boundDiag = bound.diagnal();
+        int splitAxis = findMaxVector3fComponent(boundDiag);
+        if(currentNodeCount == 1){
+            //create leaf node and return
+            std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr,nullptr,offset,splitAxis,currentNodeCount,bound));
+            return newNode;
+        }else{
+            AABB centroidBound;
+            for(int i=begin;i<end;i++){
+                centroidBound.unionWith(shapes[i]->bound());
+            }
+            /*
+             * if the maximum component of centroids of the
+             * bounds of all shapes are the same,
+             * just create a leaf node for all of them
+             */
+
+            if(centroidBound.m_min[splitAxis] == centroidBound.m_max[splitAxis]){
+                std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr,nullptr,offset,splitAxis,currentNodeCount,bound));
+                return newNode;
+            }
+
+            /*
+             * else
+             */
+            struct bucketInfo{
+                std::vector<int> indices;
+                AABB bound;
+            };
+            constexpr int nBuckets = 12;
+            bucketInfo buckets[nBuckets];
+            for(int i=begin;i<end;i++){
+                Point3f center = shapes[i]->bound().center();
+                int bucketIndex = nBuckets*(center[splitAxis]/boundDiag[splitAxis]);
+                buckets[bucketIndex].indices.push_back(i);
+                buckets[bucketIndex].bound.unionWith(shapes[i]->bound());
+            }
+            Float cost[nBuckets -1];
+            for(int i=0;i<nBuckets-1;i++){
+                AABB bLeft,bRight;
+                int nLeft=0,nRight =0;
+                for(int j =0;j<=i;j++){
+                    bLeft.unionWith(buckets[j].bound);
+                    nLeft += buckets[j].indices.size();
+                }
+                for(int j=i+1;j<nBuckets;j++){
+                    bRight.unionWith(buckets[j].bound);
+                    nRight += buckets[j].indices.size();
+                }
+                cost[i] = 0.125+(nLeft*bLeft.surfaceArea()+
+                        bRight.surfaceArea()*nRight)/bound.surfaceArea();
+            }
+            int efficientSplit = std::distance(cost,std::min_element(cost,cost+nBuckets-1));
+            auto lambda =[&](const std::shared_ptr<Shape> s){
+                int b = nBuckets*(s->bound().center()[splitAxis]/boundDiag[splitAxis]);
+                return b<efficientSplit;
+            };
+            int mid = std::distance(shapes.begin(),std::partition(shapes.begin(),shapes.end(),lambda));
+            //create interior node
+            std::unique_ptr<BVHNode> newNode(new BVHNode(recursiveBuild(shapes,begin,mid,orderedShapes),
+                                                         recursiveBuild(shapes,mid+1,end,orderedShapes),
+                                                         offset,splitAxis,currentNodeCount,bound));
+            return newNode;
+
+        }
+    }
 };
+
 /*
  *Qt GUI
 */
