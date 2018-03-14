@@ -10,9 +10,6 @@
 #include <algorithm>
 #include <iterator>
 
-
-
-
 constexpr Float LOWEST_Float_VALUE = std::numeric_limits<Float>::lowest();
 constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
 
@@ -82,6 +79,15 @@ class Ray
 public:
     Ray(const Point3f & d, const Point3f & o, Float t = MAX_Float_VALUE)noexcept :m_o(o), m_d(d), m_tMax(t){}
     Point3f operator()(float t)noexcept { return m_o + t * m_d; }
+    const Point3f & original()const{
+        return m_o;
+    }
+    const Vector3f & direction()const{
+        return m_d;
+    }
+    void setMaxLength(Float t){
+        m_tMax = t;
+    }
     friend class AABB;
     friend class Triangle;
     friend class Shape;

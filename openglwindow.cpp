@@ -220,11 +220,8 @@ void OpenGLWidget::paintModel()
 		m_program->bind();
 		{
 			m_vao.bind();
-	 
-
 			m_program->setUniformValue("projection_matrix",m_projection);
 			m_program->setUniformValue("view_matrix", m_camera.view());
-       
 			m_program->setUniformValue("model_matrix", m_model);
 			m_program->setUniformValue("light_pos", m_camera.Position);
 			m_program->setUniformValue("light_color", m_lightColor);
