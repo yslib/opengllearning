@@ -59,18 +59,15 @@ RESOURCES += \
     resources.qrc
 
 
-unix|win32: LIBS += -L$$PWD/lib/ -lgtest
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lgtest
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lgtestd
+else:unix: LIBS += -L$$PWD/lib/ -lgtest
 
 INCLUDEPATH += $$PWD/include
 DEPENDPATH += $$PWD/include
 
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/lib/gtest.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/lib/libgtest.a
-
-unix|win32: LIBS += -L$$PWD/lib/ -lgtest_main
-
-INCLUDEPATH += $$PWD/include
-DEPENDPATH += $$PWD/include
-
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/lib/gtest_main.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/lib/libgtest_main.a
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libgtest.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libgtestd.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/gtest.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/gtestd.lib
+else:unix: PRE_TARGETDEPS += $$PWD/lib/libgtest.a

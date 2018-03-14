@@ -1,7 +1,7 @@
 #include <QApplication>
 #include <QSurfaceFormat>
 #include "mainwindow.h"
-#include "gtest/gtest.h"
+//#include "gtest/gtest.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +15,9 @@ int main(int argc, char *argv[])
 
     QApplication a(argc,argv);
     MainWindow mainwindow;
-	mainwindow.show();
+    mainwindow.show();
+    //testing::InitGoogleTest(&argc, argv);
+    //RUN_ALL_TESTS();
     return a.exec();
 }
 
