@@ -1,7 +1,8 @@
-#include "mainwindow.h"
 #include <QApplication>
 #include <QSurfaceFormat>
-#include "openglwindow.h"
+#include "mainwindow.h"
+#include "gtest/gtest.h"
+
 int main(int argc, char *argv[])
 {
     //For macos ,the format setting must be added before gui is created
@@ -12,9 +13,10 @@ int main(int argc, char *argv[])
     fmt.setProfile(QSurfaceFormat::CoreProfile);
     QSurfaceFormat::setDefaultFormat(fmt);
 
-
     QApplication a(argc,argv);
     MainWindow mainwindow;
 	mainwindow.show();
     return a.exec();
 }
+
+
