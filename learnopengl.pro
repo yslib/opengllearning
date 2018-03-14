@@ -57,3 +57,17 @@ DISTFILES += \
 
 RESOURCES += \
     resources.qrc
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lib/ -lgtest
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lib/ -lgtestd
+else:unix: LIBS += -L$$PWD/lib/ -lgtest
+
+INCLUDEPATH += $$PWD/include
+DEPENDPATH += $$PWD/include
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/libgtest.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/libgtestd.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/lib/gtest.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/lib/gtestd.lib
+else:unix: PRE_TARGETDEPS += $$PWD/lib/libgtest.a
