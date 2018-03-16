@@ -101,8 +101,11 @@ class AABB
     Point3f m_min;
     Point3f m_max;
 public:
-    AABB(const Point3f & p0 = Point3f(LOWEST_Float_VALUE, LOWEST_Float_VALUE, LOWEST_Float_VALUE),
-        const Point3f & p1 = Point3f(MAX_Float_VALUE, MAX_Float_VALUE, MAX_Float_VALUE))noexcept :
+    AABB():m_min(MAX_Float_VALUE,MAX_Float_VALUE,MAX_Float_VALUE),m_max(LOWEST_Float_VALUE,LOWEST_Float_VALUE,LOWEST_Float_VALUE)
+    {
+        //construct a empty bounding box
+    }
+    AABB(const Point3f & p0,const Point3f & p1)noexcept :
         m_min(std::min(p0.x(), p1.x()), std::min(p0.y(), p1.y()), std::min(p0.z(), p1.z())),
         m_max(std::max(p0.x(), p1.x()), std::max(p0.y(), p1.y()), std::max(p0.z(), p1.z()))
     {}
@@ -436,11 +439,16 @@ public:
 private:
 
     bool recursiveIntersect(const BVHNode * root,const Ray & ray){
+        //If the BVH is empty or there is no intersection with current node
         if(root == nullptr || root->m_bound.intersect(ray,nullptr,nullptr) == false)
             return false;
+        //Interior node
         if(root->m_nShape != -1){
-            return recursiveIntersect(root->m_left.get(),ray)||recursiveIntersect(root->m_right.get(),ray);
+            bool interLeft =  recursiveIntersect(root->m_left.get(),ray);
+            bool interRight =  recursiveIntersect(root->m_right.get(),ray);
+            return interLeft || interRight;
         }else{
+            //Leaf node, check and find the nearest intersection
             bool isect = false;
             for(int i = 0;i<root->m_nShape;i++){
                 Float t;
@@ -484,9 +492,7 @@ private:
                 return newNode;
             }
 
-            /*
-             * else
-             */
+            //find the split position with minimum cost
             struct bucketInfo{
                 std::vector<int> indices;
                 AABB bound;
@@ -496,6 +502,7 @@ private:
             for(int i=begin;i<end;i++){
                 Point3f center = shapes[i]->bound().center();
                 int bucketIndex = nBuckets*(center[splitAxis]/boundDiag[splitAxis]);
+                if(bucketIndex == nBuckets)bucketIndex-=1;
                 buckets[bucketIndex].indices.push_back(i);
                 buckets[bucketIndex].bound.unionWith(shapes[i]->bound());
             }
@@ -514,19 +521,43 @@ private:
                 cost[i] = 0.125+(nLeft*bLeft.surfaceArea()+
                         bRight.surfaceArea()*nRight)/bound.surfaceArea();
             }
-            int efficientSplit = std::distance(cost,std::min_element(cost,cost+nBuckets-1));
-            auto lambda =[&](const std::shared_ptr<Shape> s){
-                int b = nBuckets*(s->bound().center()[splitAxis]/boundDiag[splitAxis]);
-                return b<efficientSplit;
-            };
-            int mid = std::distance(shapes.begin(),std::partition(shapes.begin(),shapes.end(),lambda));
-            //create interior node
-            std::unique_ptr<BVHNode> newNode(new BVHNode(recursiveBuild(shapes,begin,mid,orderedShapes),
-                                                         recursiveBuild(shapes,mid+1,end,orderedShapes),
-                                                         offset,splitAxis,currentNodeCount,bound));
-            return newNode;
+            auto efficientIter = std::min_element(cost,cost+nBuckets-1);
+            int efficentIndex = std::distance(cost,efficientIter);
+            if(currentNodeCount > 255 || *efficientIter < currentNodeCount){
+                //if the count of left nodes is greater than the max count of a leaf node can hold
+                //or the cost of spliting the current node is less than creating a leaf node's with current nodes
+                auto lambda =[&](const std::shared_ptr<Shape> s){
+                    int b = nBuckets*(s->bound().center()[splitAxis]/boundDiag[splitAxis]);
+                    if(b == nBuckets)b-=1;
+                    return b<efficentIndex;
+                };
+                int mid = std::distance(shapes.begin(),std::partition(shapes.begin(),shapes.end(),lambda));
+                //create interior node
+                std::unique_ptr<BVHNode> newNode(
+                            new BVHNode(recursiveBuild(shapes,begin,mid,orderedShapes),
+                                        recursiveBuild(shapes,mid+1,end,orderedShapes),
+                                        offset,splitAxis,currentNodeCount,bound));
+                return newNode;
 
+            }else{
+                //create leaf node and return
+                std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr,nullptr,offset,splitAxis,currentNodeCount,bound));
+                return newNode;
+            }
         }
+    }
+};
+
+class Intersection
+{
+    Point3f & m_p;
+    Vector3f & m_wo;
+    Float m_u;
+    Float m_v;
+
+public:
+    Intersection(const Point3f & p,Float u,Float v,const Vector3f & wo){
+
     }
 };
 

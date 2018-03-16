@@ -9,7 +9,7 @@
 #include <qmath.h>
 
 #include "core.h"
-
+#include "PathTracingDemo.h"
 
 
 
@@ -153,6 +153,7 @@ public:
     OpenGLWidget(const Camera & cam = Camera(),QWidget * parent = nullptr);
     void setAnimation(bool enable);
     void updateModel(const QVector<QVector3D> & vertices,const QVector<QVector3D> & normals);
+    void updateModel(const TriangleMesh & mesh);
     Trans3DMat getPerspectiveMat()const;
     ~OpenGLWidget();
 protected:

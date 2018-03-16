@@ -271,7 +271,12 @@ void OpenGLWidget::updateModel(const QVector<QVector3D> &vertices,const QVector<
 	m_program->release();
 	m_vbo.release();
 	m_vao.release();
-	doneCurrent();
+    doneCurrent();
+}
+
+void OpenGLWidget::updateModel(const TriangleMesh &mesh)
+{
+
 }
 
 Trans3DMat OpenGLWidget::getPerspectiveMat() const

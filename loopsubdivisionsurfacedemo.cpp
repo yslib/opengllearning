@@ -63,13 +63,6 @@ LoopSubdivisionSurfaceDemo::LoopSubdivisionSurfaceDemo(QWidget * parent /*= null
 
 	//create display widget
 	m_displayWidget = new OpenGLWidget(Camera(),this);
-//    QSurfaceFormat fmt;
-//    fmt.setDepthBufferSize(24);
-//    fmt.setStencilBufferSize(8);
-//    fmt.setVersion(3, 3);
-//    fmt.setProfile(QSurfaceFormat::CoreProfile);
-//    QSurfaceFormat::setDefaultFormat(fmt);
-//    m_displayWidget->setFormat(fmt);
 
     m_displayWidget->setAnimation(true);
 	setDisplayWidget(m_displayWidget);
