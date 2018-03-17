@@ -7,12 +7,16 @@
 #include <QWheelEvent>
 #include <QVector3D>
 #include <QTimer>
+#include <set>
 
 OpenGLWidget::OpenGLWidget(const Camera & cam,QWidget *parent) :
 	QOpenGLWidget(parent),
+    m_drawWithIBO(false),
 	m_vshader(0),
 	m_fshader(0),
-	m_program(0),
+    m_program(0),
+    m_vbo(QOpenGLBuffer(QOpenGLBuffer::VertexBuffer)),
+    m_ibo(QOpenGLBuffer(QOpenGLBuffer::IndexBuffer)),
 	m_mousePressed(false),
 	m_eye(QVector3D(0, 0, 1)),
 	m_center(QVector3D(0, 0, 0)),
@@ -34,8 +38,13 @@ OpenGLWidget::OpenGLWidget(const Camera & cam,QWidget *parent) :
 	//setMinimumSize(500, 500);
 	setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 	//matrix initialization
-	m_model.setToIdentity();
+
+
+    m_model.setToIdentity();
+
+    //
 	m_view.lookAt(m_eye, m_center, m_up),
+
 	m_projection.perspective(m_verticalAngle, aspectRatio(), 0.01f, 100.0f);
 
 	m_timer = new QTimer(this);
@@ -65,38 +74,39 @@ void OpenGLWidget::initializeGL()
 
 	//Initialized program shader
 	m_vshader = new QOpenGLShader(QOpenGLShader::Vertex);
-	
-        m_vshader->compileSourceFile(":new/shaders/phongshadingvertexshader.glsl");
+    m_vshader->compileSourceFile(":new/shaders/phongshadingvertexshader.glsl");
 	m_fshader = new QOpenGLShader(QOpenGLShader::Fragment);
-        m_fshader->compileSourceFile(":new/shaders/phongshadingfragmentshader.glsl");
+    m_fshader->compileSourceFile(":new/shaders/phongshadingfragmentshader.glsl");
 	m_program = new QOpenGLShaderProgram();
 	m_program->addShader(m_vshader);
 	m_program->addShader(m_fshader);
 	m_program->link();
-	m_program->bind();
-	//create VAO
-	m_vao.create();
-	m_vao.bind();
 
 
-	//create VBO
-	m_vbo.create();
-	m_vbo.bind();
-	m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-	int totalBytes = m_vertices.count() * sizeof(GLfloat) * 3 + m_normals.count() * sizeof(GLfloat) * 3;
-	m_vbo.allocate(totalBytes);
-	m_vbo.write(0,m_vertices.constData(), m_vertices.count() * 3 * sizeof(float));
-	m_vbo.write(m_vertices.count() * 3 * sizeof(GLfloat), m_normals.constData(), m_normals.count() * 3 * sizeof(GLfloat));
+
+    //create VAO
+    m_vao.create();
+//    m_vao.bind();
+//    //create VBO
+    m_vbo.create();
+    m_ibo.create();
+//    m_vbo.bind();
+//    m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+//    int totalBytes = m_vertices.count() * sizeof(GLfloat) * 3 + m_normals.count() * sizeof(GLfloat) * 3;
+//    m_vbo.allocate(totalBytes);
+//    m_vbo.write(0,m_vertices.constData(), m_vertices.count() * 3 * sizeof(float));
+//    m_vbo.write(m_vertices.count() * 3 * sizeof(GLfloat), m_normals.constData(), m_normals.count() * 3 * sizeof(GLfloat));
 
 
-	m_program->enableAttributeArray(0);
-	m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3);
-	m_program->enableAttributeArray(1);
-	m_program->setAttributeBuffer(1, GL_FLOAT, m_vertices.size()*3*sizeof(GLfloat),3,0);
+//    m_program->bind();
+//    m_program->enableAttributeArray(0);
+//    m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3);
+//    m_program->enableAttributeArray(1);
+//    m_program->setAttributeBuffer(1, GL_FLOAT, m_vertices.size()*3*sizeof(GLfloat),3,0);
 
-	//m_vbo.release();
-	//m_vao.release();
-	m_program->release();
+//    m_vbo.release();
+//    m_vao.release();
+//    m_program->release();
 
 }
 void OpenGLWidget::resizeGL(int w, int h) {
@@ -227,7 +237,13 @@ void OpenGLWidget::paintModel()
 			m_program->setUniformValue("light_color", m_lightColor);
 			m_program->setUniformValue("view_pos", m_camera.Position);
 			m_program->setUniformValue("object_color", m_objectColor);
-			glDrawArrays(GL_TRIANGLES, 0, m_vertices.count());
+            if(m_drawWithIBO == false)
+            {
+                glDrawArrays(GL_TRIANGLES, 0, m_vertices.count());
+            }
+            else{
+                glDrawElements(GL_TRIANGLES,m_nVertex,GL_INT,(void*)0);
+            }
 			m_vao.release();
 		}
 		m_program->release();
@@ -251,7 +267,7 @@ void OpenGLWidget::updateModel(const QVector<QVector3D> &vertices,const QVector<
 	m_vertices = vertices;
 	m_normals = normals;
 	if (isValid() == false)
-		return;
+        return;
 	makeCurrent();
 	m_vao.bind();
 	m_vbo.bind();
@@ -274,9 +290,47 @@ void OpenGLWidget::updateModel(const QVector<QVector3D> &vertices,const QVector<
     doneCurrent();
 }
 
-void OpenGLWidget::updateModel(const TriangleMesh &mesh)
+
+void OpenGLWidget::setTriangleMesh(const Float *vertices, int nVertex, const int *faceIndices, int nFaceIndex, const Float *normals, int nNormal, const int *normalIndices, int nNorIndex)
 {
 
+    m_drawWithIBO = true;
+    m_nVertex = nVertex;
+    if(isValid() == false)
+       return;
+
+    makeCurrent();
+    m_vao.bind();
+    m_vbo.bind();
+    m_program->bind();
+    m_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    int vertexTotalBytes = nVertex*sizeof(Float)*3;
+    int normalTotalBytes = nNorIndex*sizeof(Float)*3;
+    int vertexAndNormalsTotalBytes = vertexTotalBytes+normalTotalBytes;
+
+    int faceIndexTotalBytes = nFaceIndex*sizeof(int);
+    int normalIndexTotalBytes = nNorIndex*sizeof(int);
+    int faceAndNormalIndexTotalBytes = faceIndexTotalBytes+normalIndexTotalBytes;
+
+    //create and write for vbo
+    m_vbo.allocate(vertexAndNormalsTotalBytes);
+    m_vbo.write(0,vertices,vertexTotalBytes);
+    m_vbo.write(vertexTotalBytes,normals,normalTotalBytes);
+    //create and write for ibo
+    m_ibo.allocate(faceAndNormalIndexTotalBytes);
+    m_ibo.write(0,faceIndices,faceIndexTotalBytes);
+    m_ibo.write(faceIndexTotalBytes,normalIndices,normalIndexTotalBytes);
+
+    //bind for shaders
+    m_program->enableAttributeArray(0);
+    m_program->setAttributeBuffer(0,GL_FLOAT,0,3,0);
+    m_program->enableAttributeArray(1);
+    m_program->setAttributeBuffer(1,GL_FLOAT,vertexTotalBytes,3,0);
+    m_ibo.release();
+    m_vbo.release();
+    m_vao.release();
+    m_program->release();
+    doneCurrent();
 }
 
 Trans3DMat OpenGLWidget::getPerspectiveMat() const

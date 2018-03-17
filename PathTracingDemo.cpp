@@ -49,8 +49,10 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
 
     //create display widget
     m_displayWidget = new QWidget(this);
+
     m_sceneDisplay = new OpenGLWidget(Camera(), this);
     m_sceneDisplay->setAnimation(true);
+
     QSize displaySize = m_sceneDisplay->size();
     m_resultDisplay = new QLabel(this);
     m_resultDisplay->resize(displaySize);
@@ -75,11 +77,105 @@ PathTracingDemo::~PathTracingDemo()
 
 void PathTracingDemo::onOpenFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj(*.obj)"));
-    if (fileName.isEmpty() == true)
-        return;
-    m_fileNamesLineEdit->setText(fileName);
-    m_slider->setEnabled(true);
+//    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj(*.obj)"));
+//    if (fileName.isEmpty() == true)
+//        return;
+//    m_fileNamesLineEdit->setText(fileName);
+//    m_slider->setEnabled(true);
+    OpenGLWidget * widget = static_cast<OpenGLWidget*>(displayWidget());
+    if(widget != nullptr){
+//        Float vertices[] = {
+//            -0.5f,0.f,0.f,
+//            0.5f,0.f,0.f,
+//            0.f,0.5f,0.f
+//        };
+//        int faceIndices[]={0,1,2};
+//        Float normals[] ={0.0f,0.0f,1.0f,0.0f,0.0f,1.0f,0.0f,0.0f,1.0f};
+//        int normalIndices[]={0,1,2};
+    QVector<QVector3D> a =
+           {
+           {-0.5f, -0.5f, -0.5f},
+           {0.5f, -0.5f, -0.5f },
+           {0.5f,  0.5f, -0.5f},
+           {0.5f,  0.5f, -0.5f} ,
+           {-0.5f,  0.5f, -0.5f} ,
+        {-0.5f, -0.5f, -0.5f} ,
+           {-0.5f, -0.5f,  0.5f},
+           {0.5f, -0.5f,  0.5f},
+           {0.5f,  0.5f,  0.5f},
+           {0.5f,  0.5f,  0.5f},
+           {-0.5f,  0.5f,  0.5f},
+           {-0.5f, -0.5f,  0.5f},
+           {-0.5f,  0.5f,  0.5f},
+           {-0.5f,  0.5f, -0.5f},
+           {-0.5f, -0.5f, -0.5f},
+           {-0.5f, -0.5f, -0.5f},
+           {-0.5f, -0.5f,  0.5f},
+           {-0.5f,  0.5f,  0.5f},
+           {0.5f,  0.5f,  0.5f},
+           {0.5f,  0.5f, -0.5f},
+           {0.5f, -0.5f, -0.5f} ,
+           {0.5f, -0.5f, -0.5f} ,
+           {0.5f, -0.5f,  0.5f} ,
+           {0.5f,  0.5f,  0.5f} ,
+           {-0.5f, -0.5f, -0.5f},
+           {0.5f, -0.5f, -0.5f},
+           {0.5f, -0.5f,  0.5f},
+           {0.5f, -0.5f,  0.5f} ,
+           {-0.5f, -0.5f,  0.5f} ,
+           {-0.5f, -0.5f, -0.5f}  ,
+           {-0.5f,  0.5f, -0.5f}  ,
+           {0.5f,  0.5f, -0.5f}  ,
+           {0.5f,  0.5f,  0.5f}  ,
+           {0.5f,  0.5f,  0.5f} ,
+           {-0.5f,  0.5f,  0.5f} ,
+           {-0.5f,  0.5f, -0.5f}  ,
+           };
+           QVector<QVector3D> b = {
+                  {0.0f,  0.0f, -1.0f},
+           {0.0f,  0.0f, -1.0f},
+           {0.0f,  0.0f, -1.0f},
+           {0.0f,  0.0f, -1.0f},
+           {0.0f,  0.0f, -1.0f},
+           {0.0f,  0.0f, -1.0f},
+           {0.0f,  0.0f,  1.0f},
+           {0.0f,  0.0f,  1.0f},
+           {0.0f,  0.0f,  1.0f},
+           {0.0f,  0.0f,  1.0f},
+           {0.0f,  0.0f,  1.0f},
+           {0.0f,  0.0f,  1.0f},
+           {-1.0f,  0.0f,  0.0f},
+           {-1.0f,  0.0f,  0.0f},
+           {-1.0f,  0.0f,  0.0f},
+           {-1.0f,  0.0f,  0.0f},
+           {-1.0f,  0.0f,  0.0f},
+           {-1.0f,  0.0f,  0.0f},
+           {1.0f,  0.0f,  0.0f},
+           {1.0f,  0.0f,  0.0f},
+           {1.0f,  0.0f,  0.0f},
+           {1.0f,  0.0f,  0.0f},
+           {1.0f,  0.0f,  0.0f},
+           {1.0f,  0.0f,  0.0f},
+           {0.0f, -1.0f,  0.0f},
+           {0.0f, -1.0f,  0.0f},
+           {0.0f, -1.0f,  0.0f},
+           {0.0f, -1.0f,  0.0f},
+           { 0.0f, -1.0f,  0.0f},
+           {0.0f, -1.0f,  0.0f},
+           {0.0f,  1.0f,  0.0f},
+           {0.0f,  1.0f,  0.0f},
+           {0.0f,  1.0f,  0.0f},
+           {0.0f,  1.0f,  0.0f},
+           {0.0f,  1.0f,  0.0f},
+           {0.0f,  1.0f,  0.0f}
+           };
+        //widget->setTriangleMesh(vertices,3,faceIndices,3,normals,3,normalIndices,3);
+           widget->updateModel(a,b);
+        qDebug()<<"ok";
+    }
+    qDebug()<<"asdf";
+
+
 }
 
 void PathTracingDemo::onSamplesCountChanged(int value)

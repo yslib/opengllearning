@@ -375,6 +375,10 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 
 void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 {
+
+
+    ///TODO::这里暂时废弃，以后要改成输入mesh数据的
+
 	auto indices = m_model->getFaceIndices();
 	auto vertices = m_model->getVertices();
 	std::vector<int> idxs;

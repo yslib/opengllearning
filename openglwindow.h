@@ -153,7 +153,8 @@ public:
     OpenGLWidget(const Camera & cam = Camera(),QWidget * parent = nullptr);
     void setAnimation(bool enable);
     void updateModel(const QVector<QVector3D> & vertices,const QVector<QVector3D> & normals);
-    void updateModel(const TriangleMesh & mesh);
+    void setTriangleMesh(const Float *vertices, int nVertex, const int * faceIndices, int nFaceIndex,
+                         const Float * normals, int nNormal, const int * normalIndices, int nNorIndex);
     Trans3DMat getPerspectiveMat()const;
     ~OpenGLWidget();
 protected:
@@ -173,6 +174,9 @@ private:
     void paintModel();
 
 private:
+
+    bool m_drawWithIBO;
+    int m_nVertex;
     //
     bool m_modelUpdated;
     QTimer* m_timer;
@@ -210,6 +214,7 @@ private:
     //opengl resources varibles
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_vbo;
+    QOpenGLBuffer m_ibo;
 
     QOpenGLShader * m_vshader;
     QOpenGLShader * m_fshader;

@@ -255,8 +255,9 @@ class TriangleMesh {
     int m_nVertex;
     std::unique_ptr<int[]> m_vertexIndices;
     int m_nIndex;
+    std::unique_ptr<Point3f[]> m_normals;
 public:
-    TriangleMesh(const Point3f * vertices,int nVertex,const int * vertexIndices,int nIndex,const Trans3DMat & trans)noexcept:m_nVertex(nVertex),m_nIndex(nIndex)
+    TriangleMesh(const Point3f * vertices,const Point3f * normals,int nVertex,const int * vertexIndices,int nIndex,const Trans3DMat & trans)noexcept:m_nVertex(nVertex),m_nIndex(nIndex)
     {
         m_vertices.reset(new Point3f[nVertex]);
         m_vertexIndices.reset(new int[nIndex]);
@@ -267,6 +268,10 @@ public:
         for(int i=0;i<nIndex;i++)
         {
             m_vertexIndices[i] = vertexIndices[i];
+        }
+        //create normals vertices
+        for(int i=0;i<nIndex;i++){
+            m_normals[i] = normals[i];
         }
     }
     const Point3f * getVerticesArray()const
@@ -284,6 +289,9 @@ public:
     int getIndexCount()const
     {
         return m_nIndex;
+    }
+    const Point3f getNormalsArray()const{
+        return m_normals.get();
     }
     void transform(const Trans3DMat & trans)
     {
@@ -550,15 +558,10 @@ private:
 
 class Intersection
 {
-    Point3f & m_p;
-    Vector3f & m_wo;
+    Point3f  m_p;
+    Vector3f  m_wo;
     Float m_u;
     Float m_v;
-
-public:
-    Intersection(const Point3f & p,Float u,Float v,const Vector3f & wo){
-
-    }
 };
 
 /*
@@ -573,12 +576,11 @@ class Model;
 class QTextEdit;
 class OpenGLWidget;
 
-class PathTracingDemo :
-    public BaseDemoWidget
+class PathTracingDemo :public BaseDemoWidget
 {
+    Q_OBJECT
 public:
-
-    PathTracingDemo(QWidget * parent = nullptr);
+    explicit PathTracingDemo(QWidget * parent = nullptr);
     virtual ~PathTracingDemo();
 private:
     QPushButton * m_openFileButton;
@@ -592,7 +594,7 @@ private:
     QLabel * m_sliderLabel;
     QSlider * m_slider;
     QTextEdit * m_textEdit;
-    public slots:
+public slots:
     void onOpenFile();
     void onSamplesCountChanged(int value);
 };
