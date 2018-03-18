@@ -1,4 +1,5 @@
 #include "PathTracingDemo.h"
+#include "model.h"
 #include <QLayout>
 #include <QPushButton>
 #include <QLineEdit>
@@ -54,13 +55,13 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     m_sceneDisplay->setAnimation(true);
 
     QSize displaySize = m_sceneDisplay->size();
-    m_resultDisplay = new QLabel(this);
-    m_resultDisplay->resize(displaySize);
-    m_resultDisplay->setPixmap(QPixmap::fromImage(QImage()));
+    //m_resultDisplay = new QLabel(this);
+    //m_resultDisplay->resize(displaySize);
+    //m_resultDisplay->setPixmap(QPixmap::fromImage(QImage()));
 
     QHBoxLayout * displayLayout = new QHBoxLayout(this);
     displayLayout->addWidget(m_sceneDisplay);
-    displayLayout->addWidget(m_resultDisplay);
+    //displayLayout->addWidget(m_resultDisplay);
     m_displayWidget->setLayout(displayLayout);
     setDisplayWidget(m_displayWidget);
 
@@ -77,105 +78,110 @@ PathTracingDemo::~PathTracingDemo()
 
 void PathTracingDemo::onOpenFile()
 {
-//    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj(*.obj)"));
-//    if (fileName.isEmpty() == true)
-//        return;
-//    m_fileNamesLineEdit->setText(fileName);
-//    m_slider->setEnabled(true);
-    OpenGLWidget * widget = static_cast<OpenGLWidget*>(displayWidget());
-    if(widget != nullptr){
-//        Float vertices[] = {
-//            -0.5f,0.f,0.f,
-//            0.5f,0.f,0.f,
-//            0.f,0.5f,0.f
-//        };
-//        int faceIndices[]={0,1,2};
-//        Float normals[] ={0.0f,0.0f,1.0f,0.0f,0.0f,1.0f,0.0f,0.0f,1.0f};
-//        int normalIndices[]={0,1,2};
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj(*.obj)"));
+    if (fileName.isEmpty() == true)
+        return;
+    m_fileNamesLineEdit->setText(fileName);
+    m_slider->setEnabled(true);
+    ObjReader model(fileName.toStdString());
+    if (model.isLoaded() == false)
+        return;
+    //Point3f vertices[] = {
+    //    {-0.5f,0.f,0.f},
+    //{0.5f,0.f,0.f },
+    //{0.f,0.5f,0.f}
+    //};
+    //unsigned int faceIndices[] = { 0,1,2 };
+    //Point3f normals[] = { {0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f} };
     QVector<QVector3D> a =
-           {
-           {-0.5f, -0.5f, -0.5f},
-           {0.5f, -0.5f, -0.5f },
-           {0.5f,  0.5f, -0.5f},
-           {0.5f,  0.5f, -0.5f} ,
-           {-0.5f,  0.5f, -0.5f} ,
-        {-0.5f, -0.5f, -0.5f} ,
-           {-0.5f, -0.5f,  0.5f},
-           {0.5f, -0.5f,  0.5f},
-           {0.5f,  0.5f,  0.5f},
-           {0.5f,  0.5f,  0.5f},
-           {-0.5f,  0.5f,  0.5f},
-           {-0.5f, -0.5f,  0.5f},
-           {-0.5f,  0.5f,  0.5f},
-           {-0.5f,  0.5f, -0.5f},
-           {-0.5f, -0.5f, -0.5f},
-           {-0.5f, -0.5f, -0.5f},
-           {-0.5f, -0.5f,  0.5f},
-           {-0.5f,  0.5f,  0.5f},
-           {0.5f,  0.5f,  0.5f},
-           {0.5f,  0.5f, -0.5f},
-           {0.5f, -0.5f, -0.5f} ,
-           {0.5f, -0.5f, -0.5f} ,
-           {0.5f, -0.5f,  0.5f} ,
-           {0.5f,  0.5f,  0.5f} ,
-           {-0.5f, -0.5f, -0.5f},
-           {0.5f, -0.5f, -0.5f},
-           {0.5f, -0.5f,  0.5f},
-           {0.5f, -0.5f,  0.5f} ,
-           {-0.5f, -0.5f,  0.5f} ,
-           {-0.5f, -0.5f, -0.5f}  ,
-           {-0.5f,  0.5f, -0.5f}  ,
-           {0.5f,  0.5f, -0.5f}  ,
-           {0.5f,  0.5f,  0.5f}  ,
-           {0.5f,  0.5f,  0.5f} ,
-           {-0.5f,  0.5f,  0.5f} ,
-           {-0.5f,  0.5f, -0.5f}  ,
-           };
-           QVector<QVector3D> b = {
-                  {0.0f,  0.0f, -1.0f},
+    {
+    {-0.5f, -0.5f, -0.5f},
+    {0.5f, -0.5f, -0.5f },
+    {0.5f,  0.5f, -0.5f},
+    {0.5f,  0.5f, -0.5f} ,
+    {-0.5f,  0.5f, -0.5f} ,
+    {-0.5f, -0.5f, -0.5f} ,
+    {-0.5f, -0.5f,  0.5f},
+    {0.5f, -0.5f,  0.5f},
+    {0.5f,  0.5f,  0.5f},
+    {0.5f,  0.5f,  0.5f},
+    {-0.5f,  0.5f,  0.5f},
+    {-0.5f, -0.5f,  0.5f},
+    {-0.5f,  0.5f,  0.5f},
+    {-0.5f,  0.5f, -0.5f},
+    {-0.5f, -0.5f, -0.5f},
+    {-0.5f, -0.5f, -0.5f},
+    {-0.5f, -0.5f,  0.5f},
+    {-0.5f,  0.5f,  0.5f},
+    {0.5f,  0.5f,  0.5f},
+    {0.5f,  0.5f, -0.5f},
+    {0.5f, -0.5f, -0.5f} ,
+    {0.5f, -0.5f, -0.5f} ,
+    {0.5f, -0.5f,  0.5f} ,
+    {0.5f,  0.5f,  0.5f} ,
+    {-0.5f, -0.5f, -0.5f},
+    {0.5f, -0.5f, -0.5f},
+    {0.5f, -0.5f,  0.5f},
+    {0.5f, -0.5f,  0.5f} ,
+    {-0.5f, -0.5f,  0.5f} ,
+    {-0.5f, -0.5f, -0.5f}  ,
+    {-0.5f,  0.5f, -0.5f}  ,
+    {0.5f,  0.5f, -0.5f}  ,
+    {0.5f,  0.5f,  0.5f}  ,
+    {0.5f,  0.5f,  0.5f} ,
+    {-0.5f,  0.5f,  0.5f} ,
+    {-0.5f,  0.5f, -0.5f}  ,
+    };
+    QVector<QVector3D> b = {
            {0.0f,  0.0f, -1.0f},
-           {0.0f,  0.0f, -1.0f},
-           {0.0f,  0.0f, -1.0f},
-           {0.0f,  0.0f, -1.0f},
-           {0.0f,  0.0f, -1.0f},
-           {0.0f,  0.0f,  1.0f},
-           {0.0f,  0.0f,  1.0f},
-           {0.0f,  0.0f,  1.0f},
-           {0.0f,  0.0f,  1.0f},
-           {0.0f,  0.0f,  1.0f},
-           {0.0f,  0.0f,  1.0f},
-           {-1.0f,  0.0f,  0.0f},
-           {-1.0f,  0.0f,  0.0f},
-           {-1.0f,  0.0f,  0.0f},
-           {-1.0f,  0.0f,  0.0f},
-           {-1.0f,  0.0f,  0.0f},
-           {-1.0f,  0.0f,  0.0f},
-           {1.0f,  0.0f,  0.0f},
-           {1.0f,  0.0f,  0.0f},
-           {1.0f,  0.0f,  0.0f},
-           {1.0f,  0.0f,  0.0f},
-           {1.0f,  0.0f,  0.0f},
-           {1.0f,  0.0f,  0.0f},
-           {0.0f, -1.0f,  0.0f},
-           {0.0f, -1.0f,  0.0f},
-           {0.0f, -1.0f,  0.0f},
-           {0.0f, -1.0f,  0.0f},
-           { 0.0f, -1.0f,  0.0f},
-           {0.0f, -1.0f,  0.0f},
-           {0.0f,  1.0f,  0.0f},
-           {0.0f,  1.0f,  0.0f},
-           {0.0f,  1.0f,  0.0f},
-           {0.0f,  1.0f,  0.0f},
-           {0.0f,  1.0f,  0.0f},
-           {0.0f,  1.0f,  0.0f}
-           };
-        //widget->setTriangleMesh(vertices,3,faceIndices,3,normals,3,normalIndices,3);
-           widget->updateModel(a,b);
-        qDebug()<<"ok";
-    }
-    qDebug()<<"asdf";
-
-
+    {0.0f,  0.0f, -1.0f},
+    {0.0f,  0.0f, -1.0f},
+    {0.0f,  0.0f, -1.0f},
+    {0.0f,  0.0f, -1.0f},
+    {0.0f,  0.0f, -1.0f},
+    {0.0f,  0.0f,  1.0f},
+    {0.0f,  0.0f,  1.0f},
+    {0.0f,  0.0f,  1.0f},
+    {0.0f,  0.0f,  1.0f},
+    {0.0f,  0.0f,  1.0f},
+    {0.0f,  0.0f,  1.0f},
+    {-1.0f,  0.0f,  0.0f},
+    {-1.0f,  0.0f,  0.0f},
+    {-1.0f,  0.0f,  0.0f},
+    {-1.0f,  0.0f,  0.0f},
+    {-1.0f,  0.0f,  0.0f},
+    {-1.0f,  0.0f,  0.0f},
+    {1.0f,  0.0f,  0.0f},
+    {1.0f,  0.0f,  0.0f},
+    {1.0f,  0.0f,  0.0f},
+    {1.0f,  0.0f,  0.0f},
+    {1.0f,  0.0f,  0.0f},
+    {1.0f,  0.0f,  0.0f},
+    {0.0f, -1.0f,  0.0f},
+    {0.0f, -1.0f,  0.0f},
+    {0.0f, -1.0f,  0.0f},
+    {0.0f, -1.0f,  0.0f},
+    { 0.0f, -1.0f,  0.0f},
+    {0.0f, -1.0f,  0.0f},
+    {0.0f,  1.0f,  0.0f},
+    {0.0f,  1.0f,  0.0f},
+    {0.0f,  1.0f,  0.0f},
+    {0.0f,  1.0f,  0.0f},
+    {0.0f,  1.0f,  0.0f},
+    {0.0f,  1.0f,  0.0f}
+    };
+    TriangleMesh mesh(model.getVerticesFlatArray(),
+        model.getNormalsFlatArray(),
+        model.getVertexCount(), 
+        model.getFacesIndicesFlatArray(),
+        model.getFacesCount(),
+        Trans3DMat());
+    m_sceneDisplay->setTriangleMesh(mesh.getVerticesArray(),
+        mesh.getNormalsArray(),
+        mesh.getVertexCount(),
+        (unsigned int*)mesh.getIndicesArray(),
+        mesh.getIndexCount());
+    //m_sceneDisplay->updateModel(a,b);
 }
 
 void PathTracingDemo::onSamplesCountChanged(int value)

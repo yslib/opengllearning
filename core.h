@@ -258,6 +258,8 @@ typedef Point3D<Float> Point3Df;
 typedef QMatrix4x4 Trans3DMat;
 typedef QVector3D Point3f;
 typedef QVector3D Vector3f;
+typedef QVector2D Point2f;
+typedef QVector2D Vector2f;
 
 
 class Transform3DMatrix
