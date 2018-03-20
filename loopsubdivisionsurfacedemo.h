@@ -16,7 +16,7 @@ class QPushButton;
 class QLabel;
 class QLineEdit;
 class QSlider;
-class Model;
+class ObjReader;
 class QTextEdit;
 class LoopSubdivisionSurfaceDemo:public BaseDemoWidget
 {
@@ -31,7 +31,7 @@ private:
 	QLabel * m_sliderLabel;
 	QSlider * m_slider;
 	QTextEdit * m_textEdit;
-	QScopedPointer<Model> m_model;
+	QScopedPointer<ObjReader> m_model;
 private:
 	QPair<QVector<QVector3D>,QVector<QVector3D>> LoopSubdivision(const std::vector<int> & vertexIndices,const std::vector<Point3Df> & vertices,int LEVEL = 3);
 private slots:

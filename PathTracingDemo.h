@@ -10,6 +10,9 @@
 #include <algorithm>
 #include <iterator>
 
+
+class Interaction;
+
 constexpr Float LOWEST_Float_VALUE = std::numeric_limits<Float>::lowest();
 constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
 
@@ -247,7 +250,7 @@ public:
     
     virtual AABB bound()const = 0;
     virtual Float area()const = 0;
-    virtual bool intersect(const Ray & ray, Float * t)= 0;
+    virtual bool intersect(const Ray & ray, Float * t,Interaction * iterac)= 0;
 };
 
 class TriangleMesh {
@@ -255,12 +258,13 @@ class TriangleMesh {
     int m_nVertex;
     std::unique_ptr<int[]> m_vertexIndices;
     int m_nIndex;
-    std::unique_ptr<Point3f[]> m_normals;
+    std::unique_ptr<Vector3f[]> m_normals;
 public:
-    TriangleMesh(const Point3f * vertices,const Point3f * normals,int nVertex,const int * vertexIndices,int nIndex,const Trans3DMat & trans)noexcept:m_nVertex(nVertex),m_nIndex(nIndex)
+    TriangleMesh(const Point3f * vertices,const Vector3f * normals,int nVertex,const int * vertexIndices,int nIndex,const Trans3DMat & trans)noexcept:m_nVertex(nVertex),m_nIndex(nIndex)
     {
         m_vertices.reset(new Point3f[nVertex]);
         m_vertexIndices.reset(new int[nIndex]);
+        m_normals.reset(new Vector3f[nVertex]);
         for(int i=0;i<nVertex;i++)
         {
             m_vertices[i] = trans * vertices[i];
@@ -270,7 +274,7 @@ public:
             m_vertexIndices[i] = vertexIndices[i];
         }
         //create normals vertices
-        for(int i=0;i<nIndex;i++){
+        for(int i=0;i<nVertex;i++){
             m_normals[i] = normals[i];
         }
     }
@@ -290,7 +294,7 @@ public:
     {
         return m_nIndex;
     }
-    const Point3f getNormalsArray()const{
+    const Point3f *getNormalsArray()const{
         return m_normals.get();
     }
     void transform(const Trans3DMat & trans)
@@ -300,6 +304,28 @@ public:
             m_vertices[i] = trans*m_vertices[i];
         }
     }
+    friend class Triangle;
+};
+
+
+class Interaction
+{
+    Point3f  m_p;
+    Vector3f  m_wo;
+    Point3f m_norm;
+    Float m_u;
+    Float m_v;
+    Shape * m_shape;
+
+    //BRDF
+public:
+    Interaction(){}
+    Interaction(const Point3f & p, const Vector3f & wo, Float u, Float v) :m_p(p), m_wo(wo), m_u(u), m_v(v) {}
+    const Point3f & intersectionPoint()const { return m_p; }
+    const Vector3f & reflectDirection()const { return m_wo; }
+    Float u()const { return m_u; }
+    Float v()const { return m_v; }
+
     friend class Triangle;
 };
 
@@ -329,7 +355,7 @@ public:
     }
 
 
-    bool intersect(const Ray & ray, Float * t)override
+    bool intersect(const Ray & ray, Float * t,Interaction * interac)override
     {
         /*
          * This ray-triangle intersection algorithm is from
@@ -380,15 +406,20 @@ public:
             return false;
         u*=inv;
         v*=inv;
+        interac->m_u = v;
+        interac->m_v = v;
+        interac->m_norm = Vector3f::crossProduct(p1 - p0, p2 - p0);
+        interac->m_shape = this;
+
         return true;
     }
     static std::vector<std::shared_ptr<Shape>> 
-    createTriangleMesh(const Point3f * vertices,int nVertex,
+    createTriangleMesh(const Point3f * vertices,const Point3f * normals,int nVertex,
         const int * vertexIndices,int nIndex,
         const Trans3DMat & trans)
     {
         assert(nIndex % 3 == 0);
-        std::shared_ptr<TriangleMesh> mesh(new TriangleMesh(vertices, nVertex, vertexIndices, nIndex, trans));
+        std::shared_ptr<TriangleMesh> mesh(new TriangleMesh(vertices, normals,nVertex, vertexIndices, nIndex, trans));
         std::vector<std::shared_ptr<Shape>> tris;
         for(int i=0;i<nIndex/3;i++)
         {
@@ -436,9 +467,9 @@ public:
         m_root = recursiveBuild(m_shapes,0,m_shapes.size(),orderedShapes);
         m_shapes.swap(orderedShapes);
     }
-    bool intersect(const Ray & ray,Float * t)override{
+    bool intersect(const Ray & ray,Float * t,Interaction * interac)override{
         m_tMin = MAX_Float_VALUE;
-        if(recursiveIntersect(m_root.get(),ray)){
+        if(recursiveIntersect(m_root.get(),ray,interac)){
             if(t)*t = m_tMin;
             return true;
         }
@@ -446,14 +477,14 @@ public:
     }
 private:
 
-    bool recursiveIntersect(const BVHNode * root,const Ray & ray){
+    bool recursiveIntersect(const BVHNode * root,const Ray & ray,Interaction * interac){
         //If the BVH is empty or there is no intersection with current node
         if(root == nullptr || root->m_bound.intersect(ray,nullptr,nullptr) == false)
             return false;
         //Interior node
         if(root->m_nShape != -1){
-            bool interLeft =  recursiveIntersect(root->m_left.get(),ray);
-            bool interRight =  recursiveIntersect(root->m_right.get(),ray);
+            bool interLeft =  recursiveIntersect(root->m_left.get(),ray,interac);
+            bool interRight =  recursiveIntersect(root->m_right.get(),ray,interac);
             return interLeft || interRight;
         }else{
             //Leaf node, check and find the nearest intersection
@@ -461,7 +492,14 @@ private:
             for(int i = 0;i<root->m_nShape;i++){
                 Float t;
                 if(m_shapes[i+root->m_shapeOffset]->bound().intersect(ray,&t) == true){
+                    Interaction inter;
+                    m_shapes[i + root->m_shapeOffset]->intersect(ray, &t, &inter);
                     m_tMin = std::min(m_tMin,t);
+                    if(m_tMin > t)
+                    {
+                        m_tMin = t;
+                        *interac = inter;
+                    }
                     isect = true;
                 }
             }
@@ -556,13 +594,7 @@ private:
     }
 };
 
-class Intersection
-{
-    Point3f  m_p;
-    Vector3f  m_wo;
-    Float m_u;
-    Float m_v;
-};
+
 
 /*
  *Qt GUI
@@ -572,7 +604,7 @@ class QPushButton;
 class QLabel;
 class QLineEdit;
 class QSlider;
-class Model;
+class ObjReader;
 class QTextEdit;
 class OpenGLWidget;
 

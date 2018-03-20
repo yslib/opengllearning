@@ -150,11 +150,18 @@ class OpenGLWidget:public QOpenGLWidget,protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
-    OpenGLWidget(const Camera & cam = Camera(),QWidget * parent = nullptr);
+    OpenGLWidget(const Camera & cam = Camera(),QWidget * parent = nullptr)noexcept;
     void setAnimation(bool enable);
     void updateModel(const QVector<QVector3D> & vertices,const QVector<QVector3D> & normals);
-    void setTriangleMesh(const Float *vertices, int nVertex, const int * faceIndices, int nFaceIndex,
-                         const Float * normals, int nNormal, const int * normalIndices, int nNorIndex);
+    void setTriangleMesh(const Point3f * vertices,
+        const Point3f * normals,
+        int nVertex,
+        const unsigned int * faceIndices,
+        int nFaceIndex);
+
+    //void setTriangleMesh(const TriangleMesh & mesh);
+   
+    //void setTriangleMesh(const TriangleMesh & mesh);
     Trans3DMat getPerspectiveMat()const;
     ~OpenGLWidget();
 protected:
@@ -223,7 +230,7 @@ private:
 
     //model
     QVector<QVector3D> m_vertices;
-    QVector<QVector3D> m_normals;
+    QVector<QVector3D> m_norms;
 
 
     int m_attriPos;

@@ -381,14 +381,14 @@ void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 
 	auto indices = m_model->getFaceIndices();
 	auto vertices = m_model->getVertices();
-	std::vector<int> idxs;
-	for (auto & v : indices)
-	{
-		for (auto i : v)
-		{
-			idxs.push_back(i);
-		}
-	}
+	//std::vector<int> idxs;
+	//for (auto & v : indices)
+	//{
+	//	for (auto i : v)
+	//	{
+	//		idxs.push_back(i);
+	//	}
+	//}
 
 	std::vector<Point3Df> vert;
 	for (auto & v : vertices)
@@ -397,7 +397,7 @@ void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 	}
 	auto star = std::chrono::system_clock::now();
 
-	auto res = LoopSubdivision(idxs, vert, value);
+	auto res = LoopSubdivision(indices, vert, value);
 
 	auto end = std::chrono::system_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - star);
@@ -435,7 +435,7 @@ void LoopSubdivisionSurfaceDemo::onOpenFile()
 	if (fileName.isEmpty() == true)
 		return;
 	m_fileNamesLineEdit->setText(fileName);
-	m_model.reset(new Model(fileName.toStdString()));
+	m_model.reset(new ObjReader(fileName.toStdString()));
 	if (m_model->isLoaded() == false)
 	{
 		QMessageBox::critical(this, QString("Error"), QString(".obj file can not be loaded"), QMessageBox::Ok, QMessageBox::Ok);
