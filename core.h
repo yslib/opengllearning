@@ -28,10 +28,11 @@ typedef float Float;
 #include <QMatrix4x4>
 
 
+constexpr Float PI = 3.1415926535;
+
  /*
   * Vector2D
  */
-
 
 template<typename T>
 class Vector2D {
@@ -260,6 +261,9 @@ typedef QVector3D Point3f;
 typedef QVector3D Vector3f;
 typedef QVector2D Point2f;
 typedef QVector2D Vector2f;
+
+typedef QPoint Point2i;
+typedef QPoint Vector2i;
 
 
 class Transform3DMatrix

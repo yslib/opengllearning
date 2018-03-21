@@ -34,7 +34,9 @@ SOURCES += \
     test.cpp \
     loopsubdivisionsurfacedemo.cpp \
     core.cpp \
-    PathTracingDemo.cpp
+    PathTracingDemo.cpp \
+    sampler.cpp \
+    camera.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -46,7 +48,9 @@ HEADERS += \
     test.h \
     loopsubdivisionsurfacedemo.h \
     core.h \
-    PathTracingDemo.h
+    PathTracingDemo.h \
+    sampler.h \
+    camera.h
 
 FORMS += \
         mainwindow.ui

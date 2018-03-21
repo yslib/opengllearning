@@ -3,6 +3,7 @@
 #define _PATHTRACINGDEMO_H_
 #include "basedemowidget.h"
 #include "openglwindow.h"
+#include "framebuffer.h"
 #include <QVector3D>
 #include <cassert>
 
@@ -70,6 +71,9 @@ inline Point3f permutePoint3f(const Point3f & p,int kx,int ky,int kz)
     assert((kx != ky) && (ky != kz) && (kz != kx));
     return Point3f(p[kx], p[ky], p[kz]);
 }
+
+
+
 /*
  *
 */
@@ -138,8 +142,8 @@ public:
      */
     bool intersect(const Ray & ray, Float * hit0 = nullptr, Float * hit1 = nullptr)const noexcept
     {
-        Float t0 = ray.m_tMax;
-        Float t1 = 0;
+        Float t1 = ray.m_tMax;
+        Float t0 = 0;
         for (int i = 0; i < 3; i++)
         {
             Float inv = 1 / ray.m_d[i];
@@ -434,8 +438,12 @@ class Scene
     std::shared_ptr<Shape> m_shape;
 public:
     Scene(std::shared_ptr<Shape> shape):m_shape(shape){}
-    bool intersect(const Ray & ray, Float * t) {
 
+    bool intersect(const Ray & ray, Float * t,Interaction * isect) {
+        return m_shape->intersect(ray,t,isect);
+    }
+    void setObject(std::shared_ptr<Shape> shape){
+        m_shape = shape;
     }
 };
 class BVHTreeAccelerator:public Shape
@@ -462,9 +470,10 @@ class BVHTreeAccelerator:public Shape
     std::unique_ptr<BVHNode> m_root;
     Float m_tMin;
 public:
-    BVHTreeAccelerator(const std::vector<std::shared_ptr<Shape>> & shapes):m_shapes(std::move(shapes)){
+    BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes):m_shapes(shapes){
         std::vector<std::shared_ptr<Shape>> orderedShapes;
-        m_root = recursiveBuild(m_shapes,0,m_shapes.size(),orderedShapes);
+        int s = m_shapes.size();
+        m_root = recursiveBuild(m_shapes,0,s,orderedShapes);
         m_shapes.swap(orderedShapes);
     }
     bool intersect(const Ray & ray,Float * t,Interaction * interac)override{
@@ -475,14 +484,22 @@ public:
         }
         return false;
     }
+    AABB bound()const override{
+        return AABB();
+    }
+    Float area()const override{
+        return Float(0);
+    }
 private:
 
     bool recursiveIntersect(const BVHNode * root,const Ray & ray,Interaction * interac){
         //If the BVH is empty or there is no intersection with current node
-        if(root == nullptr || root->m_bound.intersect(ray,nullptr,nullptr) == false)
+        if(root == nullptr)
+            return false;
+        if(root->m_bound.intersect(ray,nullptr,nullptr) == false)
             return false;
         //Interior node
-        if(root->m_nShape != -1){
+        if(root->m_nShape == -1){
             bool interLeft =  recursiveIntersect(root->m_left.get(),ray,interac);
             bool interRight =  recursiveIntersect(root->m_right.get(),ray,interac);
             return interLeft || interRight;
@@ -514,7 +531,8 @@ private:
         int offset = orderedShapes.size();
         AABB bound;
         for(int i=begin;i<end;i++){
-            bound.unionWith(shapes[i]->bound());
+            AABB b = shapes[i]->bound();
+            bound = bound.unionWith(shapes[i]->bound());
         }
         Vector3f boundDiag = bound.diagnal();
         int splitAxis = findMaxVector3fComponent(boundDiag);
@@ -525,7 +543,7 @@ private:
         }else{
             AABB centroidBound;
             for(int i=begin;i<end;i++){
-                centroidBound.unionWith(shapes[i]->bound());
+                centroidBound = centroidBound.unionWith(shapes[i]->bound().center());
             }
             /*
              * if the maximum component of centroids of the
@@ -545,23 +563,24 @@ private:
             };
             constexpr int nBuckets = 12;
             bucketInfo buckets[nBuckets];
+
             for(int i=begin;i<end;i++){
                 Point3f center = shapes[i]->bound().center();
-                int bucketIndex = nBuckets*(center[splitAxis]/boundDiag[splitAxis]);
+                int bucketIndex = nBuckets*((center[splitAxis]-bound.m_min[splitAxis])/boundDiag[splitAxis]);
                 if(bucketIndex == nBuckets)bucketIndex-=1;
                 buckets[bucketIndex].indices.push_back(i);
-                buckets[bucketIndex].bound.unionWith(shapes[i]->bound());
+                buckets[bucketIndex].bound = buckets[bucketIndex].bound.unionWith(shapes[i]->bound());
             }
             Float cost[nBuckets -1];
             for(int i=0;i<nBuckets-1;i++){
                 AABB bLeft,bRight;
                 int nLeft=0,nRight =0;
                 for(int j =0;j<=i;j++){
-                    bLeft.unionWith(buckets[j].bound);
+                    bLeft = bLeft.unionWith(buckets[j].bound);
                     nLeft += buckets[j].indices.size();
                 }
                 for(int j=i+1;j<nBuckets;j++){
-                    bRight.unionWith(buckets[j].bound);
+                    bRight = bRight.unionWith(buckets[j].bound);
                     nRight += buckets[j].indices.size();
                 }
                 cost[i] = 0.125+(nLeft*bLeft.surfaceArea()+
@@ -573,16 +592,16 @@ private:
                 //if the count of left nodes is greater than the max count of a leaf node can hold
                 //or the cost of spliting the current node is less than creating a leaf node's with current nodes
                 auto lambda =[&](const std::shared_ptr<Shape> s){
-                    int b = nBuckets*(s->bound().center()[splitAxis]/boundDiag[splitAxis]);
+                    int b = nBuckets*((s->bound().center()[splitAxis]-bound.m_min[splitAxis])/boundDiag[splitAxis]);
                     if(b == nBuckets)b-=1;
                     return b<efficentIndex;
                 };
-                int mid = std::distance(shapes.begin(),std::partition(shapes.begin(),shapes.end(),lambda));
+                int mid = std::distance(shapes.begin(),std::partition(shapes.begin()+begin,shapes.begin()+end,lambda));
                 //create interior node
                 std::unique_ptr<BVHNode> newNode(
                             new BVHNode(recursiveBuild(shapes,begin,mid,orderedShapes),
-                                        recursiveBuild(shapes,mid+1,end,orderedShapes),
-                                        offset,splitAxis,currentNodeCount,bound));
+                                        recursiveBuild(shapes,mid,end,orderedShapes),
+                                        offset,splitAxis,-1,bound));
                 return newNode;
 
             }else{
@@ -626,8 +645,18 @@ private:
     QLabel * m_sliderLabel;
     QSlider * m_slider;
     QTextEdit * m_textEdit;
+
+    QPushButton * m_renderButton;
+
+    FrameBuffer m_frameBuffer;
+    QImage m_image;
+    //
+    std::unique_ptr<Scene> m_scene;
+    std::shared_ptr<BVHTreeAccelerator> m_aggregate;
+
 public slots:
     void onOpenFile();
     void onSamplesCountChanged(int value);
+    void onRender();
 };
 #endif

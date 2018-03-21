@@ -1,5 +1,6 @@
 #include "PathTracingDemo.h"
 #include "model.h"
+#include "framebuffer.h"
 #include <QLayout>
 #include <QPushButton>
 #include <QLineEdit>
@@ -10,6 +11,7 @@
 #include <QSlider>
 #include <QFileDialog>
 #include <QMessageBox>
+
 
 PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
 {
@@ -39,10 +41,15 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     controlLayout->addWidget(m_sliderLabel, 1, 0, 1, 1, Qt::AlignRight);
     controlLayout->addWidget(m_slider, 1, 1, 1, 2);
 
+
+    m_renderButton = new QPushButton(tr("Render"));
+    connect(m_renderButton,SIGNAL(clicked()),this,SLOT(onRender()));
+    controlLayout->addWidget(m_renderButton,2,0,1,3);
+
     //text edit
     m_textEdit = new QTextEdit;
     m_textEdit->setReadOnly(true);
-    controlLayout->addWidget(m_textEdit, 2, 0, 1, 3);
+    controlLayout->addWidget(m_textEdit, 3, 0, 1, 3);
 
 
     controlWidget->setLayout(controlLayout);
@@ -55,13 +62,13 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     m_sceneDisplay->setAnimation(true);
 
     QSize displaySize = m_sceneDisplay->size();
-    //m_resultDisplay = new QLabel(this);
+    m_resultDisplay = new QLabel(this);
     //m_resultDisplay->resize(displaySize);
     //m_resultDisplay->setPixmap(QPixmap::fromImage(QImage()));
 
     QHBoxLayout * displayLayout = new QHBoxLayout(this);
     displayLayout->addWidget(m_sceneDisplay);
-    //displayLayout->addWidget(m_resultDisplay);
+    displayLayout->addWidget(m_resultDisplay);
     m_displayWidget->setLayout(displayLayout);
     setDisplayWidget(m_displayWidget);
 
@@ -182,9 +189,59 @@ void PathTracingDemo::onOpenFile()
         (unsigned int*)mesh.getIndicesArray(),
         mesh.getIndexCount());
     //m_sceneDisplay->updateModel(a,b);
+    std::vector<std::shared_ptr<Shape>> triangles = Triangle::createTriangleMesh(model.getVerticesFlatArray(),
+                                                                                 model.getNormalsFlatArray(),
+                                                                                 model.getVertexCount(),
+                                                                                 model.getFacesIndicesFlatArray(),
+                                                                                 model.getFacesCount(),Trans3DMat());
+
+    m_aggregate = std::make_shared<BVHTreeAccelerator>(triangles);
 }
 
 void PathTracingDemo::onSamplesCountChanged(int value)
 {
     qDebug() << "slot hitted";
+}
+
+void PathTracingDemo::onRender()
+{
+    QSize size = m_sceneDisplay->size();
+    m_frameBuffer.resize(size.width(),size.height());
+    const Camera & cam = m_sceneDisplay->getCamera();
+
+    Vector3f cameraPosition = cam.position();
+    Vector3f cameraFront = cam.front().normalized();
+    Vector3f cameraUp = cam.up().normalized();
+    Vector3f cameraRight = cam.right().normalized();
+    Float distCamToCan = 2;
+
+    Point3f canvasCentroid = cameraPosition+distCamToCan*cameraFront;
+    Float canvasHeight = 2*distCamToCan*std::tan(qDegreesToRadians(m_sceneDisplay->verticalAngle()/2));
+    Float canvasWidth = canvasHeight*m_sceneDisplay->aspectRatio();
+    Point3f canvasTopLeft = canvasCentroid-canvasHeight/2*cameraUp-canvasWidth/2*cameraRight;
+
+    int height = m_frameBuffer.height();
+    int width = m_frameBuffer.width();
+    Scene scene(m_aggregate);
+    for(int j=0;j<height;j++){
+        for(int i=0;i<width;i++){
+            Point3f canvasPosInWorld = canvasTopLeft+cameraUp*(Float(j)/height)*canvasHeight +
+                    cameraRight*(Float(i)/width)*canvasWidth;
+            //construct a ray
+            Ray ray((canvasPosInWorld-cameraPosition).normalized(),cameraPosition);
+            Float t;
+            Interaction isect;
+            if(scene.intersect(ray,&t,&isect) == true){
+                m_frameBuffer.setColor24(i,j,Color24(50,100,250));
+                qDebug()<<ray.original()<<" "<<ray.direction()<<" true";
+            }else{
+                m_frameBuffer.setColor24(i,j,Color24(0,0,0));
+                qDebug()<<ray.original()<<" "<<ray.direction()<<" false";
+            }
+            //write to framebuffer
+        }
+    }
+    QImage image(m_frameBuffer.buffer(),width,height,QImage::Format_RGB888);
+    m_resultDisplay->resize(size);
+    m_resultDisplay->setPixmap(QPixmap::fromImage(image));
 }
