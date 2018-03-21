@@ -22,9 +22,9 @@ inline int findMaxVector3fComponent(const Vector3f & v)
 {
     int idx = 0;
     Float cMax = v[0];
-    for(int i=1;i<3;i++)
+    for (int i = 1; i < 3; i++)
     {
-        if(cMax < v[i])
+        if (cMax < v[i])
         {
             cMax = v[i];
             idx = i;
@@ -36,9 +36,9 @@ inline int findMaxPoint3fComponent(const Point3f & p)
 {
     int idx = 0;
     Float cMax = p[0];
-    for(int i=1;i<3;i++)
+    for (int i = 1; i < 3; i++)
     {
-        if(cMax < p[i])
+        if (cMax < p[i])
         {
             cMax = p[i];
             idx = i;
@@ -48,14 +48,14 @@ inline int findMaxPoint3fComponent(const Point3f & p)
 }
 inline Vector3f absOfVector3f(const Vector3f & v)
 {
-    return Vector3f(std::abs(v[0]), std::abs(v[1]),std::abs(v[2]));
+    return Vector3f(std::abs(v[0]), std::abs(v[1]), std::abs(v[2]));
 }
 inline Point3f absOfPoint3f(const Point3f & p)
 {
-    return Point3f(std::abs(p[0]), std::abs(p[1]),std::abs(p[2]));
+    return Point3f(std::abs(p[0]), std::abs(p[1]), std::abs(p[2]));
 }
 
-inline Vector3f permuteVector3f(const Vector3f & v,int kx,int ky,int kz)
+inline Vector3f permuteVector3f(const Vector3f & v, int kx, int ky, int kz)
 {
     assert(kx >= 0 && kx < 3);
     assert(ky >= 0 && ky < 3);
@@ -63,7 +63,7 @@ inline Vector3f permuteVector3f(const Vector3f & v,int kx,int ky,int kz)
     assert((kx != ky) && (ky != kz) && (kz != kx));
     return Vector3f(v[kx], v[ky], v[kz]);
 }
-inline Point3f permutePoint3f(const Point3f & p,int kx,int ky,int kz)
+inline Point3f permutePoint3f(const Point3f & p, int kx, int ky, int kz)
 {
     assert(kx >= 0 && kx < 3);
     assert(ky >= 0 && ky < 3);
@@ -84,15 +84,15 @@ class Ray
     Vector3f m_d;
     Float m_tMax;
 public:
-    Ray(const Point3f & d, const Point3f & o, Float t = MAX_Float_VALUE)noexcept :m_o(o), m_d(d), m_tMax(t){}
+    Ray(const Point3f & d, const Point3f & o, Float t = MAX_Float_VALUE)noexcept : m_o(o), m_d(d), m_tMax(t) {}
     Point3f operator()(float t)noexcept { return m_o + t * m_d; }
-    const Point3f & original()const{
+    const Point3f & original()const {
         return m_o;
     }
-    const Vector3f & direction()const{
+    const Vector3f & direction()const {
         return m_d;
     }
-    void setMaxLength(Float t){
+    void setMaxLength(Float t) {
         m_tMax = t;
     }
     friend class AABB;
@@ -108,11 +108,11 @@ class AABB
     Point3f m_min;
     Point3f m_max;
 public:
-    AABB():m_min(MAX_Float_VALUE,MAX_Float_VALUE,MAX_Float_VALUE),m_max(LOWEST_Float_VALUE,LOWEST_Float_VALUE,LOWEST_Float_VALUE)
+    AABB() :m_min(MAX_Float_VALUE, MAX_Float_VALUE, MAX_Float_VALUE), m_max(LOWEST_Float_VALUE, LOWEST_Float_VALUE, LOWEST_Float_VALUE)
     {
         //construct a empty bounding box
     }
-    AABB(const Point3f & p0,const Point3f & p1)noexcept :
+    AABB(const Point3f & p0, const Point3f & p1)noexcept :
         m_min(std::min(p0.x(), p1.x()), std::min(p0.y(), p1.y()), std::min(p0.z(), p1.z())),
         m_max(std::max(p0.x(), p1.x()), std::max(p0.y(), p1.y()), std::max(p0.z(), p1.z()))
     {}
@@ -125,7 +125,7 @@ public:
         return Point3f();
     }
 
-    Point3f & operator[](int i)noexcept{
+    Point3f & operator[](int i)noexcept {
         return const_cast<Point3f&>(static_cast<const AABB &>(*this)[i]);
     }
 
@@ -137,7 +137,7 @@ public:
 
     /*
      * Check whether it is intersected with a ray.
-     * hit0 stores the nearest ray 
+     * hit0 stores the nearest ray
      * parameter and hit1 stores the farthest ray parameter
      */
     bool intersect(const Ray & ray, Float * hit0 = nullptr, Float * hit1 = nullptr)const noexcept
@@ -154,20 +154,20 @@ public:
             t1 = tFar < t1 ? tFar : t1;
             if (t0 > t1)return false;
         }
-        if(hit0 != nullptr)*hit0 = t0;
-        if(hit1 != nullptr)*hit1 = t1;
+        if (hit0 != nullptr)*hit0 = t0;
+        if (hit1 != nullptr)*hit1 = t1;
         return true;
     }
-    Point3f center()const{
-        return (m_min+m_max)/2;
+    Point3f center()const {
+        return (m_min + m_max) / 2;
     }
     Vector3f diagnal()const
     {
-        return m_max-m_min;
+        return m_max - m_min;
     }
-    Float surfaceArea()const{
+    Float surfaceArea()const {
         Vector3f d = diagnal();
-        Float area = (d[0]*d[1]+d[1]*d[2]+d[2]*d[0])*2;
+        Float area = (d[0] * d[1] + d[1] * d[2] + d[2] * d[0]) * 2;
         return area;
     }
     /*
@@ -186,14 +186,14 @@ public:
     }
 
     /*
-     * Check whether the bounding box is 
+     * Check whether the bounding box is
      * intersected with another bounding box
      */
     bool isIntersectWith(const AABB & b)
     {
-        return (m_max.x()>=b.m_min.x()&&b.m_max.x()>=m_min.x())&&
-            (m_max.y()>=b.m_min.y()&&b.m_max.y()>=m_min.y())&&
-            (m_max.z()>=b.m_min.z()&&b.m_max.z()>=m_min.z());
+        return (m_max.x() >= b.m_min.x() && b.m_max.x() >= m_min.x()) &&
+            (m_max.y() >= b.m_min.y() && b.m_max.y() >= m_min.y()) &&
+            (m_max.z() >= b.m_min.z() && b.m_max.z() >= m_min.z());
     }
 
     /*
@@ -228,7 +228,7 @@ public:
 
     }
     /*
-     * Return a minimun bounding box containing the 
+     * Return a minimun bounding box containing the
      * bounding box and the point
      */
     AABB unionWith(const Point3f & p)const {
@@ -251,10 +251,10 @@ public:
 class Shape
 {
 public:
-    
+
     virtual AABB bound()const = 0;
     virtual Float area()const = 0;
-    virtual bool intersect(const Ray & ray, Float * t,Interaction * iterac)= 0;
+    virtual bool intersect(const Ray & ray, Float * t, Interaction * iterac) = 0;
 };
 
 class TriangleMesh {
@@ -264,21 +264,21 @@ class TriangleMesh {
     int m_nIndex;
     std::unique_ptr<Vector3f[]> m_normals;
 public:
-    TriangleMesh(const Point3f * vertices,const Vector3f * normals,int nVertex,const int * vertexIndices,int nIndex,const Trans3DMat & trans)noexcept:m_nVertex(nVertex),m_nIndex(nIndex)
+    TriangleMesh(const Point3f * vertices, const Vector3f * normals, int nVertex, const int * vertexIndices, int nIndex, const Trans3DMat & trans)noexcept : m_nVertex(nVertex), m_nIndex(nIndex)
     {
         m_vertices.reset(new Point3f[nVertex]);
         m_vertexIndices.reset(new int[nIndex]);
         m_normals.reset(new Vector3f[nVertex]);
-        for(int i=0;i<nVertex;i++)
+        for (int i = 0; i < nVertex; i++)
         {
             m_vertices[i] = trans * vertices[i];
         }
-        for(int i=0;i<nIndex;i++)
+        for (int i = 0; i < nIndex; i++)
         {
             m_vertexIndices[i] = vertexIndices[i];
         }
         //create normals vertices
-        for(int i=0;i<nVertex;i++){
+        for (int i = 0; i < nVertex; i++) {
             m_normals[i] = normals[i];
         }
     }
@@ -298,14 +298,14 @@ public:
     {
         return m_nIndex;
     }
-    const Point3f *getNormalsArray()const{
+    const Point3f *getNormalsArray()const {
         return m_normals.get();
     }
     void transform(const Trans3DMat & trans)
     {
-        for(int i=0;i<m_nVertex;i++)
+        for (int i = 0; i < m_nVertex; i++)
         {
-            m_vertices[i] = trans*m_vertices[i];
+            m_vertices[i] = trans * m_vertices[i];
         }
     }
     friend class Triangle;
@@ -323,10 +323,11 @@ class Interaction
 
     //BRDF
 public:
-    Interaction(){}
+    Interaction() {}
     Interaction(const Point3f & p, const Vector3f & wo, Float u, Float v) :m_p(p), m_wo(wo), m_u(u), m_v(v) {}
     const Point3f & intersectionPoint()const { return m_p; }
     const Vector3f & reflectDirection()const { return m_wo; }
+    const Vector3f & normal()const { return m_norm; }
     Float u()const { return m_u; }
     Float v()const { return m_v; }
 
@@ -337,7 +338,7 @@ class Triangle :public Shape {
     std::shared_ptr<TriangleMesh> m_sharedTriangles;
     const int * m_vertexIndices;
 public:
-    Triangle(std::shared_ptr<TriangleMesh> mesh,int indexOffset)
+    Triangle(std::shared_ptr<TriangleMesh> mesh, int indexOffset)
     {
         m_sharedTriangles = mesh;
         m_vertexIndices = &(mesh->m_vertexIndices[indexOffset * 3]);
@@ -350,8 +351,8 @@ public:
     }
     Float area()const override
     {
-        Vector3f v1 = m_sharedTriangles->m_vertices[m_vertexIndices[1]] 
-        - m_sharedTriangles->m_vertices[m_vertexIndices[0]];
+        Vector3f v1 = m_sharedTriangles->m_vertices[m_vertexIndices[1]]
+            - m_sharedTriangles->m_vertices[m_vertexIndices[0]];
         Vector3f v2 = m_sharedTriangles->m_vertices[m_vertexIndices[2]]
             - m_sharedTriangles->m_vertices[m_vertexIndices[0]];
         return 0.5*Vector3f::dotProduct(v1, v2);
@@ -359,7 +360,7 @@ public:
     }
 
 
-    bool intersect(const Ray & ray, Float * t,Interaction * interac)override
+    bool intersect(const Ray & ray, Float * t, Interaction * interac)override
     {
         /*
          * This ray-triangle intersection algorithm is from
@@ -375,59 +376,60 @@ public:
 
         const Point3f & D = ray.m_d;
         Vector3f T;
-        Vector3f E1 = p1-p0;
+        Vector3f E1 = p1 - p0;
         Vector3f E2 = p2 - p0;
-        Vector3f P = Vector3f::crossProduct(D,E2);
+        Vector3f P = Vector3f::crossProduct(D, E2);
 
-        Float det = Vector3f::dotProduct(P,E1);
-        if(det>0){
-            T = ray.m_o-p0;
-        }else{
-            T = p0-ray.m_o;
-            det =-det;
+        Float det = Vector3f::dotProduct(P, E1);
+        if (det > 0) {
+            T = ray.m_o - p0;
         }
-        if(det < 0.0001)
+        else {
+            T = p0 - ray.m_o;
+            det = -det;
+        }
+        if (det < 0.0001)
             return false;
 
-        Float u,v;
-        u = Vector3f::dotProduct(P,T);
-        if(u<0.0||u>det){
+        Float u, v;
+        u = Vector3f::dotProduct(P, T);
+        if (u<0.0 || u>det) {
             //u > 1, invalid
             return false;
         }
-        Vector3f Q = Vector3f::crossProduct(T,E1);
-        v = Vector3f::dotProduct(Q,D);
-        if(v < 0.0||v>det){
+        Vector3f Q = Vector3f::crossProduct(T, E1);
+        v = Vector3f::dotProduct(D, Q);
+        if (v < 0.0 || v+u>det) {
             // v > 1 ,invalid
             return false;
         }
 
-        if(t != nullptr)*t = Vector3f::dotProduct(E2,Q);
+        Float tt = Vector3f::dotProduct(E2, Q);
 
-        Float inv = 1.0f/det;
-        (*t)*=inv;
-        if(*t > ray.m_tMax)
+        Float inv = 1.0f / det;
+        tt *= inv;
+        if (tt > ray.m_tMax)
             return false;
-        u*=inv;
-        v*=inv;
-        interac->m_u = v;
+        u *= inv;
+        v *= inv;
+        interac->m_u = u;
         interac->m_v = v;
         interac->m_norm = Vector3f::crossProduct(p1 - p0, p2 - p0);
         interac->m_shape = this;
-
+        if (t)*t = tt;
         return true;
     }
-    static std::vector<std::shared_ptr<Shape>> 
-    createTriangleMesh(const Point3f * vertices,const Point3f * normals,int nVertex,
-        const int * vertexIndices,int nIndex,
-        const Trans3DMat & trans)
+    static std::vector<std::shared_ptr<Shape>>
+        createTriangleMesh(const Point3f * vertices, const Point3f * normals, int nVertex,
+            const int * vertexIndices, int nIndex,
+            const Trans3DMat & trans)
     {
         assert(nIndex % 3 == 0);
-        std::shared_ptr<TriangleMesh> mesh(new TriangleMesh(vertices, normals,nVertex, vertexIndices, nIndex, trans));
+        std::shared_ptr<TriangleMesh> mesh(new TriangleMesh(vertices, normals, nVertex, vertexIndices, nIndex, trans));
         std::vector<std::shared_ptr<Shape>> tris;
-        for(int i=0;i<nIndex/3;i++)
+        for (int i = 0; i < nIndex / 3; i++)
         {
-            tris.push_back(std::make_shared<Triangle>(mesh,i));
+            tris.push_back(std::make_shared<Triangle>(mesh, i));
         }
         return tris;
     }
@@ -437,87 +439,92 @@ class Scene
     AABB m_worldBound;
     std::shared_ptr<Shape> m_shape;
 public:
-    Scene(std::shared_ptr<Shape> shape):m_shape(shape){}
+    Scene(std::shared_ptr<Shape> shape) :m_shape(shape) {}
 
-    bool intersect(const Ray & ray, Float * t,Interaction * isect) {
-        return m_shape->intersect(ray,t,isect);
+    bool intersect(const Ray & ray, Float * t, Interaction * isect) {
+        return m_shape->intersect(ray, t, isect);
     }
-    void setObject(std::shared_ptr<Shape> shape){
+    void setObject(std::shared_ptr<Shape> shape) {
         m_shape = shape;
     }
 };
-class BVHTreeAccelerator:public Shape
+class BVHTreeAccelerator :public Shape
 {
-    class BVHNode{
+    class BVHNode {
     public:
-      int m_nShape;
-      int m_shapeOffset;
-      int m_splitAxis;
-      AABB m_bound;
-      std::unique_ptr<BVHNode> m_left;
-      std::unique_ptr<BVHNode> m_right;
-      BVHNode(){}
-      BVHNode(std::unique_ptr<BVHNode> left,std::unique_ptr<BVHNode> right,int shapeOffset,
-              int splitAxis,
-               int nshape,
-               const AABB & b = AABB()):
-          m_nShape(nshape),
-          m_shapeOffset(shapeOffset),
-          m_splitAxis(splitAxis),
-          m_bound(b){}
+        int m_nShape;
+        int m_shapeOffset;
+        int m_splitAxis;
+        AABB m_bound;
+        std::unique_ptr<BVHNode> m_left;
+        std::unique_ptr<BVHNode> m_right;
+        BVHNode() {}
+        BVHNode(std::unique_ptr<BVHNode> &&left, std::unique_ptr<BVHNode> &&right, int shapeOffset,
+            int splitAxis,
+            int nshape,
+            const AABB & b = AABB()) :
+            m_left(std::move(left)),
+            m_right(std::move(right)),
+            m_nShape(nshape),
+            m_shapeOffset(shapeOffset),
+            m_splitAxis(splitAxis),
+            m_bound(b) {}
     };
     std::vector<std::shared_ptr<Shape>> m_shapes;
     std::unique_ptr<BVHNode> m_root;
     Float m_tMin;
 public:
-    BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes):m_shapes(shapes){
+    BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes) :m_shapes(shapes) {
         std::vector<std::shared_ptr<Shape>> orderedShapes;
         int s = m_shapes.size();
-        m_root = recursiveBuild(m_shapes,0,s,orderedShapes);
+        m_root = recursiveBuild(m_shapes, 0, s, orderedShapes);
         m_shapes.swap(orderedShapes);
     }
-    bool intersect(const Ray & ray,Float * t,Interaction * interac)override{
+    bool intersect(const Ray & ray, Float * t, Interaction * interac)override {
         m_tMin = MAX_Float_VALUE;
-        if(recursiveIntersect(m_root.get(),ray,interac)){
-            if(t)*t = m_tMin;
+        if (recursiveIntersect(m_root.get(), ray, interac)) {
+            if (t)*t = m_tMin;
             return true;
         }
         return false;
     }
-    AABB bound()const override{
+    AABB bound()const override {
         return AABB();
     }
-    Float area()const override{
+    Float area()const override {
         return Float(0);
     }
 private:
 
-    bool recursiveIntersect(const BVHNode * root,const Ray & ray,Interaction * interac){
+    bool recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac) {
         //If the BVH is empty or there is no intersection with current node
-        if(root == nullptr)
+        if (root == nullptr)
             return false;
-        if(root->m_bound.intersect(ray,nullptr,nullptr) == false)
+        if (root->m_bound.intersect(ray, nullptr, nullptr) == false)
             return false;
         //Interior node
-        if(root->m_nShape == -1){
-            bool interLeft =  recursiveIntersect(root->m_left.get(),ray,interac);
-            bool interRight =  recursiveIntersect(root->m_right.get(),ray,interac);
+        if (root->m_nShape == -1) {
+            bool interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
+            bool interRight = recursiveIntersect(root->m_right.get(), ray, interac);
             return interLeft || interRight;
-        }else{
+        }
+        else {
             //Leaf node, check and find the nearest intersection
             bool isect = false;
-            for(int i = 0;i<root->m_nShape;i++){
+            for (int i = 0; i < root->m_nShape; i++) {
                 Float t;
-                if(m_shapes[i+root->m_shapeOffset]->bound().intersect(ray,&t) == true){
+                if (m_shapes[i + root->m_shapeOffset]->bound().intersect(ray, &t) == true) {
                     Interaction inter;
-                    m_shapes[i + root->m_shapeOffset]->intersect(ray, &t, &inter);
-                    m_tMin = std::min(m_tMin,t);
-                    if(m_tMin > t)
+                    if(m_shapes[i + root->m_shapeOffset]->intersect(ray, &t, &inter) == true)
                     {
-                        m_tMin = t;
-                        *interac = inter;
+                        m_tMin = std::min(m_tMin, t);
+                        if (m_tMin > t)
+                        {
+                            m_tMin = t;
+                            *interac = inter;
+                        }
+                        isect = true;
                     }
-                    isect = true;
                 }
             }
             return isect;
@@ -525,24 +532,29 @@ private:
     }
 
     std::unique_ptr<BVHNode> recursiveBuild(std::vector<std::shared_ptr<Shape>> & shapes,
-                             int begin,int end,
-                             std::vector<std::shared_ptr<Shape>> & orderedShapes){
+        int begin, int end,
+        std::vector<std::shared_ptr<Shape>> & orderedShapes) {
         int currentNodeCount = end - begin;
         int offset = orderedShapes.size();
         AABB bound;
-        for(int i=begin;i<end;i++){
+        for (int i = begin; i < end; i++) {
             AABB b = shapes[i]->bound();
             bound = bound.unionWith(shapes[i]->bound());
         }
         Vector3f boundDiag = bound.diagnal();
         int splitAxis = findMaxVector3fComponent(boundDiag);
-        if(currentNodeCount == 1){
+        if (currentNodeCount == 1) {
             //create leaf node and return
-            std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr,nullptr,offset,splitAxis,currentNodeCount,bound));
+            std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr, nullptr, offset, splitAxis, currentNodeCount, bound));
+            for (int i = begin; i < end; i++)
+            {
+                orderedShapes.push_back(m_shapes[i]);
+            }
             return newNode;
-        }else{
+        }
+        else {
             AABB centroidBound;
-            for(int i=begin;i<end;i++){
+            for (int i = begin; i < end; i++) {
                 centroidBound = centroidBound.unionWith(shapes[i]->bound().center());
             }
             /*
@@ -551,62 +563,75 @@ private:
              * just create a leaf node for all of them
              */
 
-            if(centroidBound.m_min[splitAxis] == centroidBound.m_max[splitAxis]){
-                std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr,nullptr,offset,splitAxis,currentNodeCount,bound));
+            if (centroidBound.m_min[splitAxis] == centroidBound.m_max[splitAxis]) {
+                std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr, nullptr, offset, splitAxis, currentNodeCount, bound));
+                for (int i = begin; i < end; i++)
+                {
+                    orderedShapes.push_back(m_shapes[i]);
+                }
+
                 return newNode;
             }
 
             //find the split position with minimum cost
-            struct bucketInfo{
+            struct bucketInfo {
                 std::vector<int> indices;
                 AABB bound;
             };
             constexpr int nBuckets = 12;
             bucketInfo buckets[nBuckets];
 
-            for(int i=begin;i<end;i++){
+            for (int i = begin; i < end; i++) {
                 Point3f center = shapes[i]->bound().center();
-                int bucketIndex = nBuckets*((center[splitAxis]-bound.m_min[splitAxis])/boundDiag[splitAxis]);
-                if(bucketIndex == nBuckets)bucketIndex-=1;
+                int bucketIndex = nBuckets * ((center[splitAxis] - bound.m_min[splitAxis]) / boundDiag[splitAxis]);
+                if (bucketIndex == nBuckets)bucketIndex -= 1;
                 buckets[bucketIndex].indices.push_back(i);
                 buckets[bucketIndex].bound = buckets[bucketIndex].bound.unionWith(shapes[i]->bound());
             }
-            Float cost[nBuckets -1];
-            for(int i=0;i<nBuckets-1;i++){
-                AABB bLeft,bRight;
-                int nLeft=0,nRight =0;
-                for(int j =0;j<=i;j++){
+            Float cost[nBuckets - 1];
+            for (int i = 0; i < nBuckets - 1; i++) {
+                AABB bLeft, bRight;
+                int nLeft = 0, nRight = 0;
+                for (int j = 0; j <= i; j++) {
                     bLeft = bLeft.unionWith(buckets[j].bound);
                     nLeft += buckets[j].indices.size();
                 }
-                for(int j=i+1;j<nBuckets;j++){
+                for (int j = i + 1; j < nBuckets; j++) {
                     bRight = bRight.unionWith(buckets[j].bound);
                     nRight += buckets[j].indices.size();
                 }
-                cost[i] = 0.125+(nLeft*bLeft.surfaceArea()+
-                        bRight.surfaceArea()*nRight)/bound.surfaceArea();
+                cost[i] = 0.125 + (nLeft*bLeft.surfaceArea() +
+                    bRight.surfaceArea()*nRight) / bound.surfaceArea();
             }
-            auto efficientIter = std::min_element(cost,cost+nBuckets-1);
-            int efficentIndex = std::distance(cost,efficientIter);
-            if(currentNodeCount > 255 || *efficientIter < currentNodeCount){
+            auto efficientIter = std::min_element(cost, cost + nBuckets - 1);
+            int efficentIndex = std::distance(cost, efficientIter);
+            if (currentNodeCount > 255 || *efficientIter < currentNodeCount) {
                 //if the count of left nodes is greater than the max count of a leaf node can hold
                 //or the cost of spliting the current node is less than creating a leaf node's with current nodes
-                auto lambda =[&](const std::shared_ptr<Shape> s){
-                    int b = nBuckets*((s->bound().center()[splitAxis]-bound.m_min[splitAxis])/boundDiag[splitAxis]);
-                    if(b == nBuckets)b-=1;
-                    return b<efficentIndex;
+                auto lambda = [&](const std::shared_ptr<Shape> s) {
+                    int b = nBuckets * ((s->bound().center()[splitAxis] - bound.m_min[splitAxis]) / boundDiag[splitAxis]);
+                    if (b == nBuckets)b -= 1;
+                    return b < efficentIndex;
                 };
-                int mid = std::distance(shapes.begin(),std::partition(shapes.begin()+begin,shapes.begin()+end,lambda));
+                int mid = std::distance(shapes.begin(), std::partition(shapes.begin() + begin, shapes.begin() + end, lambda));
                 //create interior node
+                auto leftNode = recursiveBuild(shapes, begin, mid, orderedShapes);
+                auto rightNode = recursiveBuild(shapes, mid, end, orderedShapes);
                 std::unique_ptr<BVHNode> newNode(
-                            new BVHNode(recursiveBuild(shapes,begin,mid,orderedShapes),
-                                        recursiveBuild(shapes,mid,end,orderedShapes),
-                                        offset,splitAxis,-1,bound));
+                    new BVHNode(std::move(leftNode),
+                        std::move(rightNode),
+                        offset, splitAxis, -1, bound)
+                );
                 return newNode;
 
-            }else{
+            }
+            else {
                 //create leaf node and return
-                std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr,nullptr,offset,splitAxis,currentNodeCount,bound));
+                std::unique_ptr<BVHNode> newNode(new BVHNode(nullptr, nullptr, offset, splitAxis, currentNodeCount, bound));
+                for (int i = begin; i < end; i++)
+                {
+                    orderedShapes.push_back(m_shapes[i]);
+                }
                 return newNode;
             }
         }
@@ -654,7 +679,7 @@ private:
     std::unique_ptr<Scene> m_scene;
     std::shared_ptr<BVHTreeAccelerator> m_aggregate;
 
-public slots:
+    public slots:
     void onOpenFile();
     void onSamplesCountChanged(int value);
     void onRender();

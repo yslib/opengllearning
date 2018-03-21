@@ -218,30 +218,37 @@ void PathTracingDemo::onRender()
     Point3f canvasCentroid = cameraPosition+distCamToCan*cameraFront;
     Float canvasHeight = 2*distCamToCan*std::tan(qDegreesToRadians(m_sceneDisplay->verticalAngle()/2));
     Float canvasWidth = canvasHeight*m_sceneDisplay->aspectRatio();
-    Point3f canvasTopLeft = canvasCentroid-canvasHeight/2*cameraUp-canvasWidth/2*cameraRight;
+    Point3f canvasTopLeft = canvasCentroid+canvasHeight/2*cameraUp-canvasWidth/2*cameraRight;
 
     int height = m_frameBuffer.height();
     int width = m_frameBuffer.width();
     Scene scene(m_aggregate);
+
+    QImage resultImage(width, height, QImage::Format_RGB888);
+    QColor color(50, 100, 150);
     for(int j=0;j<height;j++){
         for(int i=0;i<width;i++){
-            Point3f canvasPosInWorld = canvasTopLeft+cameraUp*(Float(j)/height)*canvasHeight +
+            Point3f canvasPosInWorld = canvasTopLeft-cameraUp*(Float(j)/height)*canvasHeight +
                     cameraRight*(Float(i)/width)*canvasWidth;
             //construct a ray
             Ray ray((canvasPosInWorld-cameraPosition).normalized(),cameraPosition);
             Float t;
             Interaction isect;
             if(scene.intersect(ray,&t,&isect) == true){
-                m_frameBuffer.setColor24(i,j,Color24(50,100,250));
-                qDebug()<<ray.original()<<" "<<ray.direction()<<" true";
+                //m_frameBuffer.setColor24(i,j,Color24(50,100,250));
+                //float k = std::max(Vector3f::dotProduct(isect.normal(), -cameraFront),0.f);
+                resultImage.setPixelColor(i, j,QColor(50,100,150));
+
+                //qDebug()<<ray.original()<<" "<<ray.direction()<<" true";
             }else{
-                m_frameBuffer.setColor24(i,j,Color24(0,0,0));
-                qDebug()<<ray.original()<<" "<<ray.direction()<<" false";
+                //m_frameBuffer.setColor24(i,j,Color24(0,0,0));
+                resultImage.setPixelColor(i, j, QColor(0, 0, 0));
+                //qDebug()<<ray.original()<<" "<<ray.direction()<<" false";
             }
             //write to framebuffer
         }
     }
-    QImage image(m_frameBuffer.buffer(),width,height,QImage::Format_RGB888);
+    //QImage image(m_frameBuffer.buffer(),width,height,QImage::Format_RGB888);
     m_resultDisplay->resize(size);
-    m_resultDisplay->setPixmap(QPixmap::fromImage(image));
+    m_resultDisplay->setPixmap(QPixmap::fromImage(resultImage));
 }
