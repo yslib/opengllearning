@@ -20,17 +20,29 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
 
     //button
     m_openFileButton = new QPushButton;
-    m_openFileButton->setText(QString("Open..."));
+    m_openFileButton->setText(QString("Open Obj..."));
+
+    m_openMtlFileButton = new QPushButton(tr("Open Mtl.."));
+
+
     //lineedit
     m_fileNamesLineEdit = new QLineEdit;
+    m_fileNamesLineEdit->setReadOnly(true);
+    m_mtlFileNameLineEdit = new QLineEdit;
+    m_mtlFileNameLineEdit->setReadOnly(true);
+
     //label
     m_fileNameLabel = new QLabel;
-    m_fileNameLabel->setText(tr("File:"));
-    m_fileNamesLineEdit->setReadOnly(true);
+    m_fileNameLabel->setText(tr("Obj File:"));
+    m_mtlNameLabel = new QLabel(tr("Mtl File:"));
 
     controlLayout->addWidget(m_fileNameLabel, 0, 0, 1, 1, Qt::AlignRight);
     controlLayout->addWidget(m_fileNamesLineEdit, 0, 1);
     controlLayout->addWidget(m_openFileButton, 0, 2);
+
+    controlLayout->addWidget(m_mtlNameLabel, 1, 0, 1, 1, Qt::AlignRight);
+    controlLayout->addWidget(m_mtlFileNameLineEdit, 1, 1);
+    controlLayout->addWidget(m_openMtlFileButton, 1, 2);
 
     //slider label
     m_sliderLabel = new QLabel(tr("Samples:"));
@@ -38,18 +50,18 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     m_slider = new QSlider(Qt::Horizontal);
     m_slider->setMaximum(10);
     m_slider->setEnabled(false);
-    controlLayout->addWidget(m_sliderLabel, 1, 0, 1, 1, Qt::AlignRight);
-    controlLayout->addWidget(m_slider, 1, 1, 1, 2);
+    controlLayout->addWidget(m_sliderLabel, 2, 0, 1, 1, Qt::AlignRight);
+    controlLayout->addWidget(m_slider, 2, 1, 1, 2);
 
 
     m_renderButton = new QPushButton(tr("Render"));
     connect(m_renderButton,SIGNAL(clicked()),this,SLOT(onRender()));
-    controlLayout->addWidget(m_renderButton,2,0,1,3);
+    controlLayout->addWidget(m_renderButton,3,0,1,3);
 
     //text edit
     m_textEdit = new QTextEdit;
     m_textEdit->setReadOnly(true);
-    controlLayout->addWidget(m_textEdit, 3, 0, 1, 3);
+    controlLayout->addWidget(m_textEdit, 4, 0, 1, 3);
 
 
     controlWidget->setLayout(controlLayout);
@@ -73,8 +85,9 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     setDisplayWidget(m_displayWidget);
 
     //signals and slots
-    connect(m_openFileButton, SIGNAL(clicked()), this, SLOT(onOpenFile()));
+    connect(m_openFileButton, SIGNAL(clicked()), this, SLOT(onOpenObjectFile()));
     connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(onSamplesCountChanged(int)));
+    connect(m_openMtlFileButton, SIGNAL(clicked()), this, SLOT(onOpenMtlFile()));
 }
 
 
@@ -83,7 +96,7 @@ PathTracingDemo::~PathTracingDemo()
 
 }
 
-void PathTracingDemo::onOpenFile()
+void PathTracingDemo::onOpenObjectFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj(*.obj)"));
     if (fileName.isEmpty() == true)
@@ -100,83 +113,7 @@ void PathTracingDemo::onOpenFile()
     //};
     //unsigned int faceIndices[] = { 0,1,2 };
     //Point3f normals[] = { {0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f} };
-    QVector<QVector3D> a =
-    {
-    {-0.5f, -0.5f, -0.5f},
-    {0.5f, -0.5f, -0.5f },
-    {0.5f,  0.5f, -0.5f},
-    {0.5f,  0.5f, -0.5f} ,
-    {-0.5f,  0.5f, -0.5f} ,
-    {-0.5f, -0.5f, -0.5f} ,
-    {-0.5f, -0.5f,  0.5f},
-    {0.5f, -0.5f,  0.5f},
-    {0.5f,  0.5f,  0.5f},
-    {0.5f,  0.5f,  0.5f},
-    {-0.5f,  0.5f,  0.5f},
-    {-0.5f, -0.5f,  0.5f},
-    {-0.5f,  0.5f,  0.5f},
-    {-0.5f,  0.5f, -0.5f},
-    {-0.5f, -0.5f, -0.5f},
-    {-0.5f, -0.5f, -0.5f},
-    {-0.5f, -0.5f,  0.5f},
-    {-0.5f,  0.5f,  0.5f},
-    {0.5f,  0.5f,  0.5f},
-    {0.5f,  0.5f, -0.5f},
-    {0.5f, -0.5f, -0.5f} ,
-    {0.5f, -0.5f, -0.5f} ,
-    {0.5f, -0.5f,  0.5f} ,
-    {0.5f,  0.5f,  0.5f} ,
-    {-0.5f, -0.5f, -0.5f},
-    {0.5f, -0.5f, -0.5f},
-    {0.5f, -0.5f,  0.5f},
-    {0.5f, -0.5f,  0.5f} ,
-    {-0.5f, -0.5f,  0.5f} ,
-    {-0.5f, -0.5f, -0.5f}  ,
-    {-0.5f,  0.5f, -0.5f}  ,
-    {0.5f,  0.5f, -0.5f}  ,
-    {0.5f,  0.5f,  0.5f}  ,
-    {0.5f,  0.5f,  0.5f} ,
-    {-0.5f,  0.5f,  0.5f} ,
-    {-0.5f,  0.5f, -0.5f}  ,
-    };
-    QVector<QVector3D> b = {
-           {0.0f,  0.0f, -1.0f},
-    {0.0f,  0.0f, -1.0f},
-    {0.0f,  0.0f, -1.0f},
-    {0.0f,  0.0f, -1.0f},
-    {0.0f,  0.0f, -1.0f},
-    {0.0f,  0.0f, -1.0f},
-    {0.0f,  0.0f,  1.0f},
-    {0.0f,  0.0f,  1.0f},
-    {0.0f,  0.0f,  1.0f},
-    {0.0f,  0.0f,  1.0f},
-    {0.0f,  0.0f,  1.0f},
-    {0.0f,  0.0f,  1.0f},
-    {-1.0f,  0.0f,  0.0f},
-    {-1.0f,  0.0f,  0.0f},
-    {-1.0f,  0.0f,  0.0f},
-    {-1.0f,  0.0f,  0.0f},
-    {-1.0f,  0.0f,  0.0f},
-    {-1.0f,  0.0f,  0.0f},
-    {1.0f,  0.0f,  0.0f},
-    {1.0f,  0.0f,  0.0f},
-    {1.0f,  0.0f,  0.0f},
-    {1.0f,  0.0f,  0.0f},
-    {1.0f,  0.0f,  0.0f},
-    {1.0f,  0.0f,  0.0f},
-    {0.0f, -1.0f,  0.0f},
-    {0.0f, -1.0f,  0.0f},
-    {0.0f, -1.0f,  0.0f},
-    {0.0f, -1.0f,  0.0f},
-    { 0.0f, -1.0f,  0.0f},
-    {0.0f, -1.0f,  0.0f},
-    {0.0f,  1.0f,  0.0f},
-    {0.0f,  1.0f,  0.0f},
-    {0.0f,  1.0f,  0.0f},
-    {0.0f,  1.0f,  0.0f},
-    {0.0f,  1.0f,  0.0f},
-    {0.0f,  1.0f,  0.0f}
-    };
+
     TriangleMesh mesh(model.getVerticesFlatArray(),
         model.getNormalsFlatArray(),
         model.getVertexCount(), 
@@ -189,13 +126,12 @@ void PathTracingDemo::onOpenFile()
         (unsigned int*)mesh.getIndicesArray(),
         mesh.getIndexCount());
     //m_sceneDisplay->updateModel(a,b);
-    std::vector<std::shared_ptr<Shape>> triangles = Triangle::createTriangleMesh(model.getVerticesFlatArray(),
-                                                                                 model.getNormalsFlatArray(),
-                                                                                 model.getVertexCount(),
-                                                                                 model.getFacesIndicesFlatArray(),
-                                                                                 model.getFacesCount(),Trans3DMat());
+    //std::vector<std::shared_ptr<Shape>> triangles = Triangle::createTriangleMesh(model.getVerticesFlatArray(),
+    //m_aggregate = std::make_shared<BVHTreeAccelerator>(triangles);
+}
 
-    m_aggregate = std::make_shared<BVHTreeAccelerator>(triangles);
+void PathTracingDemo::onOpenMtlFile()
+{
 }
 
 void PathTracingDemo::onSamplesCountChanged(int value)
@@ -235,20 +171,12 @@ void PathTracingDemo::onRender()
             Float t;
             Interaction isect;
             if(scene.intersect(ray,&t,&isect) == true){
-                //m_frameBuffer.setColor24(i,j,Color24(50,100,250));
-                //float k = std::max(Vector3f::dotProduct(isect.normal(), -cameraFront),0.f);
                 resultImage.setPixelColor(i, j,QColor(50,100,150));
-
-                //qDebug()<<ray.original()<<" "<<ray.direction()<<" true";
             }else{
-                //m_frameBuffer.setColor24(i,j,Color24(0,0,0));
                 resultImage.setPixelColor(i, j, QColor(0, 0, 0));
-                //qDebug()<<ray.original()<<" "<<ray.direction()<<" false";
             }
-            //write to framebuffer
         }
     }
-    //QImage image(m_frameBuffer.buffer(),width,height,QImage::Format_RGB888);
     m_resultDisplay->resize(size);
     m_resultDisplay->setPixmap(QPixmap::fromImage(resultImage));
 }

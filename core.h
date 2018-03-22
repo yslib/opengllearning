@@ -24,6 +24,7 @@ typedef float Float;
 #include <QVector>
 #include <QVector2D>
 #include <QVector3D>
+#include <QColor>
 
 #include <QMatrix4x4>
 
@@ -264,6 +265,8 @@ typedef QVector2D Vector2f;
 
 typedef QPoint Point2i;
 typedef QPoint Vector2i;
+
+typedef Point3f Color;
 
 
 class Transform3DMatrix

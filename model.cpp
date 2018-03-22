@@ -5,38 +5,33 @@
 
 ObjReader::ObjReader()noexcept:
 m_loaded(false)
-//m_verticesFlatArray(nullptr),
-//m_normalsFlatArray(nullptr),
-//m_texturesFlatArray(nullptr),
-//m_facesIndicesFlatArray(nullptr)
-//m_normalsIndicesFlatArray(nullptr),
-//m_textureIndicesFlatArray(nullptr)
 {
 }
 
-ObjReader::ObjReader(const std::string & fileName) noexcept:ObjReader()
+ObjReader::ObjReader(const std::string & fileName,const std::string & mtlFileName) noexcept:ObjReader()
 {
     m_loaded = load(fileName);
 }
-bool ObjReader::load(const std::string & fileName)
+bool ObjReader::load(const std::string & fileName,const std::string & mtlFileName)
 {
     _init();
-
-    bool ok = true;
+    MaterialReader mtlReader(mtlFileName);
 
     std::ifstream fileIn(fileName);
     if (fileIn.is_open() == false) {
         std::cerr << "Can not open this file\n";
-        return false;
+        return (m_loaded = false);
     }
     std::string line;
     char l;
+    int faceCount = 0;
     while (getline(fileIn, line)) {
         //std::cout << line << std::endl;
         line = line.substr(0, line.find_first_of('#'));
         //line = line.substr(line.find_first_not_of(' ')+1);
         std::stringstream ss(line);
         std::string objKeyword;
+        std::string prevMtlName;
         ss >> objKeyword;
         if (objKeyword == "v") {
             float x, y, z;
@@ -46,88 +41,69 @@ bool ObjReader::load(const std::string & fileName)
         else if (objKeyword == "vt") {
             float x, y;
             ss >> x >> y;
-            m_textures.emplace_back(x,y);
+            m_textures.emplace_back(x, y);
         }
         else if (objKeyword == "vn") {
             float x, y, z;
             ss >> x >> y >> z;
             m_normals.emplace_back(x, y, z);
         }
+        else if(objKeyword == "usemtl")
+        {
+            ss >> prevMtlName;
+        }
         else if (objKeyword == "f") {
             std::string str;
-            //m_facesIndices.push_back(std::vector<int>());
+            std::vector<std::tuple<int, int, int>> indexBuffer;
+            //arbitray patches
             while (ss >> str) {
                 int vid, vtid, vnid;
                 sscanf(str.c_str(), "%d/%d/%d", &vid, &vtid, &vnid);
-                m_facesIndices.emplace_back(vid - 1);
+                indexBuffer.push_back({ vid - 1, vtid - 1, vnid - 1 });
+            }
+            //transform to triangle patches
+            assert(indexBuffer.size() >= 3);
+            for (int i = 1; i < indexBuffer.size() - 1; i++)
+            {
+                m_vertexIndices.emplace_back(std::get<0>(indexBuffer[0]));
+                m_textureIndices.emplace_back(std::get<1>(indexBuffer[0]));
+                m_normalIndices.emplace_back(std::get<2>(indexBuffer[0]));
+                m_vertexIndices.emplace_back(std::get<0>(indexBuffer[i]));
+                m_textureIndices.emplace_back(std::get<1>(indexBuffer[i]));
+                m_normalIndices.emplace_back(std::get<2>(indexBuffer[i]));
+                m_vertexIndices.emplace_back(std::get<0>(indexBuffer[i+1]));
+                m_textureIndices.emplace_back(std::get<1>(indexBuffer[i+1]));
+                m_normalIndices.emplace_back(std::get<2>(indexBuffer[i+1]));
+                if(prevMtlName != std::string())
+                {
+                    m_indexToMtlName[faceCount] = prevMtlName;
+                }
+                faceCount++;
             }
         }
         ss.clear();
     }
-
     //if there is no normals in files, normal vectors could be created by cross product of vertices
-    if(m_normals.size() == 0)
+    if (m_normals.size() == 0)
     {
-        assert(m_facesIndices.size() % 3 == 0);
+        assert(m_vertexIndices.size() % 3 == 0);
         m_normals.resize(m_vertices.size());
-        for(int i=0;i<m_facesIndices.size();i+=3)
+        for (int i = 0; i < m_vertexIndices.size(); i += 3)
         {
             Vector3f norm = Point3f::crossProduct(
-                m_vertices[m_facesIndices[i + 1]] - m_vertices[m_facesIndices[i]],
-                m_vertices[m_facesIndices[i + 2]] - m_vertices[m_facesIndices[i]]);
-            m_normals[m_facesIndices[i]] = 
-                m_normals[m_facesIndices[i + 1]] =
-                m_normals[m_facesIndices[i + 2]] = norm;
+                m_vertices[m_vertexIndices[i + 1]] - m_vertices[m_vertexIndices[i]],
+                m_vertices[m_vertexIndices[i + 2]] - m_vertices[m_vertexIndices[i]]);
+            m_normals[m_vertexIndices[i]] =
+                m_normals[m_vertexIndices[i + 1]] =
+                m_normals[m_vertexIndices[i + 2]] = norm;
         }
     }
-
-    //_toVerticesFlatArray();
-    //_toFacesIndicesFlatArray();
-    return (ok);
+    return (m_loaded = true);
 }
 bool ObjReader::isLoaded() const
 {
     return m_loaded;
 }
-//void ObjReader::_toVerticesFlatArray()
-//{
-//     //std::size_t elemCount = m_vertices.size()*3;
-//     //m_verticesFlatArray.reset(new Float[elemCount]);
-//     //std::size_t count = m_vertices.size();
-//     //for (std::size_t i = 0; i < count; i++) {
-//     //    m_verticesFlatArray[3 * i] = m_vertices[i].x();
-//     //    m_verticesFlatArray[3 * i + 1] = m_vertices[i].y();
-//     //    m_verticesFlatArray[3 * i + 2] = m_vertices[i].z();
-//     //}
-//}
-//void ObjReader::_toNormalsSFlatArray()
-//{
-//
-//}
-//void ObjReader::_toTexturesFlayArray()
-//{
-//
-//}
-//void ObjReader::_toFacesIndicesFlatArray()
-//{
-//    //std::size_t elemCount = m_facesIndices.size() * 3;
-//    //m_facesIndicesFlatArray.reset(new int[elemCount]);
-//    //std::size_t count = m_facesIndices.size();
-//    //for (std::size_t i = 0; i < count; i++) {
-//    //    m_facesIndicesFlatArray[3 * i] = m_facesIndices[i][0];
-//    //    m_facesIndicesFlatArray[3 * i + 1] = m_facesIndices[i][1];
-//    //    m_facesIndicesFlatArray[3 * i + 2] = m_facesIndices[i][2];
-//    //}
-//}
-
-//void ObjReader::_toFormalsIndicesFlayArray()
-//{
-//}
-//
-//void ObjReader::_toTextureIndicesFlayArray()
-//{
-//}
-
 ObjReader::~ObjReader()
 {
 }
@@ -137,9 +113,9 @@ void ObjReader::_init()
     m_normals.clear();
     m_vertices.clear();
     m_textures.clear();
-    m_facesIndices.clear();
-    //m_normalsIndices.clear();
-    //m_texturesIndices.clear();
+    m_vertexIndices.clear();
+    m_normalIndices.clear();
+    m_textureIndices.clear();
     m_loaded = false;
 }
 

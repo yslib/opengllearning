@@ -10,6 +10,8 @@
 #include <limits>
 #include <algorithm>
 #include <iterator>
+#include <unordered_map>
+#include "model.h"
 
 
 class Interaction;
@@ -17,6 +19,31 @@ class Interaction;
 constexpr Float LOWEST_Float_VALUE = std::numeric_limits<Float>::lowest();
 constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
 
+
+class BSDF
+{
+public:
+    virtual Color sampleF()
+    {
+        
+    }
+};
+
+class Material
+{
+    Color m_kd;
+    Color m_ks;
+    Color m_ka;
+    Color m_tf;
+    Float m_ni;
+public:
+    Material(const Color &kd,const Color &ks,const Color &ka,const Color &tf,Float ni):
+    m_kd(kd),m_ks(ks),m_ka(ka),m_tf(tf),m_ni(ni){}
+    void computeScatterFunction(Interaction * interact)
+    {
+        
+    }
+};
 
 inline int findMaxVector3fComponent(const Vector3f & v)
 {
@@ -83,8 +110,14 @@ class Ray
     Point3f m_o;
     Vector3f m_d;
     Float m_tMax;
+    bool m_negDirection[3];
 public:
-    Ray(const Point3f & d, const Point3f & o, Float t = MAX_Float_VALUE)noexcept : m_o(o), m_d(d), m_tMax(t) {}
+    Ray(const Point3f & d, const Point3f & o, Float t = MAX_Float_VALUE)noexcept : m_o(o), m_d(d), m_tMax(t)
+    {
+        m_negDirection[0] = d.x() < 0;
+        m_negDirection[1] = d.y() < 0;
+        m_negDirection[2] = d.z() < 0;
+    }
     Point3f operator()(float t)noexcept { return m_o + t * m_d; }
     const Point3f & original()const {
         return m_o;
@@ -95,9 +128,11 @@ public:
     void setMaxLength(Float t) {
         m_tMax = t;
     }
+
     friend class AABB;
     friend class Triangle;
     friend class Shape;
+    friend class BVHTreeAccelerator;
 };
 
 /*
@@ -167,6 +202,7 @@ public:
     }
     Float surfaceArea()const {
         Vector3f d = diagnal();
+        if (d[0] < 0 || d[1] < 0 || d[2] < 0)return Float(0);
         Float area = (d[0] * d[1] + d[1] * d[2] + d[2] * d[0]) * 2;
         return area;
     }
@@ -215,33 +251,36 @@ public:
      * Return a minimum bounding box containing the two bounding boxes
      */
     AABB unionWith(const AABB & b)const {
-        return AABB(Point3f(
+        AABB a;
+        a.m_min = Point3f(
             std::min(m_min.x(), b.m_min.x()),
             std::min(m_min.y(), b.m_min.y()),
             std::min(m_min.z(), b.m_min.z())
-        ),
-            Point3f(
-                std::max(m_max.x(), b.m_max.x()),
-                std::max(m_max.y(), b.m_max.y()),
-                std::max(m_max.z(), b.m_max.z())
-            ));
-
+        );
+        a.m_max = Point3f(
+            std::max(m_max.x(), b.m_max.x()),
+            std::max(m_max.y(), b.m_max.y()),
+            std::max(m_max.z(), b.m_max.z())
+        );
+        return a;
     }
     /*
      * Return a minimun bounding box containing the
      * bounding box and the point
      */
     AABB unionWith(const Point3f & p)const {
-        return AABB(Point3f(
+        AABB a;
+        a.m_min = Point3f(
             std::min(m_min.x(), p.x()),
             std::min(m_min.y(), p.y()),
             std::min(m_min.z(), p.z())
-        ),
-            Point3f(
-                std::max(m_max.x(), p.x()),
-                std::max(m_max.y(), p.y()),
-                std::max(m_max.z(), p.z())
-            ));
+        );
+        a.m_max = Point3f(
+            std::max(m_max.x(), p.x()),
+            std::max(m_max.y(), p.y()),
+            std::max(m_max.z(), p.z())
+        );
+        return a;
     }
 
 
@@ -250,11 +289,16 @@ public:
 
 class Shape
 {
+    std::shared_ptr<Material> m_material;
 public:
-
     virtual AABB bound()const = 0;
     virtual Float area()const = 0;
     virtual bool intersect(const Ray & ray, Float * t, Interaction * iterac) = 0;
+    void setMaterial(std::shared_ptr<Material> m)
+    {
+        m_material = m;
+    }
+
 };
 
 class TriangleMesh {
@@ -319,18 +363,18 @@ class Interaction
     Point3f m_norm;
     Float m_u;
     Float m_v;
-    Shape * m_shape;
-
+    Shape* m_shape;
+    std::shared_ptr<BSDF> m_bsdf;
     //BRDF
 public:
     Interaction() {}
-    Interaction(const Point3f & p, const Vector3f & wo, Float u, Float v) :m_p(p), m_wo(wo), m_u(u), m_v(v) {}
+    Interaction(const Point3f & p, const Vector3f & wo, Float u, Float v) :m_p(p), m_wo(wo), m_u(u), m_v(v),m_bsdf(nullptr) {}
     const Point3f & intersectionPoint()const { return m_p; }
     const Vector3f & reflectDirection()const { return m_wo; }
     const Vector3f & normal()const { return m_norm; }
     Float u()const { return m_u; }
     Float v()const { return m_v; }
-
+    std::shared_ptr<BSDF> bsdf()const { return m_bsdf; }
     friend class Triangle;
 };
 
@@ -399,7 +443,7 @@ public:
         }
         Vector3f Q = Vector3f::crossProduct(T, E1);
         v = Vector3f::dotProduct(D, Q);
-        if (v < 0.0 || v+u>det) {
+        if (v < 0.0 || v + u>det) {
             // v > 1 ,invalid
             return false;
         }
@@ -421,7 +465,7 @@ public:
     }
     static std::vector<std::shared_ptr<Shape>>
         createTriangleMesh(const Point3f * vertices, const Point3f * normals, int nVertex,
-            const int * vertexIndices, int nIndex,
+            const int * vertexIndices, int nIndex,std::unordered_map<int,std::string> & mtlName,MaterialReader & mtlReader,
             const Trans3DMat & trans)
     {
         assert(nIndex % 3 == 0);
@@ -430,7 +474,15 @@ public:
         for (int i = 0; i < nIndex / 3; i++)
         {
             tris.push_back(std::make_shared<Triangle>(mesh, i));
+            std::string name = mtlName[i];
+            Color kd = mtlReader[name]["Kd"];
+            Color ks = mtlReader[name]["Ka"];
+            Color ka = mtlReader[name]["Ka"];
+            Color tf = mtlReader[name]["Tf"];
+            Float ni = mtlReader[name]["Ni"][0];
+            tris.back()->setMaterial(std::make_shared<Material>(kd,ks,ka,tf,ni));
         }
+
         return tris;
     }
 };
@@ -473,6 +525,7 @@ class BVHTreeAccelerator :public Shape
     std::vector<std::shared_ptr<Shape>> m_shapes;
     std::unique_ptr<BVHNode> m_root;
     Float m_tMin;
+
 public:
     BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes) :m_shapes(shapes) {
         std::vector<std::shared_ptr<Shape>> orderedShapes;
@@ -504,8 +557,37 @@ private:
             return false;
         //Interior node
         if (root->m_nShape == -1) {
-            bool interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
-            bool interRight = recursiveIntersect(root->m_right.get(), ray, interac);
+            ///TODO:This is need to be optimazed 
+            int splitAxis = root->m_splitAxis;
+            const AABB & bLeft = root->m_left->m_bound;
+            const AABB & bRight = root->m_right->m_bound;
+            bool interLeft, interRight;
+            if (ray.m_negDirection[splitAxis] == false)
+            {
+                if (bLeft.m_min[splitAxis] <= bRight.m_min[splitAxis])
+                {
+                    interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
+                    interRight = recursiveIntersect(root->m_right.get(), ray, interac);
+                }
+                else
+                {
+                    interRight = recursiveIntersect(root->m_right.get(), ray, interac);
+                    interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
+                }
+            }
+            else
+            {
+                if (bLeft.m_min[splitAxis] > bRight.m_min[splitAxis])
+                {
+                    interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
+                    interRight = recursiveIntersect(root->m_right.get(), ray, interac);
+                }
+                else
+                {
+                    interRight = recursiveIntersect(root->m_right.get(), ray, interac);
+                    interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
+                }
+            }
             return interLeft || interRight;
         }
         else {
@@ -514,8 +596,9 @@ private:
             for (int i = 0; i < root->m_nShape; i++) {
                 Float t;
                 if (m_shapes[i + root->m_shapeOffset]->bound().intersect(ray, &t) == true) {
+                    if (m_tMin < t)continue;
                     Interaction inter;
-                    if(m_shapes[i + root->m_shapeOffset]->intersect(ray, &t, &inter) == true)
+                    if (m_shapes[i + root->m_shapeOffset]->intersect(ray, &t, &inter) == true)
                     {
                         m_tMin = std::min(m_tMin, t);
                         if (m_tMin > t)
@@ -611,7 +694,8 @@ private:
                 auto lambda = [&](const std::shared_ptr<Shape> s) {
                     int b = nBuckets * ((s->bound().center()[splitAxis] - bound.m_min[splitAxis]) / boundDiag[splitAxis]);
                     if (b == nBuckets)b -= 1;
-                    return b < efficentIndex;
+                    //equal is necessary. or the partition will be one-side and it never ends
+                    return b <= efficentIndex;
                 };
                 int mid = std::distance(shapes.begin(), std::partition(shapes.begin() + begin, shapes.begin() + end, lambda));
                 //create interior node
@@ -662,6 +746,11 @@ private:
     QPushButton * m_openFileButton;
     QLabel * m_fileNameLabel;
     QLineEdit * m_fileNamesLineEdit;
+
+    QPushButton * m_openMtlFileButton;
+    QLabel * m_mtlNameLabel;
+    QLineEdit *m_mtlFileNameLineEdit;
+
     QWidget * m_displayWidget;
 
     OpenGLWidget * m_sceneDisplay;
@@ -680,7 +769,8 @@ private:
     std::shared_ptr<BVHTreeAccelerator> m_aggregate;
 
     public slots:
-    void onOpenFile();
+    void onOpenObjectFile();
+    void onOpenMtlFile();
     void onSamplesCountChanged(int value);
     void onRender();
 };
