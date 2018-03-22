@@ -55,6 +55,10 @@ public:
     const Vector3f * getNormalsFlatArray()const { return m_normals.data(); }
     const int * getFacesIndicesFlatArray()const { return m_vertexIndices.data(); }
 
+    std::unordered_map<int,std::string> & getIndexToMtlName()
+    {
+        return m_indexToMtlName;
+    }
     virtual ~ObjReader();
 private:
     void _init();
@@ -80,7 +84,7 @@ private:
     MaterialLib m_mLib;
     int test;
 public:
-    MaterialReader(const std::string & fileName)
+    MaterialReader(const std::string & fileName="")
     {
         m_loaded = loadFromFile(fileName);
     }
@@ -99,9 +103,7 @@ public:
             ss >> keyword;
             if(keyword == "newmtl")     //a new material defination
             {
-                std::string mtlName;
-                ss >> mtlName;
-                prevMtlName = mtlName;
+                ss >> prevMtlName;
             }
             else
             {

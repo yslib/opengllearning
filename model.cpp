@@ -25,13 +25,13 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
     std::string line;
     char l;
     int faceCount = 0;
+    std::string prevMtlName;
     while (getline(fileIn, line)) {
         //std::cout << line << std::endl;
         line = line.substr(0, line.find_first_of('#'));
         //line = line.substr(line.find_first_not_of(' ')+1);
         std::stringstream ss(line);
         std::string objKeyword;
-        std::string prevMtlName;
         ss >> objKeyword;
         if (objKeyword == "v") {
             float x, y, z;

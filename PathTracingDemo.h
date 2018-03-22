@@ -15,6 +15,7 @@
 
 
 class Interaction;
+class Material;
 
 constexpr Float LOWEST_Float_VALUE = std::numeric_limits<Float>::lowest();
 constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
@@ -22,28 +23,17 @@ constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
 
 class BSDF
 {
+    Color m_color;
 public:
-    virtual Color sampleF()
+    BSDF(const Color & color):m_color(color){}
+    virtual Color sampleF(const Vector3f & wo,Vector3f * wi,Float *pdf)
     {
-        
+        if (pdf)*pdf = 1 / (2*PI);
+        return m_color;
     }
 };
 
-class Material
-{
-    Color m_kd;
-    Color m_ks;
-    Color m_ka;
-    Color m_tf;
-    Float m_ni;
-public:
-    Material(const Color &kd,const Color &ks,const Color &ka,const Color &tf,Float ni):
-    m_kd(kd),m_ks(ks),m_ka(ka),m_tf(tf),m_ni(ni){}
-    void computeScatterFunction(Interaction * interact)
-    {
-        
-    }
-};
+
 
 inline int findMaxVector3fComponent(const Vector3f & v)
 {
@@ -298,6 +288,10 @@ public:
     {
         m_material = m;
     }
+    std::shared_ptr<Material> getMaterial()const
+    {
+        return m_material;
+    }
 
 };
 
@@ -376,8 +370,24 @@ public:
     Float v()const { return m_v; }
     std::shared_ptr<BSDF> bsdf()const { return m_bsdf; }
     friend class Triangle;
+    friend class Material;
 };
-
+class Material
+{
+    Color m_kd;
+    Color m_ks;
+    Color m_ka;
+    Color m_tf;
+    Float m_ni;
+    Color m_color;
+public:
+    Material(const Color &kd, const Color &ks, const Color &ka, const Color &tf, Float ni) :
+        m_kd(kd), m_ks(ks), m_ka(ka), m_tf(tf), m_ni(ni) {}
+    void computeScatteringFunction(Interaction * interact)
+    {
+        interact->m_bsdf = std::make_shared<BSDF>(m_kd);
+    }
+};
 class Triangle :public Shape {
     std::shared_ptr<TriangleMesh> m_sharedTriangles;
     const int * m_vertexIndices;
@@ -460,6 +470,7 @@ public:
         interac->m_v = v;
         interac->m_norm = Vector3f::crossProduct(p1 - p0, p2 - p0);
         interac->m_shape = this;
+        getMaterial()->computeScatteringFunction(interac);
         if (t)*t = tt;
         return true;
     }
@@ -764,6 +775,8 @@ private:
 
     FrameBuffer m_frameBuffer;
     QImage m_image;
+
+    MaterialReader m_materialReader;
     //
     std::unique_ptr<Scene> m_scene;
     std::shared_ptr<BVHTreeAccelerator> m_aggregate;

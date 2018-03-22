@@ -126,12 +126,28 @@ void PathTracingDemo::onOpenObjectFile()
         (unsigned int*)mesh.getIndicesArray(),
         mesh.getIndexCount());
     //m_sceneDisplay->updateModel(a,b);
-    //std::vector<std::shared_ptr<Shape>> triangles = Triangle::createTriangleMesh(model.getVerticesFlatArray(),
-    //m_aggregate = std::make_shared<BVHTreeAccelerator>(triangles);
+    std::vector<std::shared_ptr<Shape>> triangles = Triangle::createTriangleMesh(model.getVerticesFlatArray(),
+        model.getNormalsFlatArray(),
+        model.getVertexCount(),
+        model.getFacesIndicesFlatArray(),
+        model.getFacesCount(),
+        model.getIndexToMtlName(),
+        m_materialReader,Trans3DMat());
+    m_aggregate = std::make_shared<BVHTreeAccelerator>(triangles);
 }
 
 void PathTracingDemo::onOpenMtlFile()
 {
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".mtl(*.mtl)"));
+    if (fileName.isEmpty() == true)
+        return;
+    m_mtlFileNameLineEdit->setText(fileName);
+    if (m_materialReader.loadFromFile(fileName.toStdString()) == false)
+    {
+        QMessageBox::critical(this, QString("Error"), QString("can not load mtl file"));
+    }
+
+
 }
 
 void PathTracingDemo::onSamplesCountChanged(int value)
@@ -171,7 +187,15 @@ void PathTracingDemo::onRender()
             Float t;
             Interaction isect;
             if(scene.intersect(ray,&t,&isect) == true){
-                resultImage.setPixelColor(i, j,QColor(50,100,150));
+                Color c;
+                if(isect.bsdf() != nullptr)
+                {
+                    c[0] = 0.1; c[1] = 0.3; c[2] = 0.5;
+                }else
+                {
+                   c = isect.bsdf()->sampleF(Vector3f(), nullptr, nullptr);
+                }
+                resultImage.setPixelColor(i, j,QColor(c[0]*256,c[1]*256,c[2]*256));
             }else{
                 resultImage.setPixelColor(i, j, QColor(0, 0, 0));
             }
