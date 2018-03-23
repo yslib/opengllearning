@@ -15,4 +15,9 @@ Float cosineSampleHemiSpherePdf(Float cosTheta);
 Vector3f uniformSampleCone(const Point2f & p, Float angle);
 Float uniformSampleConePdf(Float angle);
 
+inline Point2f uniformSampleTriangle(const Point2f & p);
+
+
+
+
 #endif

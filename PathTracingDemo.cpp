@@ -187,14 +187,14 @@ void PathTracingDemo::onRender()
             Float t;
             Interaction isect;
             if(scene.intersect(ray,&t,&isect) == true){
-                Color c;
-                if(isect.bsdf() != nullptr)
-                {
-                    c[0] = 0.1; c[1] = 0.3; c[2] = 0.5;
-                }else
-                {
-                   c = isect.bsdf()->sampleF(Vector3f(), nullptr, nullptr);
-                }
+                Color c(0.3,0.6,0.9);
+//                if(isect.bsdf() != nullptr)
+//                {
+//                    c[0] = 0.1; c[1] = 0.3; c[2] = 0.5;
+//                }else
+//                {
+//                   c = isect.bsdf()->sampleF(Vector3f(), nullptr, nullptr);
+//                }
                 resultImage.setPixelColor(i, j,QColor(c[0]*256,c[1]*256,c[2]*256));
             }else{
                 resultImage.setPixelColor(i, j, QColor(0, 0, 0));

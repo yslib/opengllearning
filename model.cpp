@@ -59,7 +59,7 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
             while (ss >> str) {
                 int vid, vtid, vnid;
                 sscanf(str.c_str(), "%d/%d/%d", &vid, &vtid, &vnid);
-                indexBuffer.push_back({ vid - 1, vtid - 1, vnid - 1 });
+                indexBuffer.push_back(std::tuple<int,int,int>(vid - 1, vtid - 1, vnid - 1 ));
             }
             //transform to triangle patches
             assert(indexBuffer.size() >= 3);

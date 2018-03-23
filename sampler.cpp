@@ -49,3 +49,10 @@ Float uniformSampleConePdf(Float angle)
 {
     return 1/(2*PI*(1-angle));
 }
+
+
+Point2f uniformSampleTriangle(const Point2f &p)
+{
+    Float su0 = std::sqrt(u[0]);
+    return Point2f(1-su0,u[1]*su0);
+}

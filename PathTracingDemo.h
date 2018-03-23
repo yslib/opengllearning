@@ -4,6 +4,7 @@
 #include "basedemowidget.h"
 #include "openglwindow.h"
 #include "framebuffer.h"
+#include "sampler.h"
 #include <QVector3D>
 #include <cassert>
 
@@ -24,9 +25,25 @@ constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
 class BSDF
 {
     Color m_color;
+    Vector3f m_n,m_t,m_s;
+    //n,m,s are normal and orthognal vectors
+    //normal vector in shading coordinate system is (0,1,0)
 public:
-    BSDF(const Color & color):m_color(color){}
-    virtual Color sampleF(const Vector3f & wo,Vector3f * wi,Float *pdf)
+    BSDF(const Color & color,const Vector3f & n,const Vector3f & t,const Vector3f & s):m_color(color),m_n(n.normalized()),m_t(t.normalized()),m_s(s.normalized()){}
+    Color f(const Vector3f & wo,const Vector3f & wi)const{
+        return Color();
+    }
+    Vector3f worldToLocal(const Vector3f & v)const{
+        return Vector3f(Vector3f::dotProduct(v,m_s),Vector3f::dotProduct(v,m_n),Vector3f::dotProduct(v,m_t));
+    }
+    Vector3f localToWorld(const Vector3f & v)const{
+        return Vector3f(
+                    m_s.x()*v.x()+m_n.x()*v.y()+m_t.x()*v.z(),
+                    m_s.y()*v.x()+m_n.y()*v.y()+m_t.y()*v.z(),
+                    m_s.z()*v.x()+m_n.z()*v.y()+m_t.z()*v.z()
+                    );
+    }
+    Color sampleF(const Vector3f & wo,Vector3f * wi,Float *pdf)
     {
         if (pdf)*pdf = 1 / (2*PI);
         return m_color;
@@ -292,6 +309,21 @@ public:
     {
         return m_material;
     }
+    virtual Interaction sample(const Point2f & u)const=0;
+    virtual Float pdf(const Interaction & isect)const{
+        return 1/area();
+    }
+    virtual Interaction sample(const Interaction & ref,const Point2f & u)const{
+        return sample(u);
+    }
+    virtual pdf(const Interaction & ref,const Vector3f & wi)const{
+        Ray ray(wi,ref.m_p);
+        Float tHit;
+        Interaction isect;
+        if(intersect(ray,&tHit,&isect) == false)
+            return 0;
+        Float pdf = (ref.m_p-isect.m_p).lengthSquared()/(std::abs(Vector3f::dotProduct(isect.m_norm,-wi)*area());
+    }
 
 };
 
@@ -369,6 +401,7 @@ public:
     Float u()const { return m_u; }
     Float v()const { return m_v; }
     std::shared_ptr<BSDF> bsdf()const { return m_bsdf; }
+    friend class Shape;
     friend class Triangle;
     friend class Material;
 };
@@ -412,9 +445,24 @@ public:
         return 0.5*Vector3f::dotProduct(v1, v2);
 
     }
+    Interaction sample(const Point2f &u) const override{
+        Point2f s = uniformSampleTriangle(u);
+        Point3f p0 = m_sharedTriangles->m_vertexIndices[m_vertexIndices[0]];
+        Point3f p1 = m_sharedTriangles->m_vertexIndices[m_vertexIndices[1]];
+        Point3f p2 = m_sharedTriangles->m_vertexIndices[m_vertexIndices[2]];
 
+        Point3f sp = p0*s[0] + p1*s[1] + (1-s[0]-s[1])*p2;
+
+        ///TODO::
+        //surface normal
+
+        //error bound
+
+        return isect;
+    }
 
     bool intersect(const Ray & ray, Float * t, Interaction * interac)override
+
     {
         /*
          * This ray-triangle intersection algorithm is from
@@ -496,6 +544,18 @@ public:
 
         return tris;
     }
+};
+
+
+class Light{
+
+public:
+
+};
+class AreaLight{
+    std::shared_ptr<Shape> m_shape;
+public:
+
 };
 class Scene
 {
