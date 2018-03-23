@@ -35,8 +35,16 @@ SOURCES += \
     loopsubdivisionsurfacedemo.cpp \
     core.cpp \
     PathTracingDemo.cpp \
-    sampler.cpp \
-    camera.cpp
+    camera.cpp \
+    shape.cpp \
+    interaction.cpp \
+    light.cpp \
+    appearance.cpp \
+    bvh.cpp \
+    geometry.cpp \
+    scene.cpp \
+    utils.cpp \
+    subdivision.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -49,8 +57,16 @@ HEADERS += \
     loopsubdivisionsurfacedemo.h \
     core.h \
     PathTracingDemo.h \
-    sampler.h \
-    camera.h
+    camera.h \
+    shape.h \
+    interaction.h \
+    light.h \
+    appearance.h \
+    bvh.h \
+    geometry.h \
+    scene.h \
+    utils.h \
+    subdivision.h
 
 FORMS += \
         mainwindow.ui

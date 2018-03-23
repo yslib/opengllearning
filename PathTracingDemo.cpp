@@ -1,6 +1,7 @@
 #include "PathTracingDemo.h"
 #include "model.h"
 #include "framebuffer.h"
+#include "interaction.h"
 #include <QLayout>
 #include <QPushButton>
 #include <QLineEdit>

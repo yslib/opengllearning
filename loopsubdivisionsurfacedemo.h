@@ -2,14 +2,16 @@
 #define LOOPSUBDIVISIONSURFACEDEMO_H
 
 #include <QWidget>
-#include "basedemowidget.h"
-#include "openglwindow.h"
-
-#include "core.h"
 #include <QVector>
 #include <QVector3D>
 #include <QPair>
+
+#include "basedemowidget.h"
+#include "openglwindow.h"
+#include "core.h"
+#include "geometry.h"
 #include "model.h"
+#include "subdivision.h"
 
 
 class QPushButton;

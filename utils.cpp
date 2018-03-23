@@ -1,4 +1,4 @@
-#include "sampler.h"
+#include "utils.h"
 
 Vector3f uniformSampleHemiSphere(const Point2f &p)
 {
@@ -53,6 +53,6 @@ Float uniformSampleConePdf(Float angle)
 
 Point2f uniformSampleTriangle(const Point2f &p)
 {
-    Float su0 = std::sqrt(u[0]);
-    return Point2f(1-su0,u[1]*su0);
+    Float su0 = std::sqrt(p[0]);
+    return Point2f(1-su0,p[1]*su0);
 }
