@@ -2,6 +2,11 @@
 #include "model.h"
 #include "framebuffer.h"
 #include "interaction.h"
+#include "light.h"
+
+#include <random>
+#include <ctime>
+
 #include <QLayout>
 #include <QPushButton>
 #include <QLineEdit>
@@ -12,6 +17,14 @@
 #include <QSlider>
 #include <QFileDialog>
 #include <QMessageBox>
+
+
+QDebug operator<<(QDebug d, const Interaction & isect) {
+    d << "Interaction:" << "p:" << isect.intersectionPoint() << " norm:" <<
+        isect.normal() << " pShape:" << isect.object() << " bsdf:" << isect.bsdf().get();
+    return d;
+}
+
 
 
 PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
@@ -56,8 +69,8 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
 
 
     m_renderButton = new QPushButton(tr("Render"));
-    connect(m_renderButton,SIGNAL(clicked()),this,SLOT(onRender()));
-    controlLayout->addWidget(m_renderButton,3,0,1,3);
+    connect(m_renderButton, SIGNAL(clicked()), this, SLOT(onRender()));
+    controlLayout->addWidget(m_renderButton, 3, 0, 1, 3);
 
     //text edit
     m_textEdit = new QTextEdit;
@@ -99,7 +112,7 @@ PathTracingDemo::~PathTracingDemo()
 
 void PathTracingDemo::onOpenObjectFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".obj(*.obj)"));
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("C:/Users/ysl/Downloads/tests/"), QString(".obj(*.obj)"));
     if (fileName.isEmpty() == true)
         return;
     m_fileNamesLineEdit->setText(fileName);
@@ -117,7 +130,7 @@ void PathTracingDemo::onOpenObjectFile()
 
     TriangleMesh mesh(model.getVerticesFlatArray(),
         model.getNormalsFlatArray(),
-        model.getVertexCount(), 
+        model.getVertexCount(),
         model.getFacesIndicesFlatArray(),
         model.getFacesCount(),
         Trans3DMat());
@@ -133,13 +146,13 @@ void PathTracingDemo::onOpenObjectFile()
         model.getFacesIndicesFlatArray(),
         model.getFacesCount(),
         model.getIndexToMtlName(),
-        m_materialReader,Trans3DMat());
+        m_materialReader, Trans3DMat());
     m_aggregate = std::make_shared<BVHTreeAccelerator>(triangles);
 }
 
 void PathTracingDemo::onOpenMtlFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("."), QString(".mtl(*.mtl)"));
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("C:/Users/ysl/Downloads/tests/"), QString(".mtl(*.mtl)"));
     if (fileName.isEmpty() == true)
         return;
     m_mtlFileNameLineEdit->setText(fileName);
@@ -159,7 +172,7 @@ void PathTracingDemo::onSamplesCountChanged(int value)
 void PathTracingDemo::onRender()
 {
     QSize size = m_sceneDisplay->size();
-    m_frameBuffer.resize(size.width(),size.height());
+    m_frameBuffer.resize(size.width(), size.height());
     const Camera & cam = m_sceneDisplay->getCamera();
 
     Vector3f cameraPosition = cam.position();
@@ -168,38 +181,82 @@ void PathTracingDemo::onRender()
     Vector3f cameraRight = cam.right().normalized();
     Float distCamToCan = 2;
 
-    Point3f canvasCentroid = cameraPosition+distCamToCan*cameraFront;
-    Float canvasHeight = 2*distCamToCan*std::tan(qDegreesToRadians(m_sceneDisplay->verticalAngle()/2));
-    Float canvasWidth = canvasHeight*m_sceneDisplay->aspectRatio();
-    Point3f canvasTopLeft = canvasCentroid+canvasHeight/2*cameraUp-canvasWidth/2*cameraRight;
+    Point3f canvasCentroid = cameraPosition + distCamToCan * cameraFront;
+    Float canvasHeight = 2 * distCamToCan*std::tan(qDegreesToRadians(m_sceneDisplay->verticalAngle() / 2));
+    Float canvasWidth = canvasHeight * m_sceneDisplay->aspectRatio();
+    Point3f canvasTopLeft = canvasCentroid + canvasHeight / 2 * cameraUp - canvasWidth / 2 * cameraRight;
 
     int height = m_frameBuffer.height();
     int width = m_frameBuffer.width();
     Scene scene(m_aggregate);
 
     QImage resultImage(width, height, QImage::Format_RGB888);
-    QColor color(50, 100, 150);
-    for(int j=0;j<height;j++){
-        for(int i=0;i<width;i++){
-            Point3f canvasPosInWorld = canvasTopLeft-cameraUp*(Float(j)/height)*canvasHeight +
-                    cameraRight*(Float(i)/width)*canvasWidth;
+
+    //Test Light
+    const Point3f vertices[6] =
+    { {-2.5f,4.6f,7.5f},
+    {2.5f,4.6f,7.5f},
+    {2.5f,4.6f,2.5f},
+    {-2.5f,4.6f,7.5f},
+    {2.5f,4.6f,2.5f},
+    {-2.5f,4.6f,2.5f}
+    };
+    const Vector3f normals[6] = {
+     {0,-1,0} ,
+    { 0,-1,0 },
+    { 0,-1,0 } ,
+    { 0,-1,0 } ,
+    { 0,-1,0 } ,
+    { 0,-1,0 } };
+    const int indices[6] = { 0,1,2,3,4,5 };
+    std::unordered_map<int, std::string> tempMtl;
+    MaterialReader rd;
+    std::vector<std::shared_ptr<Shape>> lightShape =
+        Triangle::createTriangleMesh(vertices,
+            normals, 6, indices, 6,
+            tempMtl,
+            rd, Trans3DMat());
+
+    //random number
+    std::default_random_engine e(time(0));
+    std::uniform_real_distribution<Float> u(Float(0), Float(1));
+
+
+    std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(1.0, 1.0, 1.0));
+    //std::shared_ptr<AreaLight> bTestLight = std::make_shared<AreaLight>(lightShape[1], Color(1.0, 1.0, 1.0));
+    std::vector<std::shared_ptr<AreaLight>> lights;
+    lights.push_back(aTestLight);
+    //lights.push_back(bTestLight);
+    constexpr int SAMPLE = 50;
+    for (int j = 0; j < height; j++) {
+        for (int i = 0; i < width; i++) {
+            Color L(0.0, 0.0, 0.0);
+
+            Point3f canvasPosInWorld = canvasTopLeft - cameraUp * (Float(j) / height)*canvasHeight +
+                cameraRight * (Float(i) / width)*canvasWidth;
             //construct a ray
-            Ray ray((canvasPosInWorld-cameraPosition).normalized(),cameraPosition);
-            Float t;
-            Interaction isect;
-            if(scene.intersect(ray,&t,&isect) == true){
-                Color c(0.3,0.6,0.9);
-//                if(isect.bsdf() != nullptr)
-//                {
-//                    c[0] = 0.1; c[1] = 0.3; c[2] = 0.5;
-//                }else
-//                {
-//                   c = isect.bsdf()->sampleF(Vector3f(), nullptr, nullptr);
-//                }
-                resultImage.setPixelColor(i, j,QColor(c[0]*256,c[1]*256,c[2]*256));
-            }else{
-                resultImage.setPixelColor(i, j, QColor(0, 0, 0));
+            Ray ray((canvasPosInWorld - cameraPosition).normalized(), cameraPosition);
+            for (int i = 0; i < SAMPLE; i++) {
+                Float t;
+                Interaction isect;
+
+                if (scene.intersect(ray, &t, &isect) == true) {
+                    //qDebug() << isect;
+                    for (const auto & light : lights) {
+                        Vector3f wi;
+                        Float pdf;
+                        VisibilityTester vis;
+                        Point2f sample(u(e), u(e));
+                        light->sampleLi(isect, &wi, &pdf, uniformSampleTriangle(sample), &vis);
+                        //qDebug() << " " << wi << " " << pdf << " " << sample;
+                        if (vis.occlude(scene) == false)
+                            L += (light->L(isect, wi))*std::max(0.0f, Vector3f::dotProduct(-ray.direction(), wi));
+
+                    }
+                }
             }
+            //qDebug() << L;
+            resultImage.setPixelColor(i, j, QColor(255 * L[0] / SAMPLE, 255 * L[1] / SAMPLE, 255 * L[2] / SAMPLE));
         }
     }
     m_resultDisplay->resize(size);

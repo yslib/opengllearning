@@ -11,7 +11,7 @@ class Scene
 public:
     Scene(std::shared_ptr<Shape> shape) :m_shape(shape) {}
 
-    bool intersect(const Ray & ray, Float * t, Interaction * isect) {
+    bool intersect(const Ray & ray, Float * t, Interaction * isect)const {
         return m_shape->intersect(ray, t, isect);
     }
     void setObject(std::shared_ptr<Shape> shape) {

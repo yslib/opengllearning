@@ -220,10 +220,7 @@ void OpenGLWidget::updateCameraVectors(int deltaX, int deltaY, int deltaWheel)
     m_view.lookAt(m_eye, m_center, m_up);
 }
 
-float OpenGLWidget::aspectRatio()
-{
-    return width() / static_cast<float>(height());
-}
+
 
 void OpenGLWidget::paintModel()
 {

@@ -35,7 +35,12 @@ public:
    
     //void setTriangleMesh(const TriangleMesh & mesh);
     Trans3DMat getPerspectiveMat()const;
-    inline float aspectRatio();
+
+    inline float aspectRatio()
+    {
+        return width() / static_cast<float>(height());
+    }
+
     inline float verticalAngle()const{return m_verticalAngle;}
     inline const Camera & getCamera()const{return m_camera;}
     ~OpenGLWidget();

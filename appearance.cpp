@@ -1,10 +1,6 @@
 #include "appearance.h"
 #include "interaction.h"
 
-Color BSDF::f(const Vector3f & wo, const Vector3f & wi) const
-{
-    return Color();
-}
 
 Vector3f BSDF::worldToLocal(const Vector3f & v) const
 {
@@ -28,5 +24,6 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf)
 
 void Material::computeScatteringFunction(Interaction * isect)
 {
-    //interact->m_bsdf = std::make_shared<BSDF>(m_kd,interact->m_norm);
+    isect->m_bsdf = std::make_shared<BSDF>(m_kd,isect->m_norm,isect->m_t,isect->m_s,BSDFType::BSDF_REFRACTION);
+    //qDebug() << "here?";
 }

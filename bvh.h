@@ -31,16 +31,16 @@ class BVHTreeAccelerator :public Shape
     };
     std::vector<std::shared_ptr<Shape>> m_shapes;
     std::unique_ptr<BVHNode> m_root;
-    Float m_tMin;
+    mutable Float m_tMin;
 
 public:
-    BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes) :m_shapes(shapes) {
+    BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes) :m_shapes(shapes),Shape(nullptr) {
         std::vector<std::shared_ptr<Shape>> orderedShapes;
         int s = m_shapes.size();
         m_root = recursiveBuild(m_shapes, 0, s, orderedShapes);
         m_shapes.swap(orderedShapes);
     }
-    bool intersect(const Ray & ray, Float * t, Interaction * interac)override {
+    bool intersect(const Ray & ray, Float * t, Interaction * interac)const override {
         m_tMin = MAX_Float_VALUE;
         if (recursiveIntersect(m_root.get(), ray, interac)) {
             if (t)*t = m_tMin;
@@ -56,7 +56,7 @@ public:
     }
 private:
 
-    bool recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac);
+    bool recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac)const;
 
     std::unique_ptr<BVHNode> recursiveBuild(std::vector<std::shared_ptr<Shape>> & shapes,
         int begin, int end,

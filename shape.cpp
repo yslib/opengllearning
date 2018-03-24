@@ -1,7 +1,7 @@
 #include "shape.h"
 #include "interaction.h"
 
-bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)
+bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
 {
     /*
     * This ray-triangle intersection algorithm is from
@@ -33,6 +33,8 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)
         return false;
 
     Float u, v;
+    //u is the parameter coresponding to p1
+    //v is the parameter coresponding to p2
     u = Vector3f::dotProduct(P, T);
     if (u<0.0 || u>det) {
         //u > 1, invalid
@@ -49,15 +51,44 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)
 
     Float inv = 1.0f / det;
     tt *= inv;
+    if (tt < 0)return false;
     if (tt > ray.m_tMax)
         return false;
     u *= inv;
     v *= inv;
-    interac->m_u = u;
-    interac->m_v = v;
-    interac->m_norm = Vector3f::crossProduct(p1 - p0, p2 - p0);
-    interac->m_shape = this;
-    //getMaterial()->computeScatteringFunction(interac);
+
+    //evaluate intersection information
+    if (interac != nullptr) {
+        interac->m_p = ray.m_o + ray.m_d*tt;
+        interac->m_u = u;
+        interac->m_v = v;
+
+        //a normal of intersction should be interpulated
+        Vector3f p0Norm = m_sharedTriangles->m_normals[m_vertexIndices[0]];
+        Vector3f p1Norm = m_sharedTriangles->m_normals[m_vertexIndices[1]];
+        Vector3f p2Norm = m_sharedTriangles->m_normals[m_vertexIndices[2]];
+
+        Vector3f norm = (u * p1Norm + v * p2Norm + (1 - v - u)*p0Norm).normalized();
+        interac->m_norm = norm;
+
+        //create two tangent vectors perpendicular to the normal
+        Vector3f t= Vector3f(-norm.z(), 0, norm.x()).normalized();
+        Vector3f s = Vector3f::crossProduct(t,norm).normalized();
+        interac->m_t = t;
+        interac->m_s = s;
+        interac->m_pShape = this;
+
+        getMaterial()->computeScatteringFunction(interac);
+    }
+    //qDebug() << "isect:" << tt;
     if (t)*t = tt;
     return true;
+}
+
+
+
+bool Sphere::intersect(const Ray & ray, Float * t, Interaction * iterac) const
+{
+
+    return false;
 }

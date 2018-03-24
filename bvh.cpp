@@ -1,7 +1,7 @@
 #include "bvh.h"
 #include "interaction.h"
 
-bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac)
+bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac)const
 {
     //If the BVH is empty or there is no intersection with current node
     if (root == nullptr)
@@ -46,17 +46,18 @@ bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ra
     else {
         //Leaf node, check and find the nearest intersection
         bool isect = false;
+        Float tWithBound;
+        Float tWithShape;
         for (int i = 0; i < root->m_nShape; i++) {
-            Float t;
-            if (m_shapes[i + root->m_shapeOffset]->bound().intersect(ray, &t) == true) {
-                if (m_tMin < t)continue;
+            if (m_shapes[i + root->m_shapeOffset]->bound().intersect(ray, &tWithBound) == true) {
+                if (m_tMin < tWithBound)continue;
                 Interaction inter;
-                if (m_shapes[i + root->m_shapeOffset]->intersect(ray, &t, &inter) == true)
+                if (m_shapes[i + root->m_shapeOffset]->intersect(ray, &tWithShape, &inter) == true)
                 {
-                    m_tMin = std::min(m_tMin, t);
-                    if (m_tMin > t)
+                    //qDebug() << "tmin" << m_tMin << " " << tWithShape;
+                    if (m_tMin > tWithShape)
                     {
-                        m_tMin = t;
+                        m_tMin = tWithShape;
                         *interac = inter;
                     }
                     isect = true;
