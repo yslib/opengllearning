@@ -169,6 +169,60 @@ void PathTracingDemo::onSamplesCountChanged(int value)
     qDebug() << "slot hitted";
 }
 
+
+//global random engine
+std::default_random_engine e(time(0));
+std::uniform_real_distribution<Float> u(Float(0), Float(1));
+
+Color trace(const Scene & scene,
+    const Ray & ray, 
+    int depth) {
+    if (depth >= 5)
+    {
+        //
+        return Color();
+    }
+    Color L;
+    Float t;
+    Interaction isect;
+    //direct light
+    if (scene.intersect(ray, &t, &isect) == true) {
+        const auto & lights = scene.lights();
+        //direct light illumination
+        for (const auto & light : lights) {
+            Vector3f wi;
+            Float pdf;
+            VisibilityTester vis;
+            Point2f sample(u(e), u(e));
+
+            light->sampleLi(isect, &wi, &pdf, uniformSampleTriangle(sample), &vis);
+
+            if (vis.occlude(scene) == false)
+            {
+                Color li = light->L(isect, wi);
+                const std::shared_ptr<Material> & m = isect.object()->getMaterial();
+                if (m != nullptr) {
+                    Color ka = m->m_ka;
+                    Color ks = m->m_kd;
+                    Color kd = m->m_kd;
+
+                    Vector3f n = isect.normal().normalized();
+                    Vector3f l = wi.normalized();
+                    Vector3f h = (-ray.direction() - wi).normalized();
+                    L += ka * li + kd * (Vector3f::dotProduct(n, l))*li + ks * (Vector3f::dotProduct(n, h))*li;
+                }
+            }
+        }
+        //indirect light illumination
+        
+
+    }
+
+    //indirect light
+
+    return L;
+}
+
 void PathTracingDemo::onRender()
 {
     QSize size = m_sceneDisplay->size();
@@ -188,21 +242,19 @@ void PathTracingDemo::onRender()
 
     int height = m_frameBuffer.height();
     int width = m_frameBuffer.width();
-    Scene scene(m_aggregate);
 
-    QImage resultImage(width, height, QImage::Format_RGB888);
 
     //Test Light
     const Point3f vertices[6] =
-    { {-2.5f,4.6f,7.5f},
-    {2.5f,4.6f,7.5f},
-    {2.5f,4.6f,2.5f},
-    {-2.5f,4.6f,7.5f},
-    {2.5f,4.6f,2.5f},
-    {-2.5f,4.6f,2.5f}
+    { { -2.5f,4.6f,7.5f },
+    { 2.5f,4.6f,7.5f },
+    { 2.5f,4.6f,2.5f },
+    { -2.5f,4.6f,7.5f },
+    { 2.5f,4.6f,2.5f },
+    { -2.5f,4.6f,2.5f }
     };
     const Vector3f normals[6] = {
-     {0,-1,0} ,
+        { 0,-1,0 } ,
     { 0,-1,0 },
     { 0,-1,0 } ,
     { 0,-1,0 } ,
@@ -217,44 +269,30 @@ void PathTracingDemo::onRender()
             tempMtl,
             rd, Trans3DMat());
 
-    //random number
-    std::default_random_engine e(time(0));
-    std::uniform_real_distribution<Float> u(Float(0), Float(1));
-
-
     std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(1.0, 1.0, 1.0));
     //std::shared_ptr<AreaLight> bTestLight = std::make_shared<AreaLight>(lightShape[1], Color(1.0, 1.0, 1.0));
     std::vector<std::shared_ptr<AreaLight>> lights;
     lights.push_back(aTestLight);
     //lights.push_back(bTestLight);
-    constexpr int SAMPLE = 50;
+
+    Scene scene(m_aggregate,lights);
+
+    //result output
+    QImage resultImage(width, height, QImage::Format_RGB888);
+
+    //random number
+
+
+    constexpr int SAMPLE = 10;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);
-
             Point3f canvasPosInWorld = canvasTopLeft - cameraUp * (Float(j) / height)*canvasHeight +
                 cameraRight * (Float(i) / width)*canvasWidth;
             //construct a ray
             Ray ray((canvasPosInWorld - cameraPosition).normalized(), cameraPosition);
-            for (int i = 0; i < SAMPLE; i++) {
-                Float t;
-                Interaction isect;
-
-                if (scene.intersect(ray, &t, &isect) == true) {
-                    //qDebug() << isect;
-                    for (const auto & light : lights) {
-                        Vector3f wi;
-                        Float pdf;
-                        VisibilityTester vis;
-                        Point2f sample(u(e), u(e));
-                        light->sampleLi(isect, &wi, &pdf, uniformSampleTriangle(sample), &vis);
-                        //qDebug() << " " << wi << " " << pdf << " " << sample;
-                        if (vis.occlude(scene) == false)
-                            L += (light->L(isect, wi))*std::max(0.0f, Vector3f::dotProduct(-ray.direction(), wi));
-
-                    }
-                }
-            }
+            for (int i = 0; i < SAMPLE; i++) 
+                L += trace(scene, ray, 0);
             //qDebug() << L;
             resultImage.setPixelColor(i, j, QColor(255 * L[0] / SAMPLE, 255 * L[1] / SAMPLE, 255 * L[2] / SAMPLE));
         }
