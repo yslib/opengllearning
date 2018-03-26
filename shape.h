@@ -167,7 +167,9 @@ public:
             Color ka = mtlReader[name]["Ka"];
             Color tf = mtlReader[name]["Tf"];
             Float ni = mtlReader[name]["Ni"][0];
-            tris.back()->setMaterial(std::make_shared<Material>(kd, ks, ka, tf, ni));
+
+            ///TODO: distiguish different material by MaterialType
+            tris.back()->setMaterial(std::make_shared<Material>(kd, ks, ka, tf, ni,MaterialType::Metal));
         }
 
         return tris;

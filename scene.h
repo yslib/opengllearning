@@ -5,6 +5,8 @@
 #include "shape.h"
 #include "light.h"
 
+
+class AreaLight;
 class Scene
 {
     AABB m_worldBound;

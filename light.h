@@ -7,23 +7,14 @@
 #include "scene.h"
 
 
+class Scene;
+
 class VisibilityTester {
     Interaction m_p0, m_p1;
 public:
     VisibilityTester() {}
     VisibilityTester(const Interaction & p0, const Interaction & p1) :m_p0(p0), m_p1(p1) {}
-    bool occlude(const Scene & scene)const {
-        assert(m_p0.object() != nullptr);
-        assert(m_p1.object() != nullptr);
-
-        Interaction isect;
-        Ray ray = m_p0.spawnRayTo(m_p1);
-        Float t;
-        if (scene.intersect(ray, &t, &isect) == false) {
-            return false;
-        }
-        return m_p0.object() != m_p1.object();
-    }
+    bool occlude(const Scene & scene)const; 
 };
 
 

@@ -283,7 +283,7 @@ void PathTracingDemo::onRender()
     //random number
 
 
-    constexpr int SAMPLE = 10;
+    constexpr int SAMPLE = 50;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);

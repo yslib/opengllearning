@@ -93,7 +93,7 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
             Vector3f norm = Point3f::crossProduct(
                 m_vertices[m_vertexIndices[i + 1]] - m_vertices[m_vertexIndices[i]],
                 m_vertices[m_vertexIndices[i + 2]] - m_vertices[m_vertexIndices[i]]);
-            m_normals[m_vertexIndices[i]] =
+                m_normals[m_vertexIndices[i]] =
                 m_normals[m_vertexIndices[i + 1]] =
                 m_normals[m_vertexIndices[i + 2]] = norm;
         }
