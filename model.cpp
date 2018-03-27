@@ -81,6 +81,7 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
                 faceCount++;
             }
         }
+
         ss.clear();
     }
     //if there is no normals in files, normal vectors could be created by cross product of vertices
@@ -98,6 +99,22 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
                 m_normals[m_vertexIndices[i + 2]] = norm;
         }
     }
+
+    assert(m_vertexIndices.size() == m_normalIndices.size() && m_normalIndices.size() == m_textureIndices.size());
+    int nVertex = m_vertexIndices.size();
+    std::vector<Point3f> vertices(nVertex);
+    std::vector<Vector3f> normals(nVertex);
+    std::vector<Point2f> textures(nVertex);
+    for (int i = 0; i < nVertex; i++) {
+        vertices[i] = m_vertices[m_vertexIndices[i]];
+        normals[i] = m_normals[m_normalIndices[i]];
+        textures[i] = m_textures[m_textureIndices[i]];
+        m_vertexIndices[i] = i;
+    }
+    m_vertices.swap(vertices);
+    m_normals.swap(normals);
+    m_textures.swap(textures);
+
     return (m_loaded = true);
 }
 bool ObjReader::isLoaded() const

@@ -46,7 +46,13 @@ class TriangleMesh {
     int m_nIndex;
     std::unique_ptr<Vector3f[]> m_normals;
 public:
-    TriangleMesh(const Point3f * vertices, const Vector3f * normals, int nVertex, const int * vertexIndices, int nIndex, const Trans3DMat & trans)noexcept : 
+    TriangleMesh(const Point3f * vertices, 
+        const Vector3f * normals,
+
+        int nVertex, 
+        const int * vertexIndices,  
+        int nIndex,
+        const Trans3DMat & trans)noexcept : 
         m_nVertex(nIndex), 
         m_nIndex(nIndex)
     {
@@ -162,12 +168,42 @@ public:
         {
             tris.push_back(std::make_shared<Triangle>(mesh, i));
             std::string name = mtlName[i];
+            MaterialType type;
+            if (name == "refraction") {
+                type = MaterialType::Glass;
+            }
+            else if (name == "specular") {
+                type = MaterialType::Mirror;
+            }
+            else if (name == "diffuse") {
+                type = MaterialType::Metal;
+            }
             Color kd = mtlReader[name]["Kd"];
-            Color ks = mtlReader[name]["Ka"];
+            Color ks = mtlReader[name]["Ks"];
             Color ka = mtlReader[name]["Ka"];
             Color tf = mtlReader[name]["Tf"];
-            Float ni = mtlReader[name]["Ni"][0];
-
+            Color ke = mtlReader[name]["Ke"];
+            Color niV = mtlReader[name]["Ni"];
+            if (kd.isNull()) {
+                kd = Color(0, 0, 0);
+            }
+            if (ks.isNull()) {
+                ks = Color(0, 0, 0);
+            }
+            if (ka.isNull()) {
+                ka = Color(0, 0, 0);
+            }
+            if (tf.isNull()) {
+                tf = Color(0, 0, 0);
+            }
+            if (ke.isNull()) {
+                ke = Color(0, 0, 0);
+            }
+            Float ni = niV[0];
+            if (niV.isNull()) {
+                ni = 0;
+            }
+            
             ///TODO: distiguish different material by MaterialType
             tris.back()->setMaterial(std::make_shared<Material>(kd, ks, ka, tf, ni,MaterialType::Metal));
         }

@@ -177,16 +177,17 @@ std::uniform_real_distribution<Float> u(Float(0), Float(1));
 Color trace(const Scene & scene,
     const Ray & ray, 
     int depth) {
-    if (depth >= 5)
-    {
-        //
-        return Color();
-    }
-    Color L;
+    Color L(0,0,0);
     Float t;
     Interaction isect;
     //direct light
     if (scene.intersect(ray, &t, &isect) == true) {
+        if (depth > 5) {
+            //return material emission
+            return Color(0, 0, 0);
+        }
+
+
         const auto & lights = scene.lights();
         //direct light illumination
         for (const auto & light : lights) {
@@ -209,8 +210,11 @@ Color trace(const Scene & scene,
                     Vector3f n = isect.normal().normalized();
                     Vector3f l = wi.normalized();
                     Vector3f h = (-ray.direction() - wi).normalized();
-                    L += ka * li + kd * (Vector3f::dotProduct(n, l))*li + ks * (Vector3f::dotProduct(n, h))*li;
+                    L += ka * li + kd * (std::max(Vector3f::dotProduct(n, l),0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h),0.0f))*li;
+                    //qDebug() << ka << " " << kd << " " << ks;
+                    //L += li * ka;
                 }
+                //L = Color(1.0, 1.0, 1.0);
             }
         }
         //indirect light illumination
@@ -283,7 +287,7 @@ void PathTracingDemo::onRender()
     //random number
 
 
-    constexpr int SAMPLE = 50;
+    constexpr int SAMPLE = 1;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);
