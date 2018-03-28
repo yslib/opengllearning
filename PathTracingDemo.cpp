@@ -177,18 +177,20 @@ std::uniform_real_distribution<Float> u(Float(0), Float(1));
 Color trace(const Scene & scene,
     const Ray & ray, 
     int depth) {
-    Color L(0,0,0);
+    Color directIllumination(0,0,0);
     Float t;
     Interaction isect;
-    //direct light
-    if (scene.intersect(ray, &t, &isect) == true) {
+    Color indirectIllumination(0, 0, 0);
+    if (scene.intersect(ray, &t, &isect) == false) {
+        return Color(0, 0, 0);
+    }
+    else{
         if (depth > 5) {
             //return material emission
             return Color(0, 0, 0);
         }
-
-
         const auto & lights = scene.lights();
+        const std::shared_ptr<Material> & m = isect.object()->getMaterial();
         //direct light illumination
         for (const auto & light : lights) {
             Vector3f wi;
@@ -201,16 +203,15 @@ Color trace(const Scene & scene,
             if (vis.occlude(scene) == false)
             {
                 Color li = light->L(isect, wi);
-                const std::shared_ptr<Material> & m = isect.object()->getMaterial();
-                if (m != nullptr) {
-                    Color ka = m->m_ka;
-                    Color ks = m->m_kd;
-                    Color kd = m->m_kd;
 
+                if (m != nullptr) {
+                    Color ks = m->m_kd;
+                    Color ka = m->m_ka;
+                    Color kd = m->m_kd;
                     Vector3f n = isect.normal().normalized();
                     Vector3f l = wi.normalized();
                     Vector3f h = (-ray.direction() - wi).normalized();
-                    L += ka * li + kd * (std::max(Vector3f::dotProduct(n, l),0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h),0.0f))*li;
+                    directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
                     //qDebug() << ka << " " << kd << " " << ks;
                     //L += li * ka;
                 }
@@ -218,13 +219,30 @@ Color trace(const Scene & scene,
             }
         }
         //indirect light illumination
-        
+       
+        Color bsdf;
+        Vector3f wi;
+        Float pdf;
+        Point2f sample(u(e), u(e));
+        switch (m->m_type)
+        {
+        case MaterialType::Mirror:
+            bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_SPECULAR);
+            break;
+        case MaterialType::Metal:
+            bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_DIFFUSE);
+            break;
+        case MaterialType::Glass:
+            bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_REFRACTION);
+                break;
+        default:
+            break;
+        }
+        Ray newRay = isect.spawnRay(wi);
+        indirectIllumination = bsdf * trace(scene,newRay, depth + 1);
+    }   //indirect light
 
-    }
-
-    //indirect light
-
-    return L;
+    return directIllumination + indirectIllumination;
 }
 
 void PathTracingDemo::onRender()

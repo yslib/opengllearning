@@ -19,6 +19,8 @@ class BSDF
     Color m_ka;
     Color m_ks;
     Color m_kd;
+    Float m_ni;
+    Color m_tf;
     //n,m,s are normal and orthognal vectors
     //normal vector in shading coordinate system is (0,1,0)
 public:
@@ -29,6 +31,8 @@ public:
     Color sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f & sample,BSDFType type);
     BSDFType type()const { return m_type; }
     bool isType(BSDFType type) { return m_type == type;}
+private:
+    void fersnel(Float cosTheta,Float n,Float * fr,Float * ft);
 };
 
 class Interaction;

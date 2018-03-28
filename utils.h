@@ -58,6 +58,22 @@ Vector3f uniformSampleCone(const Point2f &p, Float angle)
     return Vector3f(std::cos(phi)*sinTheta, cosTheta, std::sin(phi)*sinTheta);
 }
 
+inline Vector3f reflection(const Vector3f & normal, const Vector3f & incidence) {
+    Vector3f norm = normal.normalized();
+    return (incidence - 2 * norm*(Vector3f::crossProduct(norm,incidence)));
+}
+
+inline 
+Vector3f refraction(const Vector3f & normal, const Vector3f & incidence,Float ratioIOR) {
+    Vector3f norm = normal.normalized();
+    Vector3f inci = incidence.normalized();
+    Float cosI = Vector3f::dotProduct(norm, inci);
+    Float cos2T = 1.0 - ratioIOR * ratioIOR*(1 - cosI * cosI);
+    Vector3f T = ratioIOR * inci - (ratioIOR*cosI + std::sqrt(cos2T))*norm;
+    if (cos2T > 0)return T;
+    return Vector3f();
+}
+
 
 inline
 Float uniformSampleConePdf(Float angle)

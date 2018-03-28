@@ -40,25 +40,50 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
     case BSDF_REFRACTION:
     {
         ///TODO:how to judge wo is in the interior of the object or outerior of the object
-        Float into = Vector3f::dotProduct(m_n, wo);
-        if (into < 0) {
+        Float cosTheta = Vector3f::dotProduct(m_n, wo);
+        Float n;
+        Float fr, ft;
+        if (cosTheta < 0) {
             //outer
+            n = m_ni;
+            cosTheta = -cosTheta;
+            fersnel(cosTheta, n, &fr, &ft);
             //tracing reflection and refraction
 
         }
         else {
             //inter
-            //full internal reflection
+            fersnel(cosTheta, n, &fr, &ft);
+            n = 1.f/m_ni;
+            assert(n <= 1.0);
+            if (cosTheta < sqrt(1 - n * n)) {
+                //full internal reflection
+                if(pdf)*pdf = 1;
+                *wi = -reflect(m_n, wo);
+                return m_color;
+            }
+            else {
+
+            }
         }
         
     }
         break;
     case BSDF_ALL:
+        assert(false);
         break;
     default:
+        assert(false);
         break;
     }
     return f;
+}
+
+void BSDF::fersnel(Float cosTheta,Float n,Float *fr,Float *ft)
+{
+    Float f0 = (n - 1)*(n - 1) / ((n + 1)*(n + 1));
+    if (fr)*fr = f0;
+    if (ft)*ft = f0 + (1 - f0)*std::pow(1 - cosTheta, 5.0);
 }
 
 void Material::computeScatteringFunction(Interaction * isect)
