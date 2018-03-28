@@ -28,13 +28,13 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
     case BSDF_DIFFUSE:
         *wi = -localToWorld(uniformSampleHemiSphere(sample));
         if (pdf)*pdf = 1.0 / (2 * PI);
-        return m_color;
+        return m_kd;
         break;
     case BSDF_SPECULAR:
     {
         *wi = 2 * (Vector3f::dotProduct(norm, wo))*norm-wo;
         if (pdf)*pdf = 1;
-        return m_color;
+        return m_ks;
     }
         break;
     case BSDF_REFRACTION:
@@ -62,16 +62,16 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
             if(russianRoulette(sample[0],s) == true){
                     // reflection
                 *wi = -reflection(m_n,wo);
-                return m_color;
+                return m_ks;
             }else{
                 //refraction
                 *wi = -refraction(m_n,wo,n);
-                return m_color;
+                return m_ks;
             }
         }else{
             //only reflection
             *wi = -reflection(m_n,wo);
-            return m_color;
+            return m_ks;
         }
         
     }
@@ -112,5 +112,5 @@ void Material::computeScatteringFunction(Interaction * isect)
         exit(0);
         break;
     }
-    isect->m_bsdf = std::make_shared<BSDF>(m_kd,isect->m_norm,isect->m_t,isect->m_s,bsdfType);
+    isect->m_bsdf = std::make_shared<BSDF>(m_kd,m_ks,m_ka,m_tf,m_ni,m_ns,isect->m_norm,isect->m_t,isect->m_s,bsdfType);
 }

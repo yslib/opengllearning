@@ -13,19 +13,28 @@ enum BSDFType {
 
 class BSDF
 {
-    Color m_color;
     Vector3f m_n, m_t, m_s;
     BSDFType m_type;
     Color m_ka;
     Color m_ks;
     Color m_kd;
     Float m_ni;
+    Float m_ns;
     Color m_tf;
     //n,m,s are normal and orthognal vectors
     //normal vector in shading coordinate system is (0,1,0)
 public:
-    BSDF(const Color & color, const Vector3f & n, const Vector3f & t, const Vector3f & s,BSDFType type) :m_color(color), m_n(n.normalized()), m_t(t.normalized()), m_s(s.normalized()),m_type(type) {}
-    Color f(const Vector3f & wo, const Vector3f & wi)const { return m_color; }
+    BSDF(const Color & kd,
+        const Color & ks,
+        const Color & ka,
+        const Color & tf,
+        Float ni,
+        Float ns,
+        const Vector3f & n, 
+        const Vector3f & t, 
+        const Vector3f & s,
+        BSDFType type) :m_kd(kd),m_ka(ka),m_ks(ks),m_ni(ni),m_tf(tf),m_ns(ns), m_n(n.normalized()), m_t(t.normalized()), m_s(s.normalized()),m_type(type) {}
+    //Color f(const Vector3f & wo, const Vector3f & wi)const { return m_color; }
     Vector3f worldToLocal(const Vector3f & v)const;
     Vector3f localToWorld(const Vector3f & v)const;
     Color sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f & sample,BSDFType type);
@@ -53,12 +62,13 @@ public:
     Color m_ka;
     Color m_tf;
     Float m_ni;
+    Float m_ns;
     Color m_color;
     const Shape * m_pShape;
     MaterialType m_type;
 public:
-    Material(const Color &kd, const Color &ks, const Color &ka, const Color &tf, Float ni,MaterialType type) :
-        m_kd(kd), m_ks(ks), m_ka(ka), m_tf(tf), m_ni(ni),m_type(type) {}
+    Material(const Color &kd, const Color &ks, const Color &ka, const Color &tf, Float ni,Float ns,MaterialType type) :
+        m_kd(kd), m_ks(ks), m_ka(ka), m_tf(tf), m_ni(ni),m_ns(ns),m_type(type) {}
     void computeScatteringFunction(Interaction * isect);
 };
 

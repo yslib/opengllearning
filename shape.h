@@ -169,13 +169,13 @@ public:
             tris.push_back(std::make_shared<Triangle>(mesh, i));
             std::string name = mtlName[i];
             MaterialType type;
-            if (name == "refraction") {
+            if (name == "sphere_transmission") {
                 type = MaterialType::Glass;
             }
-            else if (name == "specular") {
+            else if (name == "sphere_mirror") {
                 type = MaterialType::Mirror;
             }
-            else if (name == "diffuse") {
+            else{
                 type = MaterialType::Metal;
             }
             Color kd = mtlReader[name]["Kd"];
@@ -184,6 +184,7 @@ public:
             Color tf = mtlReader[name]["Tf"];
             Color ke = mtlReader[name]["Ke"];
             Color niV = mtlReader[name]["Ni"];
+            Color nsV = mtlReader[name]["Ns"];
             if (kd.isNull()) {
                 kd = Color(0, 0, 0);
             }
@@ -199,13 +200,23 @@ public:
             if (ke.isNull()) {
                 ke = Color(0, 0, 0);
             }
-            Float ni = niV[0];
+            Float ni;
             if (niV.isNull()) {
                 ni = 0;
             }
+            else {
+                ni = niV[0];
+            }
+            Float ns;
+            if (nsV.isNull()) {
+                ns = 0;
+            }
+            else {
+                ns = nsV[0];
+            }
             
             ///TODO: distiguish different material by MaterialType
-            tris.back()->setMaterial(std::make_shared<Material>(kd, ks, ka, tf, ni,MaterialType::Metal));
+            tris.back()->setMaterial(std::make_shared<Material>(kd, ks, ka, tf, ni,ns,type));
         }
 
         return tris;
