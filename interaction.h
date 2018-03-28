@@ -10,6 +10,7 @@
 
 
 
+class Shape;
 class BSDF;
 
 class Interaction

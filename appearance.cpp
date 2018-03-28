@@ -43,28 +43,35 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         Float cosTheta = Vector3f::dotProduct(m_n, wo);
         Float n;
         Float fr, ft;
+        if(pdf)*pdf=1;
         if (cosTheta < 0) {
             //outer
             n = m_ni;
             cosTheta = -cosTheta;
-            fersnel(cosTheta, n, &fr, &ft);
             //tracing reflection and refraction
-
         }
         else {
             //inter
-            fersnel(cosTheta, n, &fr, &ft);
             n = 1.f/m_ni;
             assert(n <= 1.0);
-            if (cosTheta < sqrt(1 - n * n)) {
-                //full internal reflection
-                if(pdf)*pdf = 1;
-                *wi = -reflect(m_n, wo);
+        }
+        fersnel(cosTheta, n, &fr, &ft);
+        Vector3f refrac = refraction(m_n,wo,n);
+        Float s;
+        if(refrac.isNull() == false){
+            if(russianRoulette(sample[0],s) == true){
+                    // reflection
+                *wi = -reflection(m_n,wo);
+                return m_color;
+            }else{
+                //refraction
+                *wi = -refraction(m_n,wo,n);
                 return m_color;
             }
-            else {
-
-            }
+        }else{
+            //only reflection
+            *wi = -reflection(m_n,wo);
+            return m_color;
         }
         
     }
@@ -105,5 +112,5 @@ void Material::computeScatteringFunction(Interaction * isect)
         exit(0);
         break;
     }
-    isect->m_bsdf = std::make_shared<BSDF>(m_kd,isect->m_norm,isect->m_t,isect->m_s,BSDFType::BSDF_REFRACTION);
+    isect->m_bsdf = std::make_shared<BSDF>(m_kd,isect->m_norm,isect->m_t,isect->m_s,bsdfType);
 }

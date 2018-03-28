@@ -234,7 +234,9 @@ Color trace(const Scene & scene,
             break;
         case MaterialType::Glass:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_REFRACTION);
-                break;
+            if(wi.isNull())
+                return Color(0,0,0);
+            break;
         default:
             break;
         }

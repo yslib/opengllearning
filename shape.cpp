@@ -87,8 +87,8 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
 
 
 
-bool Sphere::intersect(const Ray & ray, Float * t, Interaction * iterac) const
-{
+//bool Sphere::intersect(const Ray & ray, Float * t, Interaction * iterac) const
+//{
 
-    return false;
-}
+//    return false;
+//}

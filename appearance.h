@@ -43,6 +43,8 @@ enum class MaterialType {
     Mirror,
     Metal
 };
+
+class Shape;
 class Material
 {
 public:

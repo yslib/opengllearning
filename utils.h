@@ -58,6 +58,14 @@ Vector3f uniformSampleCone(const Point2f &p, Float angle)
     return Vector3f(std::cos(phi)*sinTheta, cosTheta, std::sin(phi)*sinTheta);
 }
 
+
+
+inline bool russianRoulette(Float p,Float & s){
+    s = (double)rand() / RAND_MAX;
+    if (s>p) return true;
+    return false;
+}
+
 inline Vector3f reflection(const Vector3f & normal, const Vector3f & incidence) {
     Vector3f norm = normal.normalized();
     return (incidence - 2 * norm*(Vector3f::crossProduct(norm,incidence)));
