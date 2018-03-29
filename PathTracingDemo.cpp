@@ -32,6 +32,7 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     QWidget * controlWidget = new QWidget(this);
     QGridLayout * controlLayout = new QGridLayout;
 
+    m_samples = 1;
     //button
     m_openFileButton = new QPushButton;
     m_openFileButton->setText(QString("Open Obj..."));
@@ -112,7 +113,7 @@ PathTracingDemo::~PathTracingDemo()
 
 void PathTracingDemo::onOpenObjectFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("C:/Users/ysl/Downloads/tests/"), QString(".obj(*.obj)"));
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("/home/ysl/Desktop/test"), QString(".obj(*.obj)"));
     if (fileName.isEmpty() == true)
         return;
     m_fileNamesLineEdit->setText(fileName);
@@ -152,10 +153,11 @@ void PathTracingDemo::onOpenObjectFile()
 
 void PathTracingDemo::onOpenMtlFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("C:/Users/ysl/Downloads/tests/"), QString(".mtl(*.mtl)"));
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("/home/ysl/Desktop/test"), QString(".mtl(*.mtl)"));
     if (fileName.isEmpty() == true)
         return;
     m_mtlFileNameLineEdit->setText(fileName);
+    qDebug()<<fileName;
     if (m_materialReader.loadFromFile(fileName.toStdString()) == false)
     {
         QMessageBox::critical(this, QString("Error"), QString("can not load mtl file"));
@@ -167,6 +169,13 @@ void PathTracingDemo::onOpenMtlFile()
 void PathTracingDemo::onSamplesCountChanged(int value)
 {
     qDebug() << "slot hitted";
+    if(value >40)
+        value =40;
+    else if(value <1)
+        value = 1;
+    m_samples = value;
+
+    qDebug()<<value;
 }
 
 
@@ -177,7 +186,7 @@ std::uniform_real_distribution<Float> u(Float(0), Float(1));
 Color trace(const Scene & scene,
     const Ray & ray, 
     int depth) {
-    qDebug() << "depth:" << depth;
+    //qDebug() << "depth:" << depth;
     Color directIllumination(0,0,0);
     Float t;
     Interaction isect;
@@ -185,7 +194,6 @@ Color trace(const Scene & scene,
     if (scene.intersect(ray, &t, &isect) == false) {
         return Color(0, 0, 0);
     }
-    else{
         assert(isect.object() != nullptr);
         if (depth > 5) {
             //return material emission
@@ -227,7 +235,7 @@ Color trace(const Scene & scene,
         Vector3f wi;
         Float pdf;
         Point2f sample(u(e), u(e));
-        qDebug() << (m == nullptr ? false : true);
+        //qDebug() << (m == nullptr ? false : true);
         switch (m->m_type)
         {
         case MaterialType::Mirror:
@@ -241,18 +249,15 @@ Color trace(const Scene & scene,
         case MaterialType::Glass:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_REFRACTION);
             //qDebug() << "glass" << bsdf;
-           // qDebug() << "WI: "<<wi;
-            if(wi.isNull())
-                return Color(0,0,0);
             break;
         default:
+            assert(false);
             break;
         }
         Ray newRay = isect.spawnRay(wi);
         indirectIllumination = bsdf * trace(scene,newRay, depth + 1);
-    }   //indirect light
+        return (directIllumination + indirectIllumination);
 
-    return directIllumination + indirectIllumination;
 }
 
 void PathTracingDemo::onRender()
@@ -301,7 +306,7 @@ void PathTracingDemo::onRender()
             tempMtl,
             rd, Trans3DMat());
 
-    std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(50,50,50));
+    std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(100,100,100));
     //std::shared_ptr<AreaLight> bTestLight = std::make_shared<AreaLight>(lightShape[1], Color(1.0, 1.0, 1.0));
     std::vector<std::shared_ptr<AreaLight>> lights;
     lights.push_back(aTestLight);
@@ -314,8 +319,9 @@ void PathTracingDemo::onRender()
 
     //random number
 
-
-    constexpr int SAMPLE = 40;
+    int totalPixels = height*width;
+    int interval = totalPixels/100;
+    int process = 0;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);
@@ -323,11 +329,18 @@ void PathTracingDemo::onRender()
                 cameraRight * (Float(i) / width)*canvasWidth;
             //construct a ray
             Ray ray((canvasPosInWorld - cameraPosition).normalized(), cameraPosition);
-            for (int i = 0; i < SAMPLE; i++) 
+            for (int i = 0; i < m_samples; i++)
                 L += trace(scene, ray, 0);
             //qDebug() << L;
             //qDebug() << L;
-            resultImage.setPixelColor(i, j, QColor(L[0] / SAMPLE,L[1] / SAMPLE,L[2] / SAMPLE));
+            L = clamp(L/m_samples,Color(0,0,0),Color(255,255,255));
+            resultImage.setPixelColor(i, j,QColor(L[0],L[1],L[2]));
+//            if((process++)%interval){
+//                qreal p = (qreal)process/totalPixels;
+//                QString pt = QString::number(p)+"%";
+//                qDebug()<<p;
+//                //m_textEdit->setText(pt);
+//            }
         }
     }
     m_resultDisplay->resize(size);

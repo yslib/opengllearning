@@ -84,13 +84,16 @@ private:
     MaterialLib m_mLib;
     int test;
 public:
-    MaterialReader(const std::string & fileName="")
-    {
+    MaterialReader(const std::string & fileName){
         m_loaded = loadFromFile(fileName);
+    }
+    MaterialReader():m_loaded(false)
+    {
+
     }
     bool loadFromFile(const std::string & fileName)
     {
-        std::ifstream fileIn(fileName);
+        std::ifstream fileIn(fileName,std::ifstream::in);
         if (fileIn.is_open() == false)
             return m_loaded = false;
         std::string line;
@@ -116,6 +119,7 @@ public:
                 }
             }
         }
+        return m_loaded = true;
     }
     PropertyMap & operator[](const std::string & name)
     {

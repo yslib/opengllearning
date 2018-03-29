@@ -58,6 +58,7 @@ private:
     QLabel * m_sliderLabel;
     QSlider * m_slider;
     QTextEdit * m_textEdit;
+    int m_samples;
 
     QPushButton * m_renderButton;
 

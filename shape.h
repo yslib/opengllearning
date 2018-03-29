@@ -169,7 +169,7 @@ public:
             tris.push_back(std::make_shared<Triangle>(mesh, i));
             std::string name = mtlName[i];
             MaterialType type;
-            if (name == "sphere_transmission") {
+            if (name == "sphere_transparent") {
                 type = MaterialType::Glass;
             }
             else if (name == "sphere_mirror") {

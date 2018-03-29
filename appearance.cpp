@@ -26,13 +26,15 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
     switch (type)
     {
     case BSDF_DIFFUSE:
-        *wi = -localToWorld(uniformSampleHemiSphere(sample));
+        *wi = localToWorld(uniformSampleHemiSphere(sample));
         if (pdf)*pdf = 1.0 / (2 * PI);
         return m_kd;
         break;
     case BSDF_SPECULAR:
     {
-        *wi = 2 * (Vector3f::dotProduct(norm, wo))*norm-wo;
+        Float s = Vector3f::dotProduct(norm, wo);
+        if(s < 0)return Color(0,0,0);
+        *wi = 2 * (s)*norm-wo;
         if (pdf)*pdf = 1;
         return m_ks;
     }
@@ -40,7 +42,7 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
     case BSDF_REFRACTION:
     {
         ///TODO:how to judge wo is in the interior of the object or outerior of the object
-        Float cosTheta = Vector3f::dotProduct(m_n, wo);
+        Float cosTheta = Vector3f::dotProduct(m_n, -wo);
         Float n;
         Float fr, ft;
         Vector3f realNorm = m_n;
@@ -58,28 +60,28 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
             //assert(n <= 1.0);
         }
         fersnel(cosTheta, n, &fr, &ft);
-        Vector3f refrac = refraction(realNorm,wo,n);
+        Vector3f refrac = refraction(realNorm,-wo,n);
         //qDebug() << "refraction :" << refrac;
         Float s;
         if(refrac.isNull() == false){
-            if(russianRoulette(sample[0],s) == true){
-                    // reflection
+            if(russianRoulette(0.01,s) == true){
+                // reflection
                 //qDebug() << "reflection";
-                *wi = -reflection(m_n,wo);
+                *wi = reflection(m_n,-wo);
                 return m_ks;
             }else{
                 //refraction
                 //qDebug() << "refraction";
-                *wi = -refrac;
+                *wi = refrac;
                 return m_ks;
             }
-            //*wi = -refrac;
-            //return m_ks;
+//            *wi = refrac;
+//            return m_ks;
         }else{
             //only reflection
             //qDebug() << "only reflection n :" << n;
             //assert(n <= 1.0);
-            *wi = -reflection(m_n,wo);
+            *wi = reflection(m_n,-wo);
             return m_ks;
         }
         

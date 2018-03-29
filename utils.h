@@ -90,6 +90,16 @@ Vector3f refraction(const Vector3f & normal, const Vector3f & incidence,Float ra
     return T;
 }
 
+inline Float clamp(Float v,Float low,Float high){
+    if(v > high)return high;
+    if(v < low)return low;
+    return v;
+}
+
+inline Color clamp(const Color & v,const Color & low,const Color & high){
+    return Color(clamp(v[0],low[0],high[0]),clamp(v[1],low[1],high[1]),clamp(v[2],low[2],high[2]));
+}
+
 
 inline
 Float uniformSampleConePdf(Float angle)
