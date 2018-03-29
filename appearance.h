@@ -33,10 +33,13 @@ public:
         const Vector3f & n, 
         const Vector3f & t, 
         const Vector3f & s,
-        BSDFType type) :m_kd(kd),m_ka(ka),m_ks(ks),m_ni(ni),m_tf(tf),m_ns(ns), m_n(n.normalized()), m_t(t.normalized()), m_s(s.normalized()),m_type(type) {}
+        BSDFType type) :m_kd(kd),m_ka(ka),m_ks(ks),m_ni(ni),m_tf(tf),m_ns(ns), m_n(n.normalized()), m_t(t.normalized()), m_s(s.normalized()),m_type(type) {
+        createCoordinateSystem(m_n, m_t, m_s);
+    }
     //Color f(const Vector3f & wo, const Vector3f & wi)const { return m_color; }
     Vector3f worldToLocal(const Vector3f & v)const;
     Vector3f localToWorld(const Vector3f & v)const;
+    void createCoordinateSystem(const Vector3f &N, Vector3f &t, Vector3f &s);
     Color sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f & sample,BSDFType type);
     BSDFType type()const { return m_type; }
     bool isType(BSDFType type) { return m_type == type;}

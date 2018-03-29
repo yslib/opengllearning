@@ -17,6 +17,15 @@ Vector3f BSDF::localToWorld(const Vector3f & v) const
     );
 }
 
+void BSDF::createCoordinateSystem(const Vector3f & N, Vector3f & t, Vector3f & s)
+{
+    if (std::fabs(N[0]) > std::fabs(N[1]))
+        t = Vector3f(N[2], 0, -N[0]) / sqrtf(N[0] * N[0] + N[2] * N[2]);
+    else
+        t = Vector3f(0, -N[2], N[1]) / sqrtf(N[1] * N[1] + N[2] * N[2]);
+    s = Vector3f::crossProduct(N,t);
+}
+
 Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f & sample,BSDFType type)
 {
     if (isType(type) == false)return Color(0.f,0.f,0.f);
@@ -49,14 +58,14 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         if(pdf)*pdf=1;
         if (cosTheta < 0) {
             //outer
-            n = m_ni;
+            n = 1.0/m_ni;
             cosTheta = -cosTheta;
             //tracing reflection and refraction
         }
         else {
             //inter
             realNorm = -realNorm;
-            n = 1.0/m_ni;
+            n = m_ni;
             //assert(n <= 1.0);
         }
         fersnel(cosTheta, n, &fr, &ft);
@@ -64,7 +73,7 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         //qDebug() << "refraction :" << refrac;
         Float s;
         if(refrac.isNull() == false){
-            if(russianRoulette(0.01,s) == true){
+            if(russianRoulette(fr,sample[0]) == true){
                 // reflection
                 //qDebug() << "reflection";
                 *wi = reflection(m_n,-wo);

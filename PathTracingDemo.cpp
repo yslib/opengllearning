@@ -113,7 +113,7 @@ PathTracingDemo::~PathTracingDemo()
 
 void PathTracingDemo::onOpenObjectFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("/home/ysl/Desktop/test"), QString(".obj(*.obj)"));
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("C:/Users/ysl/Downloads"), QString(".obj(*.obj)"));
     if (fileName.isEmpty() == true)
         return;
     m_fileNamesLineEdit->setText(fileName);
@@ -153,7 +153,7 @@ void PathTracingDemo::onOpenObjectFile()
 
 void PathTracingDemo::onOpenMtlFile()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("/home/ysl/Desktop/test"), QString(".mtl(*.mtl)"));
+    QString fileName = QFileDialog::getOpenFileName(this, QString("Obj File"), QString("C:/Users/ysl/Downloads"), QString(".mtl(*.mtl)"));
     if (fileName.isEmpty() == true)
         return;
     m_mtlFileNameLineEdit->setText(fileName);
@@ -216,17 +216,30 @@ Color trace(const Scene & scene,
                 Color li = light->L(isect, wi);
 
                 if (m != nullptr) {
-                    Color ks = m->m_kd;
+                    Color ks = m->m_ks;
                     Color ka = m->m_ka;
                     Color kd = m->m_kd;
+                    //switch (m->m_type)
+                    //{
+                    //case MaterialType::Mirror:
+                    //    directIllumination += ks * li;
+                    //    break;
+                    //case MaterialType::Metal:
+                    //    directIllumination += kd * li;
+                    //    break;
+                    //case MaterialType::Glass:
+                    //    directIllumination += ks * li;
+                    //    break;
+                    //default:
+                    //    assert(false);
+                    //    break;
+                    //}
+                   
                     Vector3f n = isect.normal().normalized();
                     Vector3f l = wi.normalized();
                     Vector3f h = (-ray.direction() - wi).normalized();
                     directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
-                    //qDebug() << ka << " " << kd << " " << ks;
-                    //L += li * ka;
                 }
-                //L = Color(1.0, 1.0, 1.0);
             }
         }
         //indirect light illumination
@@ -235,16 +248,17 @@ Color trace(const Scene & scene,
         Vector3f wi;
         Float pdf;
         Point2f sample(u(e), u(e));
+        //qDebug() << sample;
         //qDebug() << (m == nullptr ? false : true);
         switch (m->m_type)
         {
         case MaterialType::Mirror:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_SPECULAR);
-            //qDebug() << "mirror"<<bsdf;
+            //qDebug() << "mirror" << bsdf << " " << wi;
             break;
         case MaterialType::Metal:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_DIFFUSE);
-            //qDebug() << "metal" << bsdf;
+            //qDebug() << "metal" << bsdf << " " << wi;
             break;
         case MaterialType::Glass:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_REFRACTION);
@@ -280,6 +294,7 @@ void PathTracingDemo::onRender()
     int height = m_frameBuffer.height();
     int width = m_frameBuffer.width();
 
+    Float pixelLength = canvasWidth / static_cast<Float>(width);
 
     //Test Light
     const Point3f vertices[6] =
@@ -306,7 +321,7 @@ void PathTracingDemo::onRender()
             tempMtl,
             rd, Trans3DMat());
 
-    std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(100,100,100));
+    std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(200,200,200));
     //std::shared_ptr<AreaLight> bTestLight = std::make_shared<AreaLight>(lightShape[1], Color(1.0, 1.0, 1.0));
     std::vector<std::shared_ptr<AreaLight>> lights;
     lights.push_back(aTestLight);
@@ -322,19 +337,25 @@ void PathTracingDemo::onRender()
     int totalPixels = height*width;
     int interval = totalPixels/100;
     int process = 0;
+
+    int subpixel = 4;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);
             Point3f canvasPosInWorld = canvasTopLeft - cameraUp * (Float(j) / height)*canvasHeight +
                 cameraRight * (Float(i) / width)*canvasWidth;
             //construct a ray
-            Ray ray((canvasPosInWorld - cameraPosition).normalized(), cameraPosition);
-            for (int i = 0; i < m_samples; i++)
-                L += trace(scene, ray, 0);
-            //qDebug() << L;
-            //qDebug() << L;
-            L = clamp(L/m_samples,Color(0,0,0),Color(255,255,255));
-            resultImage.setPixelColor(i, j,QColor(L[0],L[1],L[2]));
+            for (int i = 0; i < subpixel; i++) {
+                Point2f p = Point2f(u(e), u(e)) * 2 - Point2f(1, 1);
+                Ray ray((canvasPosInWorld + p[0]*cameraRight*pixelLength+p[1]*cameraUp*pixelLength- cameraPosition).normalized(), cameraPosition);
+                for (int i = 0; i < m_samples; i++)
+                    L += trace(scene, ray, 0);
+                //qDebug() << L;
+                //qDebug() << L;
+
+            }
+            L = clamp(L / (m_samples*subpixel), Color(0, 0, 0), Color(255, 255, 255));
+            resultImage.setPixelColor(i, j, QColor(L[0], L[1], L[2]));
 //            if((process++)%interval){
 //                qreal p = (qreal)process/totalPixels;
 //                QString pt = QString::number(p)+"%";

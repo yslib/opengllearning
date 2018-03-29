@@ -2,6 +2,8 @@
 #define SAMPLER_H_
 #include "core.h"
 #include <cmath>
+#include <random>
+#include <ctime>
 
 inline 
 Vector3f uniformSampleHemiSphere(const Point2f &p)
@@ -10,8 +12,8 @@ Vector3f uniformSampleHemiSphere(const Point2f &p)
     Float y = p[0];
     //x = sin(theta)*cos(phi)
     Float sinTheta = std::sqrt(std::max((Float)0, 1 - y * y));
-    Float x = sinTheta * y;
-    Float phi = 2 * PI*y;
+    //Float x = sinTheta * y;
+    Float phi = 2 * PI*p[1];
     return Vector3f(std::cos(phi)*sinTheta, y, std::sin(phi)*sinTheta);
 }
 inline
@@ -58,11 +60,8 @@ Vector3f uniformSampleCone(const Point2f &p, Float angle)
     return Vector3f(std::cos(phi)*sinTheta, cosTheta, std::sin(phi)*sinTheta);
 }
 
-
-
-inline bool russianRoulette(Float p,Float & s){
-    s = (double)rand() / RAND_MAX;
-    if (s>p) return true;
+inline bool russianRoulette(Float p,Float s){
+    if (s<=p) return true;
     return false;
 }
 
@@ -82,7 +81,7 @@ Vector3f refraction(const Vector3f & normal, const Vector3f & incidence,Float ra
     //    return Vector3f();
     //}
 
-    Float cos2T = 1.0 - (1 - cosI * cosI)/(ratioIOR*ratioIOR);
+    Float cos2T = 1.0 - (1 - cosI * cosI)*(ratioIOR*ratioIOR);
     if (cos2T < 0)return Vector3f();
     Vector3f T = ratioIOR * inci - (ratioIOR*cosI + std::sqrt(cos2T))*norm;
     //if (cos2T > 0)return T;
