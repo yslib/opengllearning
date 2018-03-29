@@ -76,10 +76,18 @@ Vector3f refraction(const Vector3f & normal, const Vector3f & incidence,Float ra
     Vector3f norm = normal.normalized();
     Vector3f inci = incidence.normalized();
     Float cosI = Vector3f::dotProduct(norm, inci);
-    Float cos2T = 1.0 - ratioIOR * ratioIOR*(1 - cosI * cosI);
+    Float sinI = std::sqrt(1 - cosI*cosI);
+    //if (sinI > ratioIOR) {
+    //    //qDebug() << "rationIOR" << ratioIOR << " sinI" << sinI << " normal" << norm << " inci" << incidence << " dp:"<<Vector3f::dotProduct(norm,incidence);
+    //    return Vector3f();
+    //}
+
+    Float cos2T = 1.0 - (1 - cosI * cosI)/(ratioIOR*ratioIOR);
+    if (cos2T < 0)return Vector3f();
     Vector3f T = ratioIOR * inci - (ratioIOR*cosI + std::sqrt(cos2T))*norm;
-    if (cos2T > 0)return T;
-    return Vector3f();
+    //if (cos2T > 0)return T;
+    //return Vector3f();
+    return T;
 }
 
 

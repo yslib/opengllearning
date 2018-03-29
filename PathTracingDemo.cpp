@@ -177,6 +177,7 @@ std::uniform_real_distribution<Float> u(Float(0), Float(1));
 Color trace(const Scene & scene,
     const Ray & ray, 
     int depth) {
+    qDebug() << "depth:" << depth;
     Color directIllumination(0,0,0);
     Float t;
     Interaction isect;
@@ -185,12 +186,14 @@ Color trace(const Scene & scene,
         return Color(0, 0, 0);
     }
     else{
+        assert(isect.object() != nullptr);
         if (depth > 5) {
             //return material emission
-            return Color(1.0, 1.0, 1.0);
+            return Color(0, 0, 0);
         }
         const auto & lights = scene.lights();
         const std::shared_ptr<Material> & m = isect.object()->getMaterial();
+        assert(m != nullptr);
         //direct light illumination
         for (const auto & light : lights) {
             Vector3f wi;
@@ -224,20 +227,21 @@ Color trace(const Scene & scene,
         Vector3f wi;
         Float pdf;
         Point2f sample(u(e), u(e));
-        //qDebug() << (m == nullptr ? false : true);
+        qDebug() << (m == nullptr ? false : true);
         switch (m->m_type)
         {
         case MaterialType::Mirror:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_SPECULAR);
-            qDebug() << "mirror"<<bsdf;
+            //qDebug() << "mirror"<<bsdf;
             break;
         case MaterialType::Metal:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_DIFFUSE);
-            qDebug() << "metal" << bsdf;
+            //qDebug() << "metal" << bsdf;
             break;
         case MaterialType::Glass:
             bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_REFRACTION);
-            qDebug() << "glass" << bsdf;
+            //qDebug() << "glass" << bsdf;
+           // qDebug() << "WI: "<<wi;
             if(wi.isNull())
                 return Color(0,0,0);
             break;
@@ -297,7 +301,7 @@ void PathTracingDemo::onRender()
             tempMtl,
             rd, Trans3DMat());
 
-    std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(100,100,100));
+    std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(50,50,50));
     //std::shared_ptr<AreaLight> bTestLight = std::make_shared<AreaLight>(lightShape[1], Color(1.0, 1.0, 1.0));
     std::vector<std::shared_ptr<AreaLight>> lights;
     lights.push_back(aTestLight);
@@ -311,7 +315,7 @@ void PathTracingDemo::onRender()
     //random number
 
 
-    constexpr int SAMPLE = 1;
+    constexpr int SAMPLE = 40;
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);

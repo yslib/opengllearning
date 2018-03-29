@@ -23,7 +23,7 @@ public:
     virtual Float area()const = 0;
     virtual bool intersect(const Ray & ray, Float * t, Interaction * iterac)const = 0;
     void setMaterial(std::shared_ptr<Material> m) {m_material = m;}
-    std::shared_ptr<Material> getMaterial()const {return m_material;}
+    const std::shared_ptr<Material>& getMaterial()const {return m_material;}
     virtual Interaction sample(const Point2f & u)const {return Interaction();}
     virtual Float pdf(const Interaction & isect)const {return 1 / area();}
     virtual Interaction sample(const Interaction & ref, const Point2f & u)const {return sample(u);}

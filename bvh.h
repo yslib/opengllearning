@@ -33,6 +33,10 @@ class BVHTreeAccelerator :public Shape
     std::unique_ptr<BVHNode> m_root;
     mutable Float m_tMin;
 
+
+    mutable bool m_debug_isect;
+    mutable bool m_debug_flag;
+
 public:
     BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes) :m_shapes(shapes),Shape(nullptr) {
         std::vector<std::shared_ptr<Shape>> orderedShapes;
@@ -42,7 +46,11 @@ public:
     }
     bool intersect(const Ray & ray, Float * t, Interaction * interac)const override {
         m_tMin = MAX_Float_VALUE;
-        if (recursiveIntersect(m_root.get(), ray, interac)) {
+        m_debug_isect = false;
+        m_debug_flag = false;
+        bool intersect = recursiveIntersect(m_root.get(), ray, interac);
+        assert(!(m_debug_isect == true && m_debug_flag == false));
+        if (intersect == true) {
             if (t)*t = m_tMin;
             return true;
         }

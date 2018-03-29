@@ -43,6 +43,7 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         Float cosTheta = Vector3f::dotProduct(m_n, wo);
         Float n;
         Float fr, ft;
+        Vector3f realNorm = m_n;
         if(pdf)*pdf=1;
         if (cosTheta < 0) {
             //outer
@@ -52,24 +53,32 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         }
         else {
             //inter
-            n = 1.f/m_ni;
-            assert(n <= 1.0);
+            realNorm = -realNorm;
+            n = 1.0/m_ni;
+            //assert(n <= 1.0);
         }
         fersnel(cosTheta, n, &fr, &ft);
-        Vector3f refrac = refraction(m_n,wo,n);
+        Vector3f refrac = refraction(realNorm,wo,n);
+        //qDebug() << "refraction :" << refrac;
         Float s;
         if(refrac.isNull() == false){
             if(russianRoulette(sample[0],s) == true){
                     // reflection
+                //qDebug() << "reflection";
                 *wi = -reflection(m_n,wo);
                 return m_ks;
             }else{
                 //refraction
-                *wi = -refraction(m_n,wo,n);
+                //qDebug() << "refraction";
+                *wi = -refrac;
                 return m_ks;
             }
+            //*wi = -refrac;
+            //return m_ks;
         }else{
             //only reflection
+            //qDebug() << "only reflection n :" << n;
+            //assert(n <= 1.0);
             *wi = -reflection(m_n,wo);
             return m_ks;
         }

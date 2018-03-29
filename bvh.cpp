@@ -48,22 +48,32 @@ bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ra
         bool isect = false;
         Float tWithBound;
         Float tWithShape;
+
+        //test bool
+        bool flag = false;
+
         for (int i = 0; i < root->m_nShape; i++) {
             if (m_shapes[i + root->m_shapeOffset]->bound().intersect(ray, &tWithBound) == true) {
                 if (m_tMin < tWithBound)continue;
                 Interaction inter;
                 if (m_shapes[i + root->m_shapeOffset]->intersect(ray, &tWithShape, &inter) == true)
                 {
+                    //assert(!std::isnan(tWithShape));
                     //qDebug() << "tmin" << m_tMin << " " << tWithShape;
                     if (m_tMin > tWithShape)
                     {
                         m_tMin = tWithShape;
                         *interac = inter;
+                        m_debug_flag = true;
                     }
                     isect = true;
+                    m_debug_isect = true;
                 }
             }
         }
+        //qDebug() << "m_tMin:" << m_tMin << " tWithShape:" << tWithShape;
+        
+        //assert(!(isect == true && flag == false));
         return isect;
     }
 }

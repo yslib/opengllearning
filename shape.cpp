@@ -51,6 +51,9 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
 
     Float inv = 1.0f / det;
     tt *= inv;
+    //if (std::isnan(tt)) {
+    //    qDebug() << "tt is nan: D" << D << " E2" << E2 << " E1" << " det" << det;
+    //}
     if (tt < 0)return false;
     if (tt > ray.m_tMax)
         return false;
