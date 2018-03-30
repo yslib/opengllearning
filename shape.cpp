@@ -11,6 +11,7 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
     * Tools, 2:1, 21-28, DOI: 10.1080/10867651.1997.10487468
     *
     */
+    //qDebug() << "enter;";
     const Point3f & p0 = m_sharedTriangles->m_vertices[m_vertexIndices[0]];
     const Point3f & p1 = m_sharedTriangles->m_vertices[m_vertexIndices[1]];
     const Point3f & p2 = m_sharedTriangles->m_vertices[m_vertexIndices[2]];
@@ -29,9 +30,10 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
         T = p0 - ray.m_o;
         det = -det;
     }
-    if (det < 0.0001)
+    //qDebug() << "det:" << det;
+    if (det < 0.000001)
         return false;
-
+    //qDebug() << "det";
     Float u, v;
     //u is the parameter coresponding to p1
     //v is the parameter coresponding to p2
@@ -40,13 +42,14 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
         //u > 1, invalid
         return false;
     }
+    //qDebug() << "2222222222";
     Vector3f Q = Vector3f::crossProduct(T, E1);
     v = Vector3f::dotProduct(D, Q);
     if (v < 0.0 || v + u>det) {
         // v > 1 ,invalid
         return false;
     }
-
+    //qDebug() << "32333333333333";
     Float tt = Vector3f::dotProduct(E2, Q);
 
     Float inv = 1.0f / det;
@@ -55,8 +58,10 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
     //    qDebug() << "tt is nan: D" << D << " E2" << E2 << " E1" << " det" << det;
     //}
     if (tt < 0)return false;
+    //qDebug() << "66666666666";
     if (tt > ray.m_tMax)
         return false;
+    //qDebug() << "555555";
     u *= inv;
     v *= inv;
 
@@ -85,6 +90,7 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
     }
     //qDebug() << "isect:" << tt;
     if(tt<0.00001)return false;
+    //qDebug() << "77777777777";
     if (t)*t = tt;
     return true;
 }

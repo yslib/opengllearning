@@ -105,6 +105,8 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
     std::vector<Point3f> vertices(nVertex);
     std::vector<Vector3f> normals(nVertex);
     std::vector<Point2f> textures(nVertex);
+    
+
     for (int i = 0; i < nVertex; i++) {
         vertices[i] = m_vertices[m_vertexIndices[i]];
         normals[i] = m_normals[m_normalIndices[i]];
