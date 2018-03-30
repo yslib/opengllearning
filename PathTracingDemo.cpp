@@ -340,6 +340,7 @@ void PathTracingDemo::onRender()
 
     int subpixel = 4;
     for (int j = 0; j < height; j++) {
+#pragma omp parallel for
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);
             Point3f canvasPosInWorld = canvasTopLeft - cameraUp * (Float(j) / height)*canvasHeight +

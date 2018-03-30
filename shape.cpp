@@ -29,7 +29,7 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
         T = p0 - ray.m_o;
         det = -det;
     }
-    if (det < 0.0001)
+    if (det < 0.001)
         return false;
 
     Float u, v;
