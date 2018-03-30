@@ -21,6 +21,7 @@ class BSDF
     Float m_ni;
     Float m_ns;
     Color m_tf;
+    Color m_e;
     //n,m,s are normal and orthognal vectors
     //normal vector in shading coordinate system is (0,1,0)
 public:
@@ -30,10 +31,11 @@ public:
         const Color & tf,
         Float ni,
         Float ns,
+        const Color & e,
         const Vector3f & n, 
         const Vector3f & t, 
         const Vector3f & s,
-        BSDFType type) :m_kd(kd),m_ka(ka),m_ks(ks),m_ni(ni),m_tf(tf),m_ns(ns), m_n(n.normalized()), m_t(t.normalized()), m_s(s.normalized()),m_type(type) {
+        BSDFType type) :m_kd(kd),m_ka(ka),m_ks(ks),m_ni(ni),m_tf(tf),m_ns(ns),m_e(e), m_n(n.normalized()), m_t(t.normalized()), m_s(s.normalized()),m_type(type) {
         createCoordinateSystem(m_n, m_t, m_s);
     }
     //Color f(const Vector3f & wo, const Vector3f & wi)const { return m_color; }
@@ -41,6 +43,7 @@ public:
     Vector3f localToWorld(const Vector3f & v)const;
     void createCoordinateSystem(const Vector3f &N, Vector3f &t, Vector3f &s);
     Color sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f & sample,BSDFType type);
+    Color emmision()const{return m_e;}
     BSDFType type()const { return m_type; }
     bool isType(BSDFType type) { return m_type == type;}
 private:
@@ -63,6 +66,7 @@ public:
     Color m_kd;
     Color m_ks;
     Color m_ka;
+    Color m_ke;
     Color m_tf;
     Float m_ni;
     Float m_ns;
@@ -70,8 +74,8 @@ public:
     const Shape * m_pShape;
     MaterialType m_type;
 public:
-    Material(const Color &kd, const Color &ks, const Color &ka, const Color &tf, Float ni,Float ns,MaterialType type) :
-        m_kd(kd), m_ks(ks), m_ka(ka), m_tf(tf), m_ni(ni),m_ns(ns),m_type(type) {}
+    Material(const Color &kd, const Color &ks, const Color &ka, const Color & ke,const Color &tf, Float ni,Float ns,MaterialType type) :
+        m_kd(kd), m_ks(ks), m_ka(ka),m_ke(ke), m_tf(tf), m_ni(ni),m_ns(ns),m_type(type) {}
     void computeScatteringFunction(Interaction * isect);
 };
 

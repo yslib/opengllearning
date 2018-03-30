@@ -29,7 +29,7 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
         T = p0 - ray.m_o;
         det = -det;
     }
-    if (det < 0.001)
+    if (det < 0.0001)
         return false;
 
     Float u, v;
@@ -84,6 +84,7 @@ bool Triangle::intersect(const Ray & ray, Float * t, Interaction * interac)const
         getMaterial()->computeScatteringFunction(interac);
     }
     //qDebug() << "isect:" << tt;
+    if(tt<0.00001)return false;
     if (t)*t = tt;
     return true;
 }

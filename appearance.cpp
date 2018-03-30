@@ -41,16 +41,20 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         break;
     case BSDF_SPECULAR:
     {
-        Float s = Vector3f::dotProduct(norm, wo);
-        if(s < 0)return Color(0,0,0);
-        *wi = 2 * (s)*norm-wo;
+        //Float s = Vector3f::dotProduct(norm, wo);
+        //if(s < 0)return Color(0,0,0);
+        //*wi = 2 * (s)*norm-wo;
+        Vector3f ref = reflection(norm,-wo);
+        createCoordinateSystem(ref,m_t,m_s);
+        Vector3f sv = cosineSampleHemiSphereWithShiness(sample,100000);
+        sv = localToWorld(sv);
+        *wi = sv;
         if (pdf)*pdf = 1;
         return m_ks;
     }
         break;
     case BSDF_REFRACTION:
     {
-        ///TODO:how to judge wo is in the interior of the object or outerior of the object
         Float cosTheta = Vector3f::dotProduct(m_n, -wo);
         Float n;
         Float fr, ft;
@@ -70,26 +74,16 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         }
         fersnel(cosTheta, n, &fr, &ft);
         Vector3f refrac = refraction(realNorm,-wo,n);
-        //qDebug() << "refraction :" << refrac;
         Float s;
         if(refrac.isNull() == false){
             if(russianRoulette(fr,sample[0]) == true){
-                // reflection
-                //qDebug() << "reflection";
                 *wi = reflection(m_n,-wo);
                 return m_ks;
             }else{
-                //refraction
-                //qDebug() << "refraction";
                 *wi = refrac;
                 return m_ks;
             }
-//            *wi = refrac;
-//            return m_ks;
         }else{
-            //only reflection
-            //qDebug() << "only reflection n :" << n;
-            //assert(n <= 1.0);
             *wi = reflection(m_n,-wo);
             return m_ks;
         }
@@ -132,5 +126,5 @@ void Material::computeScatteringFunction(Interaction * isect)
         exit(0);
         break;
     }
-    isect->m_bsdf = std::make_shared<BSDF>(m_kd,m_ks,m_ka,m_tf,m_ni,m_ns,isect->m_norm,isect->m_t,isect->m_s,bsdfType);
+    isect->m_bsdf = std::make_shared<BSDF>(m_kd,m_ks,m_ka,m_tf,m_ni,m_ns,m_ke,isect->m_norm,isect->m_t,isect->m_s,bsdfType);
 }

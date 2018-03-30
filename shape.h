@@ -159,9 +159,12 @@ public:
     static std::vector<std::shared_ptr<Shape>>
         createTriangleMesh(const Point3f * vertices, const Point3f * normals, int nVertex,
             const int * vertexIndices, int nIndex, std::unordered_map<int, std::string> & mtlName, MaterialReader & mtlReader,
+                           std::vector<std::shared_ptr<Shape>>* lightShapes,
             const Trans3DMat & trans)
     {
         assert(nIndex % 3 == 0);
+        if(lightShapes != nullptr)
+            lightShapes->clear();
         std::shared_ptr<TriangleMesh> mesh(new TriangleMesh(vertices, normals, nVertex, vertexIndices, nIndex, trans));
         std::vector<std::shared_ptr<Shape>> tris;
         for (int i = 0; i < nIndex / 3; i++)
@@ -183,9 +186,9 @@ public:
             Color ks = mtlReader[name]["Ks"];
             Color ka = mtlReader[name]["Ka"];
             Color tf = mtlReader[name]["Tf"];
-            Color ke = mtlReader[name]["Ke"];
             Color niV = mtlReader[name]["Ni"];
             Color nsV = mtlReader[name]["Ns"];
+            Color ke = mtlReader[name]["Ke"];
             if (kd.isNull()) {
                 kd = Color(0, 0, 0);
             }
@@ -200,6 +203,10 @@ public:
             }
             if (ke.isNull()) {
                 ke = Color(0, 0, 0);
+            }else{
+                //light source
+                if(lightShapes!= nullptr)
+                    lightShapes->push_back(tris.back());
             }
             Float ni;
             if (niV.isNull()) {
@@ -217,7 +224,7 @@ public:
             }
             
             ///TODO: distiguish different material by MaterialType
-            tris.back()->setMaterial(std::make_shared<Material>(kd, ks, ka, tf, ni,ns,type));
+            tris.back()->setMaterial(std::make_shared<Material>(kd, ks, ka,ke, tf, ni,ns,type));
         }
 
         return tris;

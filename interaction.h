@@ -6,10 +6,6 @@
 #include "appearance.h"
 
 
-
-
-
-
 class Shape;
 class BSDF;
 
@@ -41,10 +37,11 @@ public:
     const Vector3f & normal()const { return m_norm; }
     const Shape * object()const { return m_pShape; }
     Ray spawnRay(const Vector3f & dir)const {
-        return Ray(dir.normalized(), m_p+0.0001*dir.normalized());
+        return Ray(dir.normalized(), m_p+0.0001*(m_norm*Vector3f::dotProduct(dir,m_norm)).normalized());
     }
     Ray spawnRayTo(const Interaction & ref)const {
-        return Ray((ref.m_p - m_p).normalized(), m_p + 0.0001*m_norm.normalized());
+        Vector3f dir = (ref.m_p-m_p).normalized();
+        return Ray(dir, m_p + 0.0001*(m_norm*Vector3f::dotProduct(dir,m_norm)).normalized());
     }
     Float u()const { return m_u; }
     Float v()const { return m_v; }

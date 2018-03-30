@@ -8,11 +8,8 @@
 inline 
 Vector3f uniformSampleHemiSphere(const Point2f &p)
 {
-    //y = cos(phi)
     Float y = p[0];
-    //x = sin(theta)*cos(phi)
     Float sinTheta = std::sqrt(std::max((Float)0, 1 - y * y));
-    //Float x = sinTheta * y;
     Float phi = 2 * PI*p[1];
     return Vector3f(std::cos(phi)*sinTheta, y, std::sin(phi)*sinTheta);
 }
@@ -34,6 +31,14 @@ inline
 Float uniformDiskPdf(Float radius)
 {
     return 1 / (PI*radius*radius);
+}
+
+inline
+Vector3f cosineSampleHemiSphereWithShiness(const Point2f &p,Float shiness){
+    Float phi, theta;
+    phi = p[0] * 2 * PI;
+    theta = shiness<0 ? asin(sqrt(p[1])) : acos(pow(p[1], 1 / (shiness + 1)));
+    return Vector3f(sin(theta)*cos(phi), cos(theta), sin(theta)*sin(phi));
 }
 
 inline
@@ -67,7 +72,10 @@ inline bool russianRoulette(Float p,Float s){
 
 inline Vector3f reflection(const Vector3f & normal, const Vector3f & incidence) {
     Vector3f norm = normal.normalized();
-    return (incidence - 2 * norm*(Vector3f::crossProduct(norm,incidence)));
+    Vector3f inci = incidence.normalized();
+    Float s = Vector3f::dotProduct(norm,inci);
+    if(s>0)return (inci*std::sqrt(1-s*s)).normalized();
+    return (inci - 2 * norm*(s));
 }
 
 inline 

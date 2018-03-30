@@ -34,6 +34,8 @@ class QSlider;
 class ObjReader;
 class QTextEdit;
 class OpenGLWidget;
+class QSpinBox;
+
 
 class PathTracingDemo :public BaseDemoWidget
 {
@@ -51,29 +53,47 @@ private:
     QLineEdit *m_mtlFileNameLineEdit;
 
     QWidget * m_displayWidget;
-
     OpenGLWidget * m_sceneDisplay;
     QLabel * m_resultDisplay;
-
     QLabel * m_sliderLabel;
     QSlider * m_slider;
     QTextEdit * m_textEdit;
-    int m_samples;
+
+    int m_subpixel;
 
     QPushButton * m_renderButton;
 
     FrameBuffer m_frameBuffer;
-    QImage m_image;
-
+    QImage m_resultImage;
     MaterialReader m_materialReader;
+
+    //subpixel sample control
+    QLabel * m_subpixelLabel;
+    QSpinBox * m_subpixelSpinBox;
+
+    //recursion depth
+    QLabel * m_depthLabel;
+    QSpinBox * m_depthSpinBox;
+
     //
+    QLabel * m_saveLabel;
+    QLineEdit * m_pathLineEdit;
+    QPushButton * m_pathButton;
+    QPushButton * m_saveButton;
+
+
+    //renderer related
     std::unique_ptr<Scene> m_scene;
     std::shared_ptr<BVHTreeAccelerator> m_aggregate;
+    std::vector<std::shared_ptr<AreaLight>> m_lights;
 
     public slots:
+    void onSaveButton();
+    void onSavePathButton();
     void onOpenObjectFile();
     void onOpenMtlFile();
     void onSamplesCountChanged(int value);
+    void onDepthChanged(int depth);
     void onRender();
 };
 #endif
