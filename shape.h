@@ -65,7 +65,7 @@ public:
         }
         for (int i = 0; i < nIndex; i++)
         {
-            m_vertexIndices[i] = i;
+            m_vertexIndices[i] = vertexIndices[i];
         }
         //create normals vertices
         for (int i = 0; i < nIndex; i++) {

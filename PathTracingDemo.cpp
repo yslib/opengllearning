@@ -176,13 +176,16 @@ void PathTracingDemo::onOpenObjectFile()
     //};
     //unsigned int faceIndices[] = { 0,1,2 };
     //Point3f normals[] = { {0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f} };
-
+    Trans3DMat mat; 
+    mat.scale(Vector3f(5,5,5));
     TriangleMesh mesh(model.getVerticesFlatArray(),
         model.getNormalsFlatArray(),
         model.getVertexCount(),
         model.getFacesIndicesFlatArray(),
         model.getFacesCount(),
-        Trans3DMat());
+        mat);
+   
+   
     m_sceneDisplay->setTriangleMesh(mesh.getVerticesArray(),
         mesh.getNormalsArray(),
         mesh.getVertexCount(),
@@ -196,7 +199,7 @@ void PathTracingDemo::onOpenObjectFile()
         model.getFacesIndicesFlatArray(),
         model.getFacesCount(),
         model.getIndexToMtlName(),
-        m_materialReader, &lightShapes, Trans3DMat());
+        m_materialReader, &lightShapes, mat);
     //build bvh accelerator
     m_aggregate = std::make_shared<BVHTreeAccelerator>(triangles);
     //buid lights
@@ -285,14 +288,14 @@ Color trace(const Scene & scene,
                 Color li = light->L(isect, wi);
                // qDebug() << "Light0:"<<li;
                 Float cosTheta = Vector3f::dotProduct(vis.to().normal().normalized(), -wi.normalized());
-                li = li * cosTheta / vis.distanceSquare() * 100;
+                li = li * cosTheta / vis.distanceSquare()*10;
                 //qDebug() <<" "<<"Light1:"<< li;
                 if (m != nullptr) {
                     Color ks = m->m_ks;
                     Color ka = m->m_ka;
                     Float ns = m->m_ns;
                     Color kd = m->m_kd;
-                    Vector3f v = ray.direction().normalized();
+                    Vector3f v = -ray.direction().normalized();
                     Vector3f n = isect.normal().normalized();
                     Vector3f l = wi.normalized();
                     Vector3f h = (v + l).normalized();
@@ -303,7 +306,7 @@ Color trace(const Scene & scene,
                         //directIllumination += ka*li*0.01;
                         break;
                     case MaterialType::Metal:
-                        directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks *std::pow( (std::max(Vector3f::dotProduct(n, h), 0.0f)),ns)*li;
+                        directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks *std::pow( (std::max(Vector3f::dotProduct(n, h), 0.0f)),20)*li;
                         break;
                     case MaterialType::Glass:
                         //directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
@@ -493,7 +496,7 @@ void PathTracingDemo::onRender()
     lights.push_back(sphereLight4);
 
 
-    Scene scene(m_aggregate, lights);
+    Scene scene(m_aggregate, m_lights);
     //result output
     m_resultImage = QImage(width, height, QImage::Format_RGB888);
     //random number
@@ -524,14 +527,6 @@ void PathTracingDemo::onRender()
             L = clamp(L / (subpixels), Color(0, 0, 0), Color(255, 255, 255));
             int id = i + j * width;
             m_resultImage.setPixelColor(i, j, QColor(L[0], L[1], L[2]));
-            //if ((process++) % interval == 0) {
-            //    qreal p = (qreal)process / totalPixels;
-            //    QString pt = QString::number(100*p) + "%";
-            //    qDebug()<<p;
-            //    std::cout << p;
-            //    m_textEdit->setText(pt);
-            //    qApp->processEvents();
-            //}
         }
 
     }

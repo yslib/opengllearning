@@ -25,7 +25,9 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
     std::string line;
     char l;
     int faceCount = 0;
+    
     std::string prevMtlName;
+    
     while (getline(fileIn, line)) {
         //std::cout << line << std::endl;
         line = line.substr(0, line.find_first_of('#'));
@@ -76,6 +78,7 @@ bool ObjReader::load(const std::string & fileName,const std::string & mtlFileNam
                 m_normalIndices.emplace_back(std::get<2>(indexBuffer[i+1]));
                 if(prevMtlName != std::string())
                 {
+                    const char * debug = prevMtlName.c_str();
                     m_indexToMtlName[faceCount] = prevMtlName;
                 }
                 faceCount++;
