@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "geometry.h"
 #include "shape.h"
+#include <mutex>
+
 
 class Interaction;
 
@@ -31,11 +33,11 @@ class BVHTreeAccelerator :public Shape
     };
     std::vector<std::shared_ptr<Shape>> m_shapes;
     std::unique_ptr<BVHNode> m_root;
-    mutable Float m_tMin;
+    //mutable std::mutex m_m_tMinMutex;
+    //mutable Float m_tMin;
 
-
-    mutable bool m_debug_isect;
-    mutable bool m_debug_flag;
+    //mutable bool m_debug_isect;
+    //mutable bool m_debug_flag;
 
 public:
     BVHTreeAccelerator(std::vector<std::shared_ptr<Shape>> & shapes) :m_shapes(shapes),Shape(nullptr) {
@@ -45,13 +47,16 @@ public:
         m_shapes.swap(orderedShapes);
     }
     bool intersect(const Ray & ray, Float * t, Interaction * interac)const override {
-        m_tMin = MAX_Float_VALUE;
-        m_debug_isect = false;
-        m_debug_flag = false;
-        bool intersect = recursiveIntersect(m_root.get(), ray, interac);
-        assert(!(m_debug_isect == true && m_debug_flag == false));
+
+        //std::unique_lock<std::mutex> lock(m_m_tMinMutex);
+        //m_tMin = MAX_Float_VALUE;
+        //m_debug_isect = false;
+        //m_debug_flag = false;
+        Float tMin = MAX_Float_VALUE;
+        bool intersect = recursiveIntersect(m_root.get(), ray, interac,tMin);
+        //assert(!(m_debug_isect == true && m_debug_flag == false));
         if (intersect == true) {
-            if (t)*t = m_tMin;
+            if (t)*t = tMin;
             return true;
         }
         return false;
@@ -64,7 +69,7 @@ public:
     }
 private:
 
-    bool recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac)const;
+    bool recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac,Float &tMin)const;
 
     std::unique_ptr<BVHNode> recursiveBuild(std::vector<std::shared_ptr<Shape>> & shapes,
         int begin, int end,

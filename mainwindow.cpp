@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_stackedWidget = new QStackedWidget;
     //create menu
-    m_modeMenu = menuBar()->addMenu(tr("Mode"));
+    m_modeMenu = menuBar()->addMenu(tr("Demos"));
     m_marchingCubesDemoAction = m_modeMenu->addAction(tr("MarchingCubes"));
     m_loopSubdivisionDemoAction = m_modeMenu->addAction(tr("LoopSubdivision"));
 

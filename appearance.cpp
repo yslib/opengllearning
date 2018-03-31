@@ -35,9 +35,17 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
     switch (type)
     {
     case BSDF_DIFFUSE:
-        *wi = localToWorld(uniformSampleHemiSphere(sample));
-        if (pdf)*pdf = 1.0 / (2 * PI);
+        //*wi = localToWorld(uniformSampleHemiSphere(sample));
+        //if (pdf)*pdf = 1.0 / (2 * PI);
+    {
+        Vector3f ref = reflection(norm, -wo);
+        createCoordinateSystem(ref, m_t, m_s);
+        Vector3f sv = cosineSampleHemiSphereWithShiness(sample, m_ns);
+        sv = localToWorld(sv);
+        *wi = sv;
         return m_kd;
+    }
+
         break;
     case BSDF_SPECULAR:
     {
@@ -46,7 +54,7 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         //*wi = 2 * (s)*norm-wo;
         Vector3f ref = reflection(norm,-wo);
         createCoordinateSystem(ref,m_t,m_s);
-        Vector3f sv = cosineSampleHemiSphereWithShiness(sample,100000);
+        Vector3f sv = cosineSampleHemiSphereWithShiness(sample,m_ns);
         sv = localToWorld(sv);
         *wi = sv;
         if (pdf)*pdf = 1;
@@ -123,7 +131,7 @@ void Material::computeScatteringFunction(Interaction * isect)
         break;
     default:
         //error
-        exit(0);
+        assert(false);
         break;
     }
     isect->m_bsdf = std::make_shared<BSDF>(m_kd,m_ks,m_ka,m_tf,m_ni,m_ns,m_ke,isect->m_norm,isect->m_t,isect->m_s,bsdfType);

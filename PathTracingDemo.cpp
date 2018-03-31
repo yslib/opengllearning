@@ -20,6 +20,8 @@
 #include <QMessageBox>
 #include <QSpinBox>
 
+#include <omp.h>
+
 #define DIRECT_ILLUMINATION
 #define GI
 
@@ -28,8 +30,6 @@ QDebug operator<<(QDebug d, const Interaction & isect) {
         isect.normal() << " pShape:" << isect.object() << " bsdf:" << isect.bsdf().get();
     return d;
 }
-
-
 
 PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
 {
@@ -65,7 +65,7 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     m_subpixelSpinBox = new QSpinBox(this);
     m_subpixelSpinBox->setMaximum(2000);
     m_subpixelSpinBox->setMinimum(1);
-    m_subpixelSpinBox->setValue(800);
+    m_subpixelSpinBox->setValue(1);
 
     controlLayout->addWidget(m_subpixelLabel, 2, 0, 1, 1, Qt::AlignRight);
     controlLayout->addWidget(m_subpixelSpinBox, 2, 1, 1, 2);
@@ -75,7 +75,7 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     m_depthSpinBox = new QSpinBox(this);
     m_depthSpinBox->setMaximum(20);
     m_depthSpinBox->setMinimum(1);
-    m_depthSpinBox->setValue(5);
+    m_depthSpinBox->setValue(1);
     controlLayout->addWidget(m_depthLabel, 3, 0, 1, 1, Qt::AlignRight);
     controlLayout->addWidget(m_depthSpinBox, 3, 1, 1, 2);
 
@@ -128,6 +128,9 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     connect(m_openFileButton, SIGNAL(clicked()), this, SLOT(onOpenObjectFile()));
     //connect(m_slider, SIGNAL(valueChanged(int)), this, SLOT(onSamplesCountChanged(int)));
     connect(m_openMtlFileButton, SIGNAL(clicked()), this, SLOT(onOpenMtlFile()));
+
+
+    
 }
 
 
@@ -243,9 +246,15 @@ Color trace(const Scene & scene,
     Color indirectIllumination(0, 0, 0);
 
     if (scene.intersect(ray, &t, &isect) == false) {
-        //qDebug() << "AAA::::"<<t;
         return Color(0, 0, 0);
     }
+    //BSDF
+    //std::shared_ptr<BSDF> ptrBSDF = isect.bsdf();
+    //if (ptrBSDF == nullptr) {
+    //    AABB b = isect.object()->bound();
+    //    for (int i = 0; i < 8; i++)
+    //        qDebug() << b[i];
+    //}
     Color emission = isect.bsdf()->emmision();
     //qDebug()<<emission;
     //Color emission = Color(0,0,0);
@@ -268,22 +277,25 @@ Color trace(const Scene & scene,
         for (int i = 0; i < lightSamples; i++) {
 
             Point2f sample(u(e), u(e));
-            light->sampleLi(isect, &wi, &pdf, uniformSampleTriangle(sample), &vis);
+            light->sampleLi(isect, &wi, &pdf,sample, &vis);
 
             if (vis.occlude(scene) == false)
             {
+                //qDebug() << "sample on light";
                 Color li = light->L(isect, wi);
+               // qDebug() << "Light0:"<<li;
                 Float cosTheta = Vector3f::dotProduct(vis.to().normal().normalized(), -wi.normalized());
                 li = li * cosTheta / vis.distanceSquare() * 100;
-                qDebug() << li;
-                //qDebug()<<"visible to light"<<li;
+                //qDebug() <<" "<<"Light1:"<< li;
                 if (m != nullptr) {
                     Color ks = m->m_ks;
                     Color ka = m->m_ka;
+                    Float ns = m->m_ns;
                     Color kd = m->m_kd;
+                    Vector3f v = ray.direction().normalized();
                     Vector3f n = isect.normal().normalized();
                     Vector3f l = wi.normalized();
-                    Vector3f h = (-ray.direction() - wi).normalized();
+                    Vector3f h = (v + l).normalized();
                     switch (m->m_type)
                     {
                     case MaterialType::Mirror:
@@ -291,7 +303,7 @@ Color trace(const Scene & scene,
                         //directIllumination += ka*li*0.01;
                         break;
                     case MaterialType::Metal:
-                        directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
+                        directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks *std::pow( (std::max(Vector3f::dotProduct(n, h), 0.0f)),ns)*li;
                         break;
                     case MaterialType::Glass:
                         //directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
@@ -344,6 +356,61 @@ Color trace(const Scene & scene,
 
 }
 
+std::vector<std::shared_ptr<Shape>> creatLightTriangle() {
+
+    //half length
+    Float a = 0.125;
+    Float b = 0.25;
+    Float c = 0.5;
+    Float d = 0.75;
+
+    std::vector<Float> halfLenghts = { a,b,c,d };
+
+    //four center
+    Point3f aCenter = { -3 ,6 , 5.f };
+    Point3f bCenter = { 0.5f,6 , 5.f };
+    Point3f cCenter = { 4,  5 , 5.f };
+    Point3f dCenter = { 7.5f,6 , 5.f };
+
+    std::vector<Point3f> centers = { aCenter,bCenter,cCenter,dCenter };
+
+    std::vector<std::vector<Point3f>> rectangles;
+    for (int i = 0; i < centers.size(); i++) {
+        const auto & item1 = centers[i];
+        Float l = halfLenghts[i];
+        rectangles.push_back({
+            item1 + Point3f{ -l,-l,0 },
+            item1 + Point3f{ -l,l,0 },
+            item1 + Point3f{ l,l,0 },
+            item1 + Point3f{ l,-l,0 }
+            });
+    }
+
+    std::vector<Point3f> vertices;
+    for (const auto & item : rectangles) {
+        assert(item.size() > 3);
+        for (int i = 1; i < item.size() - 1; i++) {
+            vertices.push_back(item[0]);
+            vertices.push_back(item[i]);
+            vertices.push_back(item[i + 1]);
+        }
+    }
+    std::vector<Vector3f> normals;
+    for (int i = 0; i < vertices.size(); i++) {
+        normals.push_back({ 0,0,1 });
+    }
+    std::unordered_map<int, std::string> placeholder1;
+    MaterialReader placeholder2;
+    std::vector<int> indices;
+    for (int i = 0; i < vertices.size(); i++)indices.push_back(i);
+    auto res = Triangle::createTriangleMesh(vertices.data(),
+        normals.data(),
+        vertices.size(),
+        indices.data(),
+        indices.size(), placeholder1, placeholder2, nullptr,Trans3DMat());
+    return res;
+}
+
 void PathTracingDemo::onRender()
 {
     QSize size = m_sceneDisplay->size();
@@ -368,12 +435,12 @@ void PathTracingDemo::onRender()
 
     //Test Light
     const Point3f vertices[6] =
-    { { -2.5f,1.6f,7.5f },
-    { 2.5f,1.6f,7.5f },
-    { 2.5f,1.6f,2.5f },
-    { -2.5f,1.6f,7.5f },
-    { 2.5f,1.6f,2.5f },
-    { -2.5f,1.6f,2.5f }
+    { { -2.5f,10.0f,7.5f },
+    { 2.5f,10.0f,7.5f },
+    { 2.5f,10.0f,2.5f },
+    { -2.5f,10.0f,7.5f },
+    { 2.5f,10.0f,2.5f },
+    { -2.5f,10.0f,2.5f }
     };
     const Vector3f normals[6] = {
         { 0,-1,0 } ,
@@ -391,11 +458,41 @@ void PathTracingDemo::onRender()
             tempMtl,
             rd, nullptr, Trans3DMat());
 
+
+    
+
+    //scene1 light
     std::shared_ptr<AreaLight> aTestLight = std::make_shared<AreaLight>(lightShape[0], Color(255, 255, 255));
     std::shared_ptr<AreaLight> bTestLight = std::make_shared<AreaLight>(lightShape[1], Color(255.0, 255.0, 255.0));
+
+    std::shared_ptr<Sphere> sphereShapeLight1 = std::make_shared<Sphere>(Point3f(-3.3, 5, 3), 0.1);
+    std::shared_ptr<AreaLight> sphereLight1 = std::make_shared<AreaLight>(sphereShapeLight1,Color(255,255,255));
+    std::shared_ptr<Sphere> sphereShapeLight2 = std::make_shared<Sphere>(Point3f(0, 5, 3), 0.2);
+    std::shared_ptr<AreaLight> sphereLight2 = std::make_shared<AreaLight>(sphereShapeLight2, Color(255, 255, 255));
+    std::shared_ptr<Sphere> sphereShapeLight3 = std::make_shared<Sphere>(Point3f(3.63, 5, 3), 0.4);
+    std::shared_ptr<AreaLight> sphereLight3 = std::make_shared<AreaLight>(sphereShapeLight3, Color(255, 255, 255));
+    std::shared_ptr<Sphere> sphereShapeLight4 = std::make_shared<Sphere>(Point3f(7.1, 5, 3), 0.8);
+    std::shared_ptr<AreaLight> sphereLight4 = std::make_shared<AreaLight>(sphereShapeLight4, Color(255, 255, 255));
+
+
     std::vector<std::shared_ptr<AreaLight>> lights;
-    lights.push_back(aTestLight);
-    lights.push_back(bTestLight);
+
+    //scene2 light
+    auto scene2LightShapes = creatLightTriangle();
+    //for (const auto & item : scene2LightShapes) {
+    //    std::shared_ptr<AreaLight> aLight = std::make_shared<AreaLight>(item, Color(255.0, 255.0, 255.0));
+    //    lights.push_back(aLight);
+    //}
+    
+    //lights.push_back(aTestLight);
+    //lights.push_back(bTestLight);
+
+    lights.push_back(sphereLight1);
+    lights.push_back(sphereLight2);
+    lights.push_back(sphereLight3);
+    lights.push_back(sphereLight4);
+
+
     Scene scene(m_aggregate, lights);
     //result output
     m_resultImage = QImage(width, height, QImage::Format_RGB888);
@@ -407,9 +504,13 @@ void PathTracingDemo::onRender()
     int interval = totalPixels / 100;
     int process = 0;
 
-    qDebug() << "max depth:" << maxDepth << " subpixel samples:" << subpixels;
+    
+    QString info = "max depth:" + QString::number(maxDepth) + " subpixel samples:" + QString::number(subpixels);
+    info += "Thread number:" + QString::number(omp_get_num_threads());
+    omp_set_num_threads(8);
+    m_textEdit->setText(info);
     for (int j = 0; j < height; j++) {
-        //#pragma omp parallel for
+        #pragma omp parallel for
         for (int i = 0; i < width; i++) {
             Color L(0.0, 0.0, 0.0);
             Point3f canvasPosInWorld = canvasTopLeft - cameraUp * (Float(j) / height)*canvasHeight +
@@ -421,16 +522,16 @@ void PathTracingDemo::onRender()
                 L += trace(scene, ray, maxDepth);
             }
             L = clamp(L / (subpixels), Color(0, 0, 0), Color(255, 255, 255));
-            //qDebug() <<"Result:" <<L;
+            int id = i + j * width;
             m_resultImage.setPixelColor(i, j, QColor(L[0], L[1], L[2]));
-            if ((process++) % interval == 0) {
-                qreal p = (qreal)process / totalPixels;
-                QString pt = QString::number(100*p) + "%";
-                //qDebug()<<p;
-
-                m_textEdit->setText(pt);
-                qApp->processEvents();
-            }
+            //if ((process++) % interval == 0) {
+            //    qreal p = (qreal)process / totalPixels;
+            //    QString pt = QString::number(100*p) + "%";
+            //    qDebug()<<p;
+            //    std::cout << p;
+            //    m_textEdit->setText(pt);
+            //    qApp->processEvents();
+            //}
         }
 
     }

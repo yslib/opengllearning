@@ -1,7 +1,7 @@
 #include "bvh.h"
 #include "interaction.h"
 
-bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac)const
+bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac,Float &tMin)const
 {
     //If the BVH is empty or there is no intersection with current node
     if (root == nullptr)
@@ -19,26 +19,26 @@ bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ra
         {
             if (bLeft.m_min[splitAxis] <= bRight.m_min[splitAxis])
             {
-                interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
-                interRight = recursiveIntersect(root->m_right.get(), ray, interac);
+                interLeft = recursiveIntersect(root->m_left.get(), ray, interac,tMin);
+                interRight = recursiveIntersect(root->m_right.get(), ray, interac,tMin);
             }
             else
             {
-                interRight = recursiveIntersect(root->m_right.get(), ray, interac);
-                interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
+                interRight = recursiveIntersect(root->m_right.get(), ray, interac,tMin);
+                interLeft = recursiveIntersect(root->m_left.get(), ray, interac,tMin);
             }
         }
         else
         {
             if (bLeft.m_min[splitAxis] > bRight.m_min[splitAxis])
             {
-                interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
-                interRight = recursiveIntersect(root->m_right.get(), ray, interac);
+                interLeft = recursiveIntersect(root->m_left.get(), ray, interac,tMin);
+                interRight = recursiveIntersect(root->m_right.get(), ray, interac,tMin);
             }
             else
             {
-                interRight = recursiveIntersect(root->m_right.get(), ray, interac);
-                interLeft = recursiveIntersect(root->m_left.get(), ray, interac);
+                interRight = recursiveIntersect(root->m_right.get(), ray, interac,tMin);
+                interLeft = recursiveIntersect(root->m_left.get(), ray, interac,tMin);
             }
         }
         return interLeft || interRight;
@@ -54,20 +54,20 @@ bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ra
 
         for (int i = 0; i < root->m_nShape; i++) {
             if (m_shapes[i + root->m_shapeOffset]->bound().intersect(ray, &tWithBound) == true) {
-                if (m_tMin < tWithBound)continue;
+                if (tMin < tWithBound)continue;
                 Interaction inter;
                 if (m_shapes[i + root->m_shapeOffset]->intersect(ray, &tWithShape, &inter) == true)
                 {
                     //assert(!std::isnan(tWithShape));
                     //qDebug() << "tmin" << m_tMin << " " << tWithShape;
-                    if (m_tMin > tWithShape)
+                    if (tMin > tWithShape)
                     {
-                        m_tMin = tWithShape;
+                        tMin = tWithShape;
                         *interac = inter;
-                        m_debug_flag = true;
+                        //m_debug_flag = true;
                     }
                     isect = true;
-                    m_debug_isect = true;
+                    //m_debug_isect = true;
                 }
             }
         }

@@ -47,11 +47,12 @@ public:
     Float v()const { return m_v; }
     const Vector3f & t()const { return m_t; }
     const Vector3f & s()const { return m_s; }
-    std::shared_ptr<BSDF> bsdf()const { return m_bsdf; }
+    const std::shared_ptr<BSDF> & bsdf()const { return m_bsdf; }
 
     friend class Shape;
     friend class Triangle;
     friend class Material;
+    friend class Sphere;
     friend class AreaLight;
 };
 

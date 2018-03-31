@@ -5,6 +5,25 @@
 #include <random>
 #include <ctime>
 
+inline
+bool quadraticEquation(Float a, Float b, Float c, Float &t1, Float &t2) {
+    if (a == 0)return false;
+    Float delta =b*b - 4 * a*c;
+    if (delta < 0)return false;
+    Float inv = 1 / (2 * a);
+    Float rd = std::sqrt(delta);
+    t1 = (-b + rd)*inv;
+    t2 = (-b - rd)*inv;
+    return true;
+}
+
+inline Vector3f uniformSampleSphere(const Point2f & p) {
+    Float y = 1 - 2 * p[0];
+    Float r = std::sqrt(std::max(Float(0), Float(1 - y * y)));
+    Float phi = 2 * PI*p[1];
+    return Vector3f(r*std::cos(phi), y, r*std::sin(phi));
+}
+
 inline 
 Vector3f uniformSampleHemiSphere(const Point2f &p)
 {
