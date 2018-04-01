@@ -38,15 +38,14 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
     {
         *wi = localToWorld(uniformSampleHemiSphere(sample));
         if (pdf)*pdf = 1.0 / (2 * PI);
-    
         //Vector3f ref = reflection(norm, -wo);
         //createCoordinateSystem(ref, m_t, m_s);
-        //Vector3f sv = cosineSampleHemiSphereWithShiness(sample, m_ns);
+        //Vector3f sv = cosineSampleHemiSphereWithShiness(sample, m_ni);
         //sv = localToWorld(sv);
         //*wi = sv;
+        if (pdf)*pdf = 1;
         return m_kd;
     }
-
         break;
     case BSDF_SPECULAR:
     {
@@ -55,7 +54,7 @@ Color BSDF::sampleF(const Vector3f & wo, Vector3f * wi, Float *pdf,const Point2f
         //*wi = 2 * (s)*norm-wo;
         Vector3f ref = reflection(norm,-wo);
         createCoordinateSystem(ref,m_t,m_s);
-        Vector3f sv = cosineSampleHemiSphereWithShiness(sample,1000);
+        Vector3f sv = cosineSampleHemiSphereWithShiness(sample,m_ni);
         sv = localToWorld(sv);
         *wi = sv;
         if (pdf)*pdf = 1;

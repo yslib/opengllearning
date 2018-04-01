@@ -19,6 +19,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QSpinBox>
+#include <QCheckBox>
 
 #include <omp.h>
 
@@ -79,30 +80,42 @@ PathTracingDemo::PathTracingDemo(QWidget * parent) :BaseDemoWidget(parent)
     controlLayout->addWidget(m_depthLabel, 3, 0, 1, 1, Qt::AlignRight);
     controlLayout->addWidget(m_depthSpinBox, 3, 1, 1, 2);
 
+    //intensity
+    m_intensityLabel = new QLabel(QString("Intensity:"), this);
+    m_intensitySpinBox = new QSpinBox(this);
+    m_intensitySpinBox->setMaximum(1000);
+    m_intensitySpinBox->setMinimum(1);
+    m_intensitySpinBox->setValue(30);
+    controlLayout->addWidget(m_intensityLabel, 4, 0,1,1,Qt::AlignRight);
+    controlLayout->addWidget(m_intensitySpinBox, 4, 1, 1, 2);
+
     //save path
-    //m_saveLabel = new QLabel(tr("Save:"));
-    m_pathLineEdit = new QLineEdit(this);
-    m_pathLineEdit->setReadOnly(true);
-    m_pathButton = new QPushButton(tr("Path"));
-    m_saveButton = new QPushButton(tr("Save"));
+    m_saveButton = new QPushButton(tr("Save Image.."));
 
     //controlLayout->addWidget(m_saveButton,4,0,1,1,Qt::AlignRight);
-    controlLayout->addWidget(m_pathLineEdit, 4, 0);
-    controlLayout->addWidget(m_pathButton, 4, 1);
-    controlLayout->addWidget(m_saveButton, 4, 2);
+    controlLayout->addWidget(m_saveButton, 5, 0);
+
+    //radiobuttion
+    m_GIButtion = new QCheckBox(QString("GI"), this);
+    m_GIButtion->setChecked(true);
+    m_GIButtion->setTristate(false);
+    controlLayout->addWidget(m_GIButtion, 5, 1);
+    m_DIButtion = new QCheckBox(QString("DI"), this);
+    m_DIButtion->setChecked(true);
+    m_DIButtion->setTristate(false);
+    controlLayout->addWidget(m_DIButtion, 5, 2);
 
     connect(m_saveButton, SIGNAL(clicked()), this, SLOT(onSaveButton()));
-    connect(m_pathButton, SIGNAL(clicked()), this, SLOT(onSavePathButton()));
 
     //render button
     m_renderButton = new QPushButton(tr("Render"));
     connect(m_renderButton, SIGNAL(clicked()), this, SLOT(onRender()));
-    controlLayout->addWidget(m_renderButton, 5, 0, 1, 3);
+    controlLayout->addWidget(m_renderButton, 6, 0, 1, 3);
 
     //text edit
     m_textEdit = new QTextEdit;
     m_textEdit->setReadOnly(true);
-    controlLayout->addWidget(m_textEdit, 6, 0, 1, 3);
+    controlLayout->addWidget(m_textEdit, 7, 0, 1, 3);
     controlWidget->setLayout(controlLayout);
     setControlWidget(controlWidget);
 
@@ -141,7 +154,7 @@ PathTracingDemo::~PathTracingDemo()
 
 void PathTracingDemo::onSaveButton()
 {
-    QString path = m_pathLineEdit->text();
+    QString path = QFileDialog::getSaveFileName(this, QString("Save File"), QString("~/"), QString(".png(*.png)"));
     if (path.isEmpty() == true) {
         QMessageBox::critical(this, tr("Error"), tr("Path is empty."), QMessageBox::Ok, QMessageBox::Ok);
         return;
@@ -150,14 +163,8 @@ void PathTracingDemo::onSaveButton()
         QMessageBox::critical(this, tr("Error"), tr("Saving failed."), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
-
 }
 
-void PathTracingDemo::onSavePathButton()
-{
-    QString path = QFileDialog::getSaveFileName(this, QString("Save File"), QString("~/"), QString(".png(*.png)"));
-    m_pathLineEdit->setText(path);
-}
 
 void PathTracingDemo::onOpenObjectFile()
 {
@@ -177,7 +184,7 @@ void PathTracingDemo::onOpenObjectFile()
     //unsigned int faceIndices[] = { 0,1,2 };
     //Point3f normals[] = { {0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f},{0.0f,0.0f,1.0f} };
     Trans3DMat mat; 
-    mat.scale(Vector3f(5,5,5));
+    //mat.scale(Vector3f(5,5,5));
     TriangleMesh mesh(model.getVerticesFlatArray(),
         model.getNormalsFlatArray(),
         model.getVertexCount(),
@@ -241,119 +248,105 @@ std::uniform_real_distribution<Float> u(Float(0), Float(1));
 
 Color trace(const Scene & scene,
     const Ray & ray,
-    int depth) {
-    //qDebug() << "depth:" << depth;
+    int depth,bool di,bool gi,int intensity) {
     Color directIllumination(0, 0, 0);
     Float t;
     Interaction isect;
     Color indirectIllumination(0, 0, 0);
-
     if (scene.intersect(ray, &t, &isect) == false) {
         return Color(0, 0, 0);
     }
-    //BSDF
-    //std::shared_ptr<BSDF> ptrBSDF = isect.bsdf();
-    //if (ptrBSDF == nullptr) {
-    //    AABB b = isect.object()->bound();
-    //    for (int i = 0; i < 8; i++)
-    //        qDebug() << b[i];
-    //}
     Color emission = isect.bsdf()->emmision();
-    //qDebug()<<emission;
-    //Color emission = Color(0,0,0);
-       // assert(isect.object() != nullptr);
     if (depth == 0) {
         //return material emission
         return emission;
     }
     const std::shared_ptr<Material> & m = isect.object()->getMaterial();
 #ifdef DIRECT_ILLUMINATION
-    const auto & lights = scene.lights();
-    int lightCount = lights.size();
-    int lightSamples = 1;
-    //direct light illumination
-    for (const auto & light : lights) {
-        Vector3f wi;
-        Float pdf;
-        VisibilityTester vis;
+    if (di == true) {
+        const auto & lights = scene.lights();
+        int lightCount = lights.size();
+        int lightSamples = 1;
+        //direct light illumination
+        for (const auto & light : lights) {
+            Vector3f wi;
+            Float pdf;
+            VisibilityTester vis;
 
-        for (int i = 0; i < lightSamples; i++) {
+            for (int i = 0; i < lightSamples; i++) {
 
-            Point2f sample(u(e), u(e));
-            light->sampleLi(isect, &wi, &pdf,sample, &vis);
+                Point2f sample(u(e), u(e));
+                light->sampleLi(isect, &wi, &pdf, sample, &vis);
 
-            if (vis.occlude(scene) == false)
-            {
-                //qDebug() << "sample on light";
-                Color li = light->L(isect, wi);
-               // qDebug() << "Light0:"<<li;
-                Float cosTheta = Vector3f::dotProduct(vis.to().normal().normalized(), -wi.normalized());
-                li = li * cosTheta / vis.distanceSquare()*10;
-                //qDebug() <<" "<<"Light1:"<< li;
-                if (m != nullptr) {
-                    Color ks = m->m_ks;
-                    Color ka = m->m_ka;
-                    Float ns = m->m_ns;
-                    Color kd = m->m_kd;
-                    Vector3f v = -ray.direction().normalized();
-                    Vector3f n = isect.normal().normalized();
-                    Vector3f l = wi.normalized();
-                    Vector3f h = (v + l).normalized();
-                    switch (m->m_type)
-                    {
-                    case MaterialType::Mirror:
-                        //directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
-                        //directIllumination += ka*li*0.01;
-                        break;
-                    case MaterialType::Metal:
-                        directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks *std::pow( (std::max(Vector3f::dotProduct(n, h), 0.0f)),20)*li;
-                        break;
-                    case MaterialType::Glass:
-                        //directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
-
-                        break;
-                    default:
-                        assert(false);
-                        break;
+                if (vis.occlude(scene) == false)
+                {
+                    //qDebug() << "sample on light";
+                    Color li = light->L(isect, wi);
+                    // qDebug() << "Light0:"<<li;
+                    Float cosTheta = Vector3f::dotProduct(vis.to().normal().normalized(), -wi.normalized());
+                    li = li * cosTheta / vis.distanceSquare()*intensity;
+                    //qDebug() <<" "<<"Light1:"<< li;
+                    if (m != nullptr) {
+                        Color ks = m->m_ks;
+                        Color ka = m->m_ka;
+                        Float ns = m->m_ns;
+                        Color kd = m->m_kd;
+                        Vector3f v = -ray.direction().normalized();
+                        Vector3f n = isect.normal().normalized();
+                        Vector3f l = wi.normalized();
+                        Vector3f h = (v + l).normalized();
+                        switch (m->m_type)
+                        {
+                        case MaterialType::Mirror:
+                            break;
+                        case MaterialType::Metal:
+                            directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * std::pow((std::max(Vector3f::dotProduct(n, h),0.f)), ns)*li;
+                            break;
+                        case MaterialType::Glass:
+                            break;
+                        default:
+                            assert(false);
+                            break;
+                        }
                     }
-                    //                        directIllumination += ka * li + kd * (std::max(Vector3f::dotProduct(n, l), 0.0f))*li + ks * (std::max(Vector3f::dotProduct(n, h), 0.0f))*li;
                 }
+
             }
-
         }
-    }
 
-    directIllumination = directIllumination / static_cast<Float>(lightSamples*lightCount);
-    //qDebug() << "dire:" << directIllumination;
+        directIllumination = directIllumination / static_cast<Float>(lightSamples*lightCount);
+    }
+  
 #endif
     //indirect light illumination
 #ifdef GI
-    Color bsdf(0,0,0);
-    Vector3f wi;
-    Float pdf;
-    Point2f sample(u(e), u(e));
-    //qDebug() << sample;
-    //qDebug() << (m == nullptr ? false : true);
-    switch (m->m_type)
-    {
-    case MaterialType::Mirror:
-        bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_SPECULAR);
-        //qDebug() << "mirror" << bsdf << " " << wi;
-        break;
-    case MaterialType::Metal:
-        bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_DIFFUSE);
-        //qDebug() << "metal" << bsdf << " " << wi;
-        break;
-    case MaterialType::Glass:
-        bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_REFRACTION);
-        //qDebug() << "glass" << bsdf;
-        break;
-    default:
-        assert(false);
-        break;
+    if (gi == true) {
+        Color bsdf(0, 0, 0);
+        Vector3f wi;
+        Float pdf;
+        Point2f sample(u(e), u(e));
+        //qDebug() << sample;
+        //qDebug() << (m == nullptr ? false : true);
+        switch (m->m_type)
+        {
+        case MaterialType::Mirror:
+            bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_SPECULAR);
+            break;
+        case MaterialType::Metal:
+            bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_DIFFUSE);
+            break;
+        case MaterialType::Glass:
+            bsdf = isect.bsdf()->sampleF(-ray.direction(), &wi, &pdf, sample, BSDF_REFRACTION);
+            break;
+        default:
+            assert(false);
+            break;
+        }
+        Ray newRay = isect.spawnRay(wi);
+        indirectIllumination = bsdf * trace(scene, newRay, depth - 1,di,gi,intensity);
+        indirectIllumination = clamp(indirectIllumination, Color(0, 0, 0), Color(255, 255, 255));
     }
-    Ray newRay = isect.spawnRay(wi);
-    indirectIllumination = bsdf * trace(scene, newRay, depth - 1);
+   
 #endif
     return (emission + directIllumination + indirectIllumination);
 
@@ -362,18 +355,18 @@ Color trace(const Scene & scene,
 std::vector<std::shared_ptr<Shape>> creatLightTriangle() {
 
     //half length
-    Float a = 0.125;
-    Float b = 0.25;
-    Float c = 0.5;
-    Float d = 0.75;
+    Float a = 0.05;
+    Float b = 0.1;
+    Float c = 0.15;
+    Float d = 0.2;
 
     std::vector<Float> halfLenghts = { a,b,c,d };
 
     //four center
-    Point3f aCenter = { -3 ,6 , 5.f };
-    Point3f bCenter = { 0.5f,6 , 5.f };
-    Point3f cCenter = { 4,  5 , 5.f };
-    Point3f dCenter = { 7.5f,6 , 5.f };
+    Point3f aCenter = { -3.f ,7.2f , 4.f };
+    Point3f bCenter = { 0.5f,7.2f , 4.f };
+    Point3f cCenter = { 4.f,  7.2f , 4.f };
+    Point3f dCenter = { 7.5f,7.2f , 4.f };
 
     std::vector<Point3f> centers = { aCenter,bCenter,cCenter,dCenter };
 
@@ -382,10 +375,10 @@ std::vector<std::shared_ptr<Shape>> creatLightTriangle() {
         const auto & item1 = centers[i];
         Float l = halfLenghts[i];
         rectangles.push_back({
-            item1 + Point3f{ -l,-l,0 },
-            item1 + Point3f{ -l,l,0 },
-            item1 + Point3f{ l,l,0 },
-            item1 + Point3f{ l,-l,0 }
+            item1 + Point3f{ -l,0,-l },
+            item1 + Point3f{ -l,0,l },
+            item1 + Point3f{ l,0,l },
+            item1 + Point3f{ l,0,l }
             });
     }
 
@@ -400,7 +393,7 @@ std::vector<std::shared_ptr<Shape>> creatLightTriangle() {
     }
     std::vector<Vector3f> normals;
     for (int i = 0; i < vertices.size(); i++) {
-        normals.push_back({ 0,0,1 });
+        normals.push_back({ 0,-1,0 });
     }
     std::unordered_map<int, std::string> placeholder1;
     MaterialReader placeholder2;
@@ -438,9 +431,9 @@ void PathTracingDemo::onRender()
 
     //Test Light
     const Point3f vertices[6] =
-    { { -2.5f,10.0f,7.5f },
-    { 2.5f,10.0f,7.5f },
-    { 2.5f,10.0f,2.5f },
+    { { -.5f,10.0f,7.5f },
+    { .5f,10.0f,7.5f },
+    { .5f,10.0f,2.5f },
     { -2.5f,10.0f,7.5f },
     { 2.5f,10.0f,2.5f },
     { -2.5f,10.0f,2.5f }
@@ -481,7 +474,7 @@ void PathTracingDemo::onRender()
     std::vector<std::shared_ptr<AreaLight>> lights;
 
     //scene2 light
-    auto scene2LightShapes = creatLightTriangle();
+    //auto scene2LightShapes = creatLightTriangle();
     //for (const auto & item : scene2LightShapes) {
     //    std::shared_ptr<AreaLight> aLight = std::make_shared<AreaLight>(item, Color(255.0, 255.0, 255.0));
     //    lights.push_back(aLight);
@@ -489,11 +482,10 @@ void PathTracingDemo::onRender()
     
     //lights.push_back(aTestLight);
     //lights.push_back(bTestLight);
-
-    lights.push_back(sphereLight1);
-    lights.push_back(sphereLight2);
-    lights.push_back(sphereLight3);
-    lights.push_back(sphereLight4);
+    //lights.push_back(sphereLight1);
+    //lights.push_back(sphereLight2);
+    //lights.push_back(sphereLight3);
+    //lights.push_back(sphereLight4);
 
 
     Scene scene(m_aggregate, m_lights);
@@ -506,6 +498,10 @@ void PathTracingDemo::onRender()
     int totalPixels = height * width;
     int interval = totalPixels / 100;
     int process = 0;
+
+    bool di = m_DIButtion->isChecked();
+    bool gi = m_GIButtion->isChecked();
+    int intensity = m_intensitySpinBox->value();
 
     
     QString info = "max depth:" + QString::number(maxDepth) + " subpixel samples:" + QString::number(subpixels);
@@ -522,10 +518,10 @@ void PathTracingDemo::onRender()
             for (int k = 0; k < subpixels; k++) {
                 Point2f p = Point2f(u(e), u(e)) * 2 - Point2f(1, 1);
                 Ray ray((canvasPosInWorld + p[0] * cameraRight*pixelLength + p[1] * cameraUp*pixelLength - cameraPosition).normalized(), cameraPosition);
-                L += trace(scene, ray, maxDepth);
+                L += trace(scene, ray, maxDepth,di,gi,intensity);
             }
             L = clamp(L / (subpixels), Color(0, 0, 0), Color(255, 255, 255));
-            int id = i + j * width;
+            //int id = i + j * width;
             m_resultImage.setPixelColor(i, j, QColor(L[0], L[1], L[2]));
         }
 

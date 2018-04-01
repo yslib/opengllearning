@@ -18,7 +18,6 @@
 #include "shape.h"
 #include "scene.h"
 #include "bvh.h"
-
 /*
  * Axis-aligned Bounding Box
  */
@@ -35,6 +34,8 @@ class ObjReader;
 class QTextEdit;
 class OpenGLWidget;
 class QSpinBox;
+
+class QCheckBox;
 
 
 class PathTracingDemo :public BaseDemoWidget
@@ -76,12 +77,14 @@ private:
     QSpinBox * m_depthSpinBox;
 
     //
-    QLabel * m_saveLabel;
-    QLineEdit * m_pathLineEdit;
-    QPushButton * m_pathButton;
     QPushButton * m_saveButton;
 
+    //direct illumination and gi illumination option
+    QCheckBox *m_GIButtion;
+    QCheckBox *m_DIButtion;
 
+    QLabel * m_intensityLabel;
+    QSpinBox * m_intensitySpinBox;
     //renderer related
     std::unique_ptr<Scene> m_scene;
     std::shared_ptr<BVHTreeAccelerator> m_aggregate;
@@ -89,7 +92,6 @@ private:
 
     public slots:
     void onSaveButton();
-    void onSavePathButton();
     void onOpenObjectFile();
     void onOpenMtlFile();
     void onSamplesCountChanged(int value);
