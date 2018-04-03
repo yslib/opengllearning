@@ -38,15 +38,10 @@ OpenGLWidget::OpenGLWidget(const Camera & cam, QWidget *parent)noexcept :
     //setMinimumSize(500, 500);
     setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     //matrix initialization
-
-
     m_model.setToIdentity();
-
     //
     m_view.lookAt(m_eye, m_center, m_up),
-
-        m_projection.perspective(m_verticalAngle, aspectRatio(), 0.01f, 100.0f);
-
+    m_projection.perspective(m_verticalAngle, aspectRatio(), 0.01f, 100.0f);
     m_timer = new QTimer(this);
     m_timer->setInterval(10);
     connect(m_timer, &QTimer::timeout, this, QOverload<>::of(&QWidget::update));

@@ -12,8 +12,6 @@
 #include "PathTracingDemo.h"
 #include "camera.h"
 
-
-
 class QOpenGLShader;
 class QOpenGLShaderProgram;
 class QTimer;
