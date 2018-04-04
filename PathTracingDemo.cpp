@@ -503,11 +503,6 @@ void PathTracingDemo::onRender()
     bool gi = m_GIButtion->isChecked();
     int intensity = m_intensitySpinBox->value();
 
-    
-    QString info = "max depth:" + QString::number(maxDepth) + " subpixel samples:" + QString::number(subpixels);
-    info += "Thread number:" + QString::number(omp_get_num_threads());
-    omp_set_num_threads(8);
-    m_textEdit->setText(info);
     for (int j = 0; j < height; j++) {
         #pragma omp parallel for
         for (int i = 0; i < width; i++) {
