@@ -2,92 +2,117 @@
 #define GEOMETRY_H
 
 #include "core.h"
+#include <cassert>
 
+
+enum class State {
+	Uninitialized
+};
 
 template<typename T>
 class Vector2D {
-private:
-    T m_x;
-    T m_y;
 public:
-    explicit Vector2D(const T & x = T(), const T & y = T()) :m_x(x), m_y(y) {}
-    explicit Vector2D(const Vector2D<T> & v) :m_x(v.m_x), m_y(v.m_y) {}
+    T x;
+    T y;
+    explicit Vector2D(const T & xp = T(), const T & yp = T()) :x(xp), y(yp) {}
+    explicit Vector2D(const Vector2D<T> & v) :x(v.x), y(v.y) {}
     Vector2D<T> operator+(const Vector2D<T> & v) {
-        return Vector2D<T>(m_x + v.m_x, m_y + v.m_y);
+        return Vector2D<T>(x + v.x, y + v.y);
     }
     Vector2D<T> & operator+=(const Vector2D<T> & v) {
-        m_x += v.m_x;
-        m_y += v.m_y;
+        x += v.x;
+        y += v.y;
         return *this;
     }
     Vector2D<T> operator-(const Vector2D<T> & v) {
-        return Vector2D<T>(m_x - v.m_x, m_y - v.m_y);
+        return Vector2D<T>(x - v.x, y - v.y);
     }
     Vector2D<T> & operator-=(const Vector2D<T> & v) {
-        m_x -= v.m_x;
-        m_y -= v.m_y;
+        x -= v.x;
+        y -= v.y;
         return *this;
     }
     Vector2D<T> operator*(const T & s) {
-        return Vector2D<T>(s*m_x, s*m_y);
+        return Vector2D<T>(s*x, s*y);
     }
     Vector2D<T> & operator*=(const T & s) {
-        m_x *= s;
-        m_y *= s;
+        x *= s;
+        y *= s;
         return *this;
     }
     Vector2D<T> operator -() {
-        return Vector2D<T>(-m_x, -m_y);
+        return Vector2D<T>(-x, -y);
     }
-
+	const T & operator[](int i)const {
+		assert(i >= 0 && i < 2);
+		return *(&x + i);
+	}
+	T & operator[](int i) {
+		assert(i >= 0 && i < 2);
+		return *(&y + i);
+	}
     template<typename X> friend class Point2D; //Vector2D can be accessed by all instances of Point2D
 };
-
-
 /*
 * Point2D
 */
 template<typename T>
 class Point2D {
-private:
-    T m_x;
-    T m_y;
 public:
-    explicit Point2D(const T & x = T(), const T & y = T()) :m_x(x), m_y(y) {}
-    explicit Point2D(const Point2D<T> & v) :m_x(v.m_x), m_y(v.m_y) {}
+    T x;
+    T y;
+    explicit Point2D(const T & xp = T(), const T & yp = T()) :x(xp), y(yp) {}
+    explicit Point2D(const Point2D<T> & v) :x(v.x), y(v.y) {}
     Point2D<T> operator+(const Vector2D<T> & v) {
-        return Point2D<T>(m_x + v.m_x, m_y + v.m_y);
+        return Point2D<T>(x + v.x, y + v.y);
     }
-    Point2D<T> operator +(const Point2D<T> & p) {
-        return Point2D<T>(m_x + p.m_x, m_y + p.m_y);
+    Point2D<T> operator+(const Point2D<T> & p) {
+        return Point2D<T>(x + p.x, y + p.y);
     }
 
     Point2D<T> & operator+=(const Vector2D<T> & v) {
-        m_x += v.m_x;
-        m_y += v.m_y;
+        x += v.x;
+        y += v.y;
         return *this;
     }
 
     Point2D<T> operator-(const Vector2D<T> & v) {
-        return Point2D<T>(m_x - v.m_x, m_y - v.m_y);
+        return Point2D<T>(x - v.x, y - v.y);
     }
     Point2D<T> & operator-=(const Vector2D<T> & v) {
-        m_x -= v.m_x;
-        m_y -= v.m_y;
+        x -= v.x;
+        y -= v.y;
         return *this;
     }
     Point2D<T> operator*(const T & s) {
-        return Point2D<T>(s*m_x, s*m_y);
+        return Point2D<T>(s*x, s*y);
     }
     Point2D<T> & operator*=(const T & s) {
-        m_x *= s;
-        m_y *= s;
+        x *= s;
+        y *= s;
         return *this;
     }
     Point2D<T> operator -() {
-        return Point2D<T>(-m_x, -m_y);
+        return Point2D<T>(-x, -y);
     }
+	const T & operator[](int i)const {
+		assert(i >= 0 && i < 2);
+		return *(&x + i);
+	}
+	T & operator[](int i) {
+		assert(i >= 0 && i < 2);
+		return *(&x + i);
+	}
 };
+
+template<typename T>
+class Normal2 {
+public:
+	T x;
+	T y;
+	explicit Normal2();
+};
+
 
 
 /*
@@ -95,48 +120,49 @@ public:
 */
 template<typename T>
 class Vector3D {
-    T m_x, m_y, m_z;
 public:
-    explicit Vector3D(const T &x = T(), const T &y = T(), const T& z = T()) :m_x(x), m_y(y), m_z(z) {}
-    Vector3D(const Vector3D<T> & v) :m_x(T(v.m_x)), m_y(T(v.m_y)), m_z(T(v.m_z)) {}
+    T x, y, z;
+    explicit Vector3D(const T &xp = T(), const T &yp = T(), const T& zp = T()) :x(xp), y(yp), z(zp) {}
+    Vector3D(const Vector3D<T> & v) :x(T(v.x)), y(T(v.y)), z(T(v.z)) {}
     Vector3D<T> operator+(const Vector3D<T> & v)const {
-        return Vector3D<T>(m_x + v.m_x, m_y + v.m_y, m_z + v.m_z);
+        return Vector3D<T>(x + v.x, y + v.y, z + v.z);
     }
     Vector3D<T> & operator+=(const Vector3D<T> & v) {
-        m_x += v.m_x;
-        m_y += v.m_y;
-        m_z += v.m_z;
+        x += v.x;
+        y += v.y;
+        z += v.z;
         return *this;
     }
     Vector3D<T> operator*(const T& s)const {
-        return Vector3D<T>(s*m_x, s*m_y, s*m_z);
+        return Vector3D<T>(s*x, s*y, s*z);
     }
     Vector3D<T> & operator*=(const T& s) {
-        m_x *= s;
-        m_y *= s;
-        m_z *= s;
+        x *= s;
+        y *= s;
+        z *= s;
         return *this;
     }
     Vector3D<T> operator/(const T& f)const {
         Float inv = static_cast<Float>(1) / f;
-        return Vector3D<T>(m_x*inv, m_y*inv, m_z*inv);
+        return Vector3D<T>(x*inv, y*inv, z*inv);
     }
     Vector3D<T> & operator/(const T& f) {
         Float inv = static_cast<Float>(1) / f;
-        m_x *= inv; m_y *= inv; m_z *= inv;
+        x *= inv; y *= inv; z *= inv;
         return *this;
     }
     //unary operator
     Vector3D<T> operator-()const {
-        return Vector3D<T>(-m_x, -m_y, -m_z);
+        return Vector3D<T>(-x, -y, -z);
     }
-
-    const T x()const { return m_x; }
-    const T y()const { return m_y; }
-    const T z()const { return m_z; }
-    void x(const T & x) { m_x = x; }
-    void y(const T & y) { m_y = y; }
-    void z(const T & z) { m_z = z; }
+	const T& operator[](int i)const {
+		assert(i >= 0 && i < 3);
+		return *(&x + i);
+	}
+	T & operator[](int i) {
+		assert(i >= 0 && i < 3);
+		return *(&x + i);
+	}
 };
 
 
@@ -160,24 +186,25 @@ typedef Vector3D<Float> Vector3Df;
 template<typename T>
 class Point3D {
 public:
-    Point3D(const T &x = T(), const T &y = T(), const T& z = T()) :m_x(x), m_y(y), m_z(z) {}
-    template<typename U> explicit Point3D(const Point3D<U> & p) :m_x(T(p.m_x)), m_y(T(p.m_y)), m_z(T(p.m_z)) {}
+    T x, y, z;
+    Point3D(const T &xp = T(), const T &yp = T(), const T& zp = T()) :x(xp), y(yp), z(zp) {}
+    template<typename U> explicit Point3D(const Point3D<U> & p) :x(T(p.x)), y(T(p.y)), z(T(p.z)) {}
     Point3D<T> operator+(const Vector3D<T> & v)const {
-        return Point3D<T>(m_x + v.x(), m_y + v.y(), m_z + v.z());
+        return Point3D<T>(x + v.x, y + v.y, z + v.z);
     }
     Point3D<T> & operator+=(const Vector3D<T> & v) {
-        m_x += v.x();
-        m_y += v.y();
-        m_z += v.z();
+        x += v.x;
+        y += v.y;
+        z += v.z;
         return *this;
     }
     Point3D<T> operator+(const Point3D<T> & v)const {
-        return Point3D<T>(m_x + v.x(), m_y + v.y(), m_z + v.z());
+        return Point3D<T>(x + v.x, y + v.y, z + v.z);
     }
     Point3D<T> & operator+=(const Point3D<T> & v) {
-        m_x += v.x();
-        m_y += v.y();
-        m_z += v.z();
+        x += v.x;
+        y += v.y;
+        z += v.z;
         return *this;
     }
 
@@ -185,54 +212,43 @@ public:
 
     Point3D<T> operator*(const T & s)const
     {
-        return Point3D<T>(s*m_x, s*m_y, s*m_z);
+        return Point3D<T>(s*x, s*y, s*z);
     }
     Point3D<T> & operator*=(const T & s)
     {
-        m_x *= s;
-        m_y *= s;
-        m_z *= s;
+        x *= s;
+        y *= s;
+        z *= s;
         return *this;
     }
 
     Vector3D<T> operator-(const Point3D<T> & p)const {
-        return Vector3D<T>(m_x - p.m_x, m_y - p.m_y, m_z - p.m_z);
+        return Vector3D<T>(x - p.x, y - p.y, z - p.z);
     }
     Point3D<T> operator-(const Vector3D<T> & v) const {
-        return Point3D<T>(m_x - v.x(), m_y - v.y(), m_z - v.z());
+        return Point3D<T>(x - v.x, y - v.y, z - v.z);
     }
     Point3D<T> & operator-=(const Vector3D<T> & v)const {
-        m_x -= v.x();
-        m_y -= v.y();
-        m_z -= v.z();
+        x -= v.x;
+        y -= v.y;
+        z -= v.z;
         return *this;
     }
-
-
-    const T x()const { return m_x; }
-    const T y()const { return m_y; }
-    const T z()const { return m_z; }
-    void x(const T & x) { m_x = x; }
-    void y(const T & y) { m_y = y; }
-    void z(const T & z) { m_z = z; }
-private:
-    T m_x, m_y, m_z;
+	const T& operator[](int i)const {
+		assert(i >= 0 && i < 3);
+		return *(&x + i);
+	}
+	T & operator[](int i) {
+		assert(i >= 0 && i < 3);
+		return *(&x + i);
+	}
 };
-
-
 template<typename T> inline Point3D<T> operator*(const T & s, const Point3D<T> & p)
 {
     return p * s;
 }
-
-
 typedef Point3D<int> Point3Di;
 typedef Point3D<Float> Point3Df;
-
-
-
-
-
 
 /*
 *

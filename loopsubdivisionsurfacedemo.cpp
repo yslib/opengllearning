@@ -18,7 +18,7 @@
 QDebug operator<<(QDebug d,const Point3Df &f)
 {
 	QDebugStateSaver saver(d);
-	d.nospace() << "(" << f.x() << "," << f.y() << "," << f.z() << ")";
+	d.nospace() << "(" << f.x << "," << f.y << "," << f.z << ")";
 	return d;
 }
 
@@ -356,9 +356,9 @@ LoopSubdivisionSurfaceDemo::LoopSubdivision(
 	{
 		Point3Df pp0 = face->v[0]->point(), pp1 = face->v[1]->point(), pp2 = face->v[2]->point();
 
-		QVector3D p0(pp0.x(), pp0.y(), pp0.z());
-		QVector3D p1(pp1.x(), pp1.y(), pp1.z());
-		QVector3D p2(pp2.x(), pp2.y(), pp2.z());
+		QVector3D p0(pp0.x, pp0.y, pp0.z);
+		QVector3D p1(pp1.x, pp1.y, pp1.z);
+		QVector3D p2(pp2.x, pp2.y, pp2.z);
 
 		QVector3D v1 = p1 - p0, v2 = p2 - p1;
 		QVector3D nor = QVector3D::crossProduct(v2, v1).normalized();
