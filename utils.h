@@ -4,6 +4,37 @@
 #include <cmath>
 #include <random>
 #include <ctime>
+#include <algorithm>
+
+
+/*
+ *
+*/
+
+template<typename T,typename U,typename V>
+inline T clamp(const T & value,const U & low,const V & high){
+    if(value <low)return low;
+    if(value > high)return high;
+    return value;
+}
+
+/*
+ * This modulus function always gurantees a positive result
+ * and (a/b)*b + a%b == a always holds
+*/
+template<typename T>
+inline
+T mod(const T & a,const T & b){
+    T r = a - (a/b)*b;
+    return static_cast<T>(r>0?r:r+b);
+}
+
+template<>
+inline Float mod<Float>(const Float& a,const Float& b){
+    return std::fmod(static_cast<double>(a),static_cast<double>(b));
+}
+
+
 
 inline
 bool quadraticEquation(Float a, Float b, Float c, Float &t1, Float &t2) {
@@ -16,6 +47,11 @@ bool quadraticEquation(Float a, Float b, Float c, Float &t1, Float &t2) {
     t2 = (-b - rd)*inv;
     return true;
 }
+
+
+/*
+ * Sample Functions
+*/
 
 inline Vector3f uniformSampleSphere(const Point2f & p) {
     Float y = 1 - 2 * p[0];
@@ -37,6 +73,8 @@ constexpr Float uniformHemiSpherePdf()
 {
     return 1 / (2 * PI);
 }
+
+
 
 inline
 Point2f uniformSampleDisk(const Point2f &p)

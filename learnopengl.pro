@@ -46,7 +46,8 @@ SOURCES += \
     geometry.cpp \
     scene.cpp \
     utils.cpp \
-    subdivision.cpp
+    subdivision.cpp \
+    memorypool.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -68,7 +69,8 @@ HEADERS += \
     geometry.h \
     scene.h \
     utils.h \
-    subdivision.h
+    subdivision.h \
+    memorypool.h
 
 FORMS += \
         mainwindow.ui
