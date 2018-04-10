@@ -15,6 +15,7 @@ Vector3f BSDF::localToWorld(const Vector3f & v) const
         m_s.y()*v.x() + m_n.y()*v.y() + m_t.y()*v.z(),
         m_s.z()*v.x() + m_n.z()*v.y() + m_t.z()*v.z()
     );
+    
 }
 
 void BSDF::createCoordinateSystem(const Vector3f & N, Vector3f & t, Vector3f & s)
