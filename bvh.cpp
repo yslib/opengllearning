@@ -3,6 +3,7 @@
 
 bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac,Float &tMin)const
 {
+
     //If the BVH is empty or there is no intersection with current node
     if (root == nullptr)
         return false;
