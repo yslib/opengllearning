@@ -79,7 +79,11 @@ bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ra
     }
 }
 
-std::unique_ptr<BVHTreeAccelerator::BVHNode> BVHTreeAccelerator::recursiveBuild(std::vector<std::shared_ptr<Shape>> & shapes, int begin, int end, std::vector<std::shared_ptr<Shape>> & orderedShapes)
+std::unique_ptr<BVHTreeAccelerator::BVHNode>
+BVHTreeAccelerator::recursiveBuild(std::vector<std::shared_ptr<Shape>> & shapes,
+                                   int begin,
+                                   int end,
+                                   std::vector<std::shared_ptr<Shape>> & orderedShapes)
 {
     int currentNodeCount = end - begin;
     int offset = orderedShapes.size();

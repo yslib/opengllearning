@@ -47,7 +47,8 @@ SOURCES += \
     scene.cpp \
     utils.cpp \
     subdivision.cpp \
-    mm.cpp
+    mm.cpp \
+    arithimetic.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -70,7 +71,8 @@ HEADERS += \
     scene.h \
     utils.h \
     subdivision.h \
-    mm.h
+    mm.h \
+    arithimetic.h
 
 FORMS += \
         mainwindow.ui
