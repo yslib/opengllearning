@@ -8,6 +8,8 @@ typedef double Float;
 typedef float Float;
 #endif
 
+
+
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -27,6 +29,9 @@ typedef float Float;
 #include <QMatrix4x4>
 
 
+#include "geometry.h"
+
+
 constexpr Float PI = 3.1415926535;
 constexpr Float LOWEST_Float_VALUE = std::numeric_limits<Float>::lowest();
 constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
@@ -36,15 +41,19 @@ constexpr Float MAX_Float_VALUE = std::numeric_limits<Float>::max();
   * Vector2D
  */
 
+#ifdef USE_QT_VECTOR
+//
+//typedef QVector3D Point3f;
+//typedef QVector3D Vector3f;
+//typedef QVector2D Point2f;
+//typedef QVector2D Vector2f;
+#else
+
+
+#endif
 
 
 
-
-typedef QMatrix4x4 Trans3DMat;
-typedef QVector3D Point3f;
-typedef QVector3D Vector3f;
-typedef QVector2D Point2f;
-typedef QVector2D Vector2f;
 
 typedef QPoint Point2i;
 typedef QPoint Vector2i;

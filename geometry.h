@@ -1,7 +1,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "core.h"
+//#include "core.h"
 #include <cassert>
 
 
@@ -51,6 +51,8 @@ public:
 		assert(i >= 0 && i < 2);
 		return *(&y + i);
 	}
+	const T & x()const { return x; }
+	const T & y()const { return y; }
     template<typename X> friend class Point2D; //Vector2D can be accessed by all instances of Point2D
 };
 /*
@@ -103,6 +105,8 @@ public:
 		assert(i >= 0 && i < 2);
 		return *(&x + i);
 	}
+	const T & x()const { return x; }
+	const T & y()const { return y; }
 };
 
 template<typename T>
@@ -163,6 +167,9 @@ public:
 		assert(i >= 0 && i < 3);
 		return *(&x + i);
 	}
+	const T & x()const { return x; }
+	const T & y()const { return y; }
+	const T & z()const { return z; }
 };
 
 
@@ -242,6 +249,10 @@ public:
 		assert(i >= 0 && i < 3);
 		return *(&x + i);
 	}
+	const T & x()const { return x; }
+	const T & y()const { return y; }
+	const T & z()const { return z; }
+
 };
 template<typename T> inline Point3D<T> operator*(const T & s, const Point3D<T> & p)
 {
@@ -250,6 +261,13 @@ template<typename T> inline Point3D<T> operator*(const T & s, const Point3D<T> &
 typedef Point3D<int> Point3Di;
 typedef Point3D<Float> Point3Df;
 
+
+
+typedef QMatrix4x4 Trans3DMat;
+typedef Vector3D<Float> Vector3f;
+typedef Point3D<Float> Point3f;
+typedef Vector2D<Float> Vector2f;
+typedef Point2D<Float> Point2f;
 /*
 *
 */
@@ -294,8 +312,8 @@ public:
         //construct a empty bounding box
     }
     AABB(const Point3f & p0, const Point3f & p1)noexcept :
-        m_min(std::min(p0.x(), p1.x()), std::min(p0.y(), p1.y()), std::min(p0.z(), p1.z())),
-        m_max(std::max(p0.x(), p1.x()), std::max(p0.y(), p1.y()), std::max(p0.z(), p1.z()))
+        m_min(std::min(p0.x, p1.x), std::min(p0.y, p1.y), std::min(p0.z, p1.z)),
+        m_max(std::max(p0.x, p1.x), std::max(p0.y, p1.y), std::max(p0.z, p1.z))
     {}
     AABB(const Point3f & p) :m_min(p), m_max(p) {}
 
