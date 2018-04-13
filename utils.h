@@ -36,6 +36,18 @@ inline Float mod<Float>(const Float& a,const Float& b){
 
 
 
+template<typename T>
+inline
+bool isNaN(const T & t) {
+	return std::isnan(t);
+}
+template<>
+inline bool isNaN(const int & t) {
+	return false;
+}
+
+
+
 inline
 bool quadraticEquation(Float a, Float b, Float c, Float &t1, Float &t2) {
     if (a == 0)return false;

@@ -3,6 +3,8 @@
 
 #include "core.h"
 #include <cassert>
+#include "utils.h"
+
 
 
 enum class State {
@@ -16,18 +18,25 @@ public:
     T y;
     explicit Vector2D(const T & xp = T(), const T & yp = T()) :x(xp), y(yp) {}
     explicit Vector2D(const Vector2D<T> & v) :x(v.x), y(v.y) {}
+	bool nan()const {
+		return isNaN(x) || isNaN(y);
+	}
     Vector2D<T> operator+(const Vector2D<T> & v) {
+		//assert(v.nan() == false);
         return Vector2D<T>(x + v.x, y + v.y);
     }
     Vector2D<T> & operator+=(const Vector2D<T> & v) {
+		//assert(v.nan() == false);
         x += v.x;
         y += v.y;
         return *this;
     }
     Vector2D<T> operator-(const Vector2D<T> & v) {
+		//assert(v.nan() == false);
         return Vector2D<T>(x - v.x, y - v.y);
     }
     Vector2D<T> & operator-=(const Vector2D<T> & v) {
+		//assert(v.nan() == false);
         x -= v.x;
         y -= v.y;
         return *this;
@@ -40,7 +49,7 @@ public:
         y *= s;
         return *this;
     }
-    Vector2D<T> operator -() {
+    Vector2D<T> operator-() {
         return Vector2D<T>(-x, -y);
     }
 	const T & operator[](int i)const {
@@ -69,13 +78,11 @@ public:
     Point2D<T> operator+(const Point2D<T> & p) {
         return Point2D<T>(x + p.x, y + p.y);
     }
-
     Point2D<T> & operator+=(const Vector2D<T> & v) {
         x += v.x;
         y += v.y;
         return *this;
     }
-
     Point2D<T> operator-(const Vector2D<T> & v) {
         return Point2D<T>(x - v.x, y - v.y);
     }
@@ -105,13 +112,36 @@ public:
 	}
 };
 
-template<typename T>
-class Normal2 {
+class Normal2f {
 public:
-	T x;
-	T y;
-	explicit Normal2();
+	Float x;
+	Float y;
+	explicit Normal2f() = default;
+	//Normal2f(Float xp, Float yp) :x(xp), y(yp) {
+	//	
+	//}
+	bool nan()const {
+		return isNaN(x) || isNaN(y);
+	}
+	//Float x()const { return x; }
+	//Float y()const { return y; }
+	Normal2f operator+(const Normal2f & norm)const { return Normal2f(x + norm.x, y + norm.y); }
+	Normal2f &operator += (const Normal2f & norm) { x += norm.x; y += norm.y; return *this; }
+
+	Normal2f operator-(const Normal2f & norm)const { return Normal2f(x - norm.x, y - norm.y); }
+	Normal2f &operator-=(const Normal2f & norm) { x -= norm.x; y -= norm.y; return *this; }
+
+	template<typename T> Normal2f operator*(const T & s) { return Normal2f(x*s, y*s); }
+
+
+	Float dotProduct(const Normal2f & norm)const { return x * norm.x + y * norm.y; }
+
 };
+template<typename T>
+inline
+Normal2f operator*(const T & s, const Normal2f & norm) {
+	return norm * s;
+}
 
 
 
@@ -123,7 +153,7 @@ class Vector3D {
 public:
     T x, y, z;
     explicit Vector3D(const T &xp = T(), const T &yp = T(), const T& zp = T()) :x(xp), y(yp), z(zp) {}
-    Vector3D(const Vector3D<T> & v) :x(T(v.x)), y(T(v.y)), z(T(v.z)) {}
+    //Vector3D(const Vector3D<T> & v) :x(T(v.x)), y(T(v.y)), z(T(v.z)) {}
     Vector3D<T> operator+(const Vector3D<T> & v)const {
         return Vector3D<T>(x + v.x, y + v.y, z + v.z);
     }
@@ -187,8 +217,8 @@ template<typename T>
 class Point3D {
 public:
     T x, y, z;
-    Point3D(const T &xp = T(), const T &yp = T(), const T& zp = T()) :x(xp), y(yp), z(zp) {}
-    template<typename U> explicit Point3D(const Point3D<U> & p) :x(T(p.x)), y(T(p.y)), z(T(p.z)) {}
+    explicit Point3D(const T &xp = T(), const T &yp = T(), const T& zp = T()) :x(xp), y(yp), z(zp) {}
+    //template<typename U> explicit Point3D(const Point3D<U> & p) :x(T(p.x)), y(T(p.y)), z(T(p.z)) {}
     Point3D<T> operator+(const Vector3D<T> & v)const {
         return Point3D<T>(x + v.x, y + v.y, z + v.z);
     }
@@ -207,9 +237,6 @@ public:
         z += v.z;
         return *this;
     }
-
-
-
     Point3D<T> operator*(const T & s)const
     {
         return Point3D<T>(s*x, s*y, s*z);

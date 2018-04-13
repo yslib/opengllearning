@@ -393,7 +393,9 @@ void LoopSubdivisionSurfaceDemo::onRecursionsCountChanged(int value)
 	std::vector<Point3Df> vert;
 	for (auto & v : vertices)
 	{
-            vert.push_back({ v.x(),v.y(),v.z() });
+		//auto ver = { v.x(),v.y(),v.z() };
+		vert.emplace_back(v.x(), v.y(), v.z());
+        //vert.push_back({ v.x(),v.y(),v.z() });
 	}
 	auto star = std::chrono::system_clock::now();
 
