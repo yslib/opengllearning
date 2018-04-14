@@ -145,6 +145,7 @@ Normal2f operator*(const T & s, const Normal2f & norm) {
 
 
 
+
 /*
 * Vector3D
 */
