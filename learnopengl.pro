@@ -48,7 +48,8 @@ SOURCES += \
     utils.cpp \
     subdivision.cpp \
     mm.cpp \
-    arithimetic.cpp
+    arithimetic.cpp \
+    kdtree.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -72,7 +73,8 @@ HEADERS += \
     utils.h \
     subdivision.h \
     mm.h \
-    arithimetic.h
+    arithimetic.h \
+    kdtree.h
 
 FORMS += \
         mainwindow.ui

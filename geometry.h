@@ -112,36 +112,36 @@ public:
 	}
 };
 
-class Normal2f {
-public:
-	Float x;
-	Float y;
-	explicit Normal2f() = default;
-	//Normal2f(Float xp, Float yp) :x(xp), y(yp) {
-	//	
-	//}
-	bool nan()const {
-		return isNaN(x) || isNaN(y);
-	}
-	//Float x()const { return x; }
-	//Float y()const { return y; }
-	Normal2f operator+(const Normal2f & norm)const { return Normal2f(x + norm.x, y + norm.y); }
-	Normal2f &operator += (const Normal2f & norm) { x += norm.x; y += norm.y; return *this; }
-
-	Normal2f operator-(const Normal2f & norm)const { return Normal2f(x - norm.x, y - norm.y); }
-	Normal2f &operator-=(const Normal2f & norm) { x -= norm.x; y -= norm.y; return *this; }
-
-	template<typename T> Normal2f operator*(const T & s) { return Normal2f(x*s, y*s); }
-
-
-	Float dotProduct(const Normal2f & norm)const { return x * norm.x + y * norm.y; }
-
-};
-template<typename T>
-inline
-Normal2f operator*(const T & s, const Normal2f & norm) {
-	return norm * s;
-}
+//class Normal2f {
+//public:
+//	Float x;
+//	Float y;
+//	explicit Normal2f() = default;
+//	Normal2f(Float xp, Float yp) :x(xp), y(yp) {
+//		
+//	}
+//	bool nan()const {
+//		return isNaN(x) || isNaN(y);
+//	}
+//	//Float x()const { return x; }
+//	//Float y()const { return y; }
+//	Normal2f operator+(const Normal2f & norm)const { return Normal2f(x + norm.x, y + norm.y); }
+//	Normal2f &operator += (const Normal2f & norm) { x += norm.x; y += norm.y; return *this; }
+//
+//	Normal2f operator-(const Normal2f & norm)const { return Normal2f(x - norm.x, y - norm.y); }
+//	Normal2f &operator-=(const Normal2f & norm) { x -= norm.x; y -= norm.y; return *this; }
+//
+//	template<typename T> Normal2f operator*(const T & s) { return Normal2f(x*s, y*s); }
+//
+//
+//	Float dotProduct(const Normal2f & norm)const { return x * norm.x + y * norm.y; }
+//
+//};
+//template<typename T>
+//inline
+//Normal2f operator*(const T & s, const Normal2f & norm) {
+//	return norm * s;
+//}
 
 
 
