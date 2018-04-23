@@ -90,7 +90,7 @@ private:
     std::shared_ptr<BVHTreeAccelerator> m_aggregate;
     std::vector<std::shared_ptr<AreaLight>> m_lights;
 
-    public slots:
+public slots:
     void onSaveButton();
     void onOpenObjectFile();
     void onOpenMtlFile();

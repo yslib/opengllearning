@@ -7,6 +7,7 @@
 
 
 class AreaLight;
+
 class Scene
 {
     AABB m_worldBound;
