@@ -1,25 +1,21 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include <QLayout>
-#include "openglwindow.h"
-#include <QPushButton>
-#include <QLabel>
-#include <QSlider>
-#include <QGroupBox>
-#include <QComboBox>
-#include <QLineEdit>
-#include <QDebug>
-#include <QFileDialog>
 #include <QString>
 #include <marchingcubesdemo.h>
-#include "loopsubdivisionsurfacedemo.h"
-#include "PathTracingDemo.h"
-#include <QMenu>
-#include <QAction>
 #include <QStackedWidget>
 
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include "openglwindow.h"
+#include "loopsubdivisionsurfacedemo.h"
+#include "PathTracingDemo.h"
+#include "clothmodelingdemo.h"
+
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), m_mcDemo(nullptr), m_loopSubdivisionDemo(nullptr), m_pathTracingDemo(nullptr)
+    QMainWindow(parent),
+m_mcDemo(nullptr),
+m_loopSubdivisionDemo(nullptr),
+m_pathTracingDemo(nullptr),
+m_clothModelingDemo(nullptr)
 {
     //set main window size
     setMinimumSize(1000, 700);
@@ -30,8 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_modeMenu = menuBar()->addMenu(tr("Demos"));
     m_marchingCubesDemoAction = m_modeMenu->addAction(tr("MarchingCubes"));
     m_loopSubdivisionDemoAction = m_modeMenu->addAction(tr("LoopSubdivision"));
-
     m_pathTracingDemoAction = m_modeMenu->addAction(tr("Path Tracing"));
+	m_clothModelingDemoAction = m_modeMenu->addAction(QStringLiteral("Cloth Modeling"));
 
     connect(m_modeMenu, &QMenu::triggered, this, &MainWindow::onMenuActions);
 
@@ -72,6 +68,14 @@ void MainWindow::onMenuActions(QAction * action)
             m_stackedWidget->addWidget(m_pathTracingDemo);
         }
         m_stackedWidget->setCurrentWidget(m_pathTracingDemo);
+    }else if(action == m_clothModelingDemoAction)
+    {
+	    if(m_clothModelingDemo == nullptr)
+	    {
+			m_clothModelingDemo = new ClothModelingDemo(this);
+			m_stackedWidget->addWidget(m_clothModelingDemo);
+	    }
+		m_stackedWidget->setCurrentWidget(m_clothModelingDemo);
     }
 }
 MainWindow::~MainWindow() {

@@ -245,6 +245,37 @@ inline Point3f permutePoint3f(const Point3f & p, int kx, int ky, int kz)
     return Point3f(p[kx], p[ky], p[kz]);
 }
 
+inline
+void integrateRK4(Point3f * x,Vector3f * v, Vector3f acc, Float dt) {
+	Point3f p1 = *x;
+	Vector3f v1 = *v;
+	Vector3f a1 = acc;
+
+	Point3f p2 = *x + 0.5 * v1 * dt;
+	Vector3f v2 = *v + 0.5 * a1 * dt;
+	Vector3f a2 = acc;
+
+	Point3f p3 = *x + 0.5 * v2 * dt;
+	Vector3f v3 = *v + 0.5 * a2 * dt;
+	Vector3f a3 = acc;
+
+	Point3f p4 = *x + v3 * dt;
+	Vector3f v4 = *v + a3 * dt;
+	Vector3f a4 = acc;
+
+	Point3f xfinal = *x + (dt / 6.0) * (v1 + 2 * v2 + 2 * v3 + v4);
+	Vector3f vfinal = *v + (dt / 6.0) * (a1 + 2 * a2 + 2 * a3 + a4);
+
+	*x = xfinal;
+	*v = 0.9f * (vfinal);
+}
+
+inline
+void integrateEuler(Point3f * x,Vector3f * v, Vector3f acc, float dt) {
+	*x = *x + *v * dt;
+	*v = 0.9f* (*v + acc * dt);
+}
+
 
 
 #endif

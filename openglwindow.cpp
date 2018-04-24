@@ -148,6 +148,8 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent *event)
         m_prevYPos = event->y();
         //updateCameraVectors(deltaX, deltaY);
         m_camera.ProcessMouseMovement(deltaX, deltaY);
+		//qDebug() << m_camera;
+		
     }
 
 
@@ -177,6 +179,7 @@ void OpenGLWidget::keyPressEvent(QKeyEvent * event)
     default:
         break;
     }
+	//qDebug() << m_camera;
 }
 
 void OpenGLWidget::wheelEvent(QWheelEvent *event)

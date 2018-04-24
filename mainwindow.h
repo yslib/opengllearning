@@ -21,7 +21,7 @@ class QAction;
 class QMenuBar;
 class QStackedWidget;
 class PathTracingDemo;
-
+class ClothModelingDemo;
 
 class OpenGLWidget;
 
@@ -34,14 +34,18 @@ public:
     ~MainWindow();
 private:
     QGridLayout * m_mainLayout;
+
     MarchingCubesDemo * m_mcDemo;
     LoopSubdivisionSurfaceDemo * m_loopSubdivisionDemo;
     PathTracingDemo * m_pathTracingDemo;
+	ClothModelingDemo *m_clothModelingDemo;
+
     QStackedWidget * m_stackedWidget;
     QMenu * m_modeMenu;
     QAction * m_marchingCubesDemoAction;
     QAction * m_loopSubdivisionDemoAction;
     QAction * m_pathTracingDemoAction;
+	QAction * m_clothModelingDemoAction;
     QMenuBar * m_menuBar;
 private:
     void setWidget(BaseDemoWidget * widget);

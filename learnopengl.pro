@@ -49,7 +49,8 @@ SOURCES += \
     subdivision.cpp \
     mm.cpp \
     arithimetic.cpp \
-    kdtree.cpp
+    kdtree.cpp \
+    clothmodelingdemo.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -74,7 +75,8 @@ HEADERS += \
     subdivision.h \
     mm.h \
     arithimetic.h \
-    kdtree.h
+    kdtree.h \
+    clothmodelingdemo.h
 
 FORMS += \
         mainwindow.ui

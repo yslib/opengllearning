@@ -3,6 +3,12 @@
 
 #include "core.h"
 #include "qmath.h"
+#include <QDebug>
+
+
+
+
+
 
 class AbstractCamera {
 public:
@@ -144,6 +150,12 @@ private:
         Up = QVector3D::crossProduct(Right, Front).normalized();
     }
 };
+
+inline
+QDebug operator<<(QDebug db, const Camera & cam) {
+	db << "{Pos:" << cam.position() << ",Up:" << cam.up() << ",Yaw:" << cam.Yaw << ",Pitch:" << cam.Pitch;
+	return db;
+}
 
 
 #endif // CAMERA_H

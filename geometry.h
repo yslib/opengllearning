@@ -289,7 +289,7 @@ class Ray
     Float m_tMax;
     bool m_negDirection[3];
 public:
-    Ray(const Point3f & d, const Point3f & o, Float t = MAX_Float_VALUE)noexcept : m_o(o), m_d(d), m_tMax(t)
+    Ray(const Vector3f & d, const Point3f & o, Float t = MAX_Float_VALUE)noexcept : m_o(o), m_d(d), m_tMax(t)
     {
         m_negDirection[0] = d.x() < 0;
         m_negDirection[1] = d.y() < 0;
