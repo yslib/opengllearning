@@ -11,41 +11,16 @@
 #include <QTimer>
 
 
-//class state{
-//public:
-//	Point3f x;
-//	Vector3f v;
-//};
-//void integrateRK4(state & st, Vector3f acc, float dt) {
-//	Point3f p1 = st.x;
-//	Vector3f v1 = st.v;
-//
-//	Vector3f a1 = acc;
-//	Point3f p2 = st.x + 0.5 * v1 * dt;
-//	Vector3f v2 = st.v + 0.5 * a1 * dt;
-//	Vector3f a2 = acc;
-//	Point3f p3 = st.x + 0.5 * v2 * dt;
-//	Vector3f v3 = st.v + 0.5 * a2 * dt;
-//	Vector3f a3 = acc;
-//	Point3f p4 = st.x + v3 * dt;
-//	Vector3f v4 = st.v + a3 * dt;
-//	Vector3f a4 = acc;
-//	Point3f xfinal = st.x + (dt / 6.0) * (v1 + 2 * v2 + 2 * v3 + v4);
-//	Vector3f vfinal = st.v + (dt / 6.0) * (a1 + 2 * a2 + 2 * a3 + a4);
-//	st.x = xfinal;
-//	st.v = 0.9 * (vfinal);
-//}
-
 
 void ClothModelingDemo::initModel()
 {
 
 	m_meshSize = 20;
-	m_springLength = 1.0;
+	m_springLength = 1.5;
 	m_gravity = Vector3f(0,-0.98,0);
 	m_pointMass = 0.01f;
 	m_damping = 0.9f;
-	m_springConst = 12.0;
+	m_springConst = 20.0;
 	m_euler = true;
 
 	m_nVerts = m_meshSize * m_meshSize;
@@ -66,7 +41,7 @@ void ClothModelingDemo::initModel()
 
 	m_nIndices = (m_meshSize - 1)*(m_meshSize - 1) * 2 * 3;
 	resetCloth();
-	std::string path = "C:\\Users\\ysl\\OneDrive\\data\\obj\\teapot-low.obj";
+	std::string path = "D:\\teapot.obj";
 	ObjReader model(path);
 	if (model.isLoaded() == false)
 	{
@@ -100,19 +75,19 @@ void ClothModelingDemo::initModel()
 		m_indices[i] = mesh.getIndicesArray()[i];
 	}
 	//set cloth vertex index
-	int id = m_nModelIndices;
-	for (int i = 0; i < m_meshSize - 1; i++) {
-		for (int j = 0; j < m_meshSize - 1; j++) {
-			int id1 = i * m_meshSize + j;
-			int id2 = i * m_meshSize + j + 1;
-			int id3 = (i + 1)*m_meshSize + j;
-			int id4 = (i + 1)*m_meshSize + j + 1;
-			m_indices[id++] = id1+m_nModelIndices;
-			m_indices[id++] = id2+m_nModelIndices;
-			m_indices[id++] = id3+m_nModelIndices;
-			m_indices[id++] = id2+m_nModelIndices;
-			m_indices[id++] = id4+m_nModelIndices;
-			m_indices[id++] = id3+m_nModelIndices;
+	auto id = m_nModelIndices;
+	for (auto i = 0; i < m_meshSize - 1; i++) {
+		for (auto j = 0; j < m_meshSize - 1; j++) {
+			const auto id1 = i * m_meshSize + j;
+			const auto id2 = i * m_meshSize + j + 1;
+			const auto id3 = (i + 1)*m_meshSize + j;
+			const auto id4 = (i + 1)*m_meshSize + j + 1;
+			m_indices[id++] = id1+m_nModelVerts;
+			m_indices[id++] = id2+m_nModelVerts;
+			m_indices[id++] = id3+m_nModelVerts;
+			m_indices[id++] = id2+m_nModelVerts;
+			m_indices[id++] = id4+m_nModelVerts;
+			m_indices[id++] = id3+m_nModelVerts;
 		}
 	}
 
@@ -140,7 +115,7 @@ void ClothModelingDemo::resetCloth()
 	for (int i = 0; i < m_meshSize; i++) {
 		for (int j = 0; j < m_meshSize; j++) {
 			SpringVertex & v = m_oldVertices[i * m_meshSize + j];
-			Point3f p = { float(j) - float(m_meshSize - 1) / 2, 13, float(i) - float(m_meshSize - 1) / 2 };
+			Point3f p = { float(j) - float(m_meshSize - 1) / 2, 20, float(i) - float(m_meshSize - 1) / 2 };
 			v.pos = p;
 			v.vel = { 0,0,0 };
 			v.mass = m_pointMass;
@@ -150,16 +125,16 @@ void ClothModelingDemo::resetCloth()
 	}
 
 	// fix four corners
-	//oldVertices[0].fixed = true;
-	//oldVertices[m_meshSize - 1].fixed = true;
-	//oldVertices[m_meshSize * (m_meshSize - 1)].fixed = true;
-	//oldVertices[m_meshSize * m_meshSize - 1].fixed = true;
+	m_oldVertices[0].fixed = true;
+	m_oldVertices[m_meshSize - 1].fixed = true;
+	//m_oldVertices[m_meshSize * (m_meshSize - 1)].fixed = true;
+	//m_oldVertices[m_meshSize * m_meshSize - 1].fixed = true;
 
 	for (int i = 0; i < m_nVerts; i++) {
 		m_updatedVertices[i] = m_oldVertices[i];
 	}
 
-	// init springs
+	// othogonal springs
 	int id = 0;
 	for (int i = 0; i < m_meshSize; i++) {
 		for (int j = 0; j < m_meshSize - 1; j++) {
@@ -228,10 +203,8 @@ void ClothModelingDemo::resetCloth()
 
 void ClothModelingDemo::simulate()
 {
-	qDebug() << "simulation";
 	int msTimeSinceLastFrame = 11;
 	float timeSinceLastFrame = msTimeSinceLastFrame / 1000.0;
-	//int elapsedTime = currTime - m_startTime;
 
 	double timeSinceLastUpdate = 0.0;
 	timeSinceLastUpdate += msTimeSinceLastFrame;
@@ -265,8 +238,6 @@ void ClothModelingDemo::simulate()
 				Point3f pi = m_oldVertices[i].pos;
 				Vector3f vi = m_oldVertices[i].vel;
 
-				//state st;
-				//st.x = pi; st.v = vi;
 				Point3f x = pi;
 				Vector3f v = vi;
 				
@@ -283,19 +254,20 @@ void ClothModelingDemo::simulate()
 					forces = forces + m_springs[j].tension * dir;
 				}
 
+				//gravity + tension
+
 				Vector3f acc = forces / m_oldVertices[i].mass;
 
 
-				integrateRK4(&x,&v, acc, timePassedInSeconds);
-				//qDebug() << st.x << " " << st.v;
-				///TODO:: Collision
+				rungeKutta4(&x,&v, acc, timePassedInSeconds);
+
 
 				Ray aRay(v,x);
 				Float t;
 				Interaction isect;
 				if(m_scene->intersect(aRay,&t,&isect) == true)
 				{
-					if(t <0.005)
+					if(t <0.1)
 					{
 						m_updatedVertices[i].fixed = true;
 					}
@@ -334,18 +306,6 @@ void ClothModelingDemo::simulate()
 				m_oldVertices[id3].normal = (tempNormal + tempNormal2).normalized();
 				m_oldVertices[id4].normal = tempNormal2.normalized();
 
-				//m_vertice[id] = oldVertices[id1].pos;
-				//m_normals[id++] = oldVertices[id1].normal;
-
-				//m_vertice[id] = oldVertices[id2].pos;
-				//m_normals[id++] = oldVertices[id2].normal;
-
-				//m_vertice[id] = oldVertices[id3].pos;
-				//m_normals[id++] = oldVertices[id3].normal;
-
-				//m_vertice[id] = oldVertices[id4].pos;
-				//m_normals[id++] = oldVertices[id4].normal;
-
 			}
 		}
 		//
@@ -355,7 +315,7 @@ void ClothModelingDemo::simulate()
 		}
 	}
 
-	m_displayWidget->setTriangleMesh(m_vertice.data(), m_normals.data(), m_nVerts, (unsigned int*)m_indices.data(), m_indices.size());
+	m_displayWidget->setTriangleMesh(m_vertice.data(), m_normals.data(), m_nVerts+m_nModelVerts, (unsigned int*)m_indices.data(), m_indices.size());
 
 }
 ClothModelingDemo::ClothModelingDemo(QWidget* parent):
@@ -393,7 +353,8 @@ ClothModelingDemo::ClothModelingDemo(QWidget* parent):
 
 void ClothModelingDemo::onSliderChanged(int value)
 {
-	qDebug() << value;
+	//qDebug() << value;
+	m_springConst = value;
 }
 
 void ClothModelingDemo::simulation()

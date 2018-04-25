@@ -246,7 +246,7 @@ inline Point3f permutePoint3f(const Point3f & p, int kx, int ky, int kz)
 }
 
 inline
-void integrateRK4(Point3f * x,Vector3f * v, Vector3f acc, Float dt) {
+void rungeKutta4(Point3f * x,Vector3f * v, Vector3f acc, Float dt) {
 	Point3f p1 = *x;
 	Vector3f v1 = *v;
 	Vector3f a1 = acc;
