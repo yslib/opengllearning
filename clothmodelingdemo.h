@@ -80,6 +80,7 @@ private:		/*Private Member Functions*/
 	void resetCloth();
 	void simulate();
 
+
 public:
     ClothModelingDemo(QWidget * parent = nullptr);
 public slots:
