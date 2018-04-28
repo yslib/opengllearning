@@ -1,6 +1,7 @@
 #include "bvh.h"
 #include "interaction.h"
 
+
 bool BVHTreeAccelerator::recursiveIntersect(const BVHNode * root, const Ray & ray, Interaction * interac,Float &tMin)const
 {
 
