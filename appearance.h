@@ -4,6 +4,7 @@
 #include "core.h"
 //#include "interaction.h"
 
+
 enum BSDFType {
     BSDF_DIFFUSE = 1 << 0,
     BSDF_SPECULAR = 1 << 1,
