@@ -4,6 +4,8 @@
 #include <QSpinBox>
 #include <QLabel>
 
+
+
 TitledSliderWithSpinBox::TitledSliderWithSpinBox(QWidget *parent, const QString &title, Qt::Orientation orientation) :QWidget(parent)
 {
 	m_label = new QLabel(title, this);
