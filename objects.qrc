@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/objects">
+        <file>teapot.obj</file>
+    </qresource>
+</RCC>

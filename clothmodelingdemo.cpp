@@ -24,14 +24,9 @@ void ClothModelingDemo::initModel()
 	m_euler = true;
 
 	m_nVerts = m_meshSize * m_meshSize;
-	// there are springs going right for each vertex
-	// not on right edge, springs going down for each vertex
-	// not on bottom edge
 	m_nSprings = (m_meshSize - 1) * m_meshSize * 2;
-
 	// cross springs
 	m_nSprings += (m_meshSize - 1) * (m_meshSize - 1) * 2;
-
 	// skipping springs
 	m_nSprings += (m_meshSize - 2) * m_meshSize * 2;
 
@@ -41,7 +36,7 @@ void ClothModelingDemo::initModel()
 
 	m_nIndices = (m_meshSize - 1)*(m_meshSize - 1) * 2 * 3;
 	resetCloth();
-	std::string path = "D:\\teapot.obj";
+    std::string path = "teapot.obj";
 	ObjReader model(path);
 	if (model.isLoaded() == false)
 	{
@@ -258,9 +253,10 @@ void ClothModelingDemo::simulate()
 
 				Vector3f acc = forces / m_oldVertices[i].mass;
 
-
-				rungeKutta4(&x,&v, acc, timePassedInSeconds);
-
+                if(m_euler == false)
+                    rungeKutta4(&x,&v, acc, timePassedInSeconds);
+                else
+                    integrateEuler(&x,&v, acc, timePassedInSeconds);
 
 				Ray aRay(v,x);
 				Float t;
@@ -332,20 +328,26 @@ ClothModelingDemo::ClothModelingDemo(QWidget* parent):
 	//control widget initialization
 	QWidget * m_controlWidget = new QWidget(this);
 	QVBoxLayout * m_layout = new QVBoxLayout;
-	m_elasticity = new TitledSliderWithSpinBox(m_controlWidget, QStringLiteral("Elasticity:"));
+    //m_elasticity = new TitledSliderWithSpinBox(m_controlWidget, QStringLiteral("Elasticity:"));
 	m_integrationMethod = new QComboBox(m_controlWidget);
 	m_integrationMethod->addItem(QStringLiteral("Euler Integration"));
 	m_integrationMethod->addItem(QStringLiteral("Runge Kutta method"));
 	m_reset = new QPushButton(QStringLiteral("Reset"));
-	m_layout->addWidget(m_elasticity);
+    //m_layout->addWidget(m_elasticity);
 	m_layout->addWidget(m_integrationMethod);
 	m_layout->addWidget(m_reset);
 	m_controlWidget->setLayout(m_layout);
 	setControlWidget(m_controlWidget);
 	m_timer = new QTimer(this);
-	connect(m_elasticity,SIGNAL(valueChanged(int)),this,SLOT(onSliderChanged(int)));
+    //connect(m_elasticity,SIGNAL(valueChanged(int)),this,SLOT(onSliderChanged(int)));
 	connect(m_reset, SIGNAL(clicked()), this, SLOT(onResetButton()));
 	connect(m_timer, SIGNAL(timeout()), this, SLOT(simulation()));
+    connect(m_integrationMethod,QOverload<const QString &>::of(&QComboBox::currentIndexChanged),[=](const QString&text){
+        if(text == QStringLiteral("Euler Integration"))
+            m_euler = true;
+        else if(text == QStringLiteral("Runge Kutta method"))
+            m_euler = false;
+    });
 
 	initModel();
 	
@@ -363,8 +365,8 @@ void ClothModelingDemo::simulation()
 }
 void ClothModelingDemo::onResetButton()
 {
+    resetCloth();
 	if(m_timer->isActive() == false){
-		resetCloth();
 		m_timer->setInterval(10);
 		m_timer->start();
 	}

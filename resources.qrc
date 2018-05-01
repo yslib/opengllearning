@@ -2,5 +2,6 @@
     <qresource prefix="/new/shaders">
         <file>phongshadingfragmentshader.glsl</file>
         <file>phongshadingvertexshader.glsl</file>
+        <file>teapot.obj</file>
     </qresource>
 </RCC>
