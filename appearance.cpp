@@ -1,8 +1,6 @@
 #include "appearance.h"
 #include "interaction.h"
 #include "utils.h"
-
-
 Vector3f BSDF::worldToLocal(const Vector3f & v) const
 {
     return Vector3f(Vector3f::dotProduct(v, m_s), Vector3f::dotProduct(v, m_n), Vector3f::dotProduct(v, m_t));
