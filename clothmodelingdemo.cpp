@@ -9,9 +9,6 @@
 #include <QMessageBox>
 #include <QCoreApplication>
 #include <QTimer>
-
-
-
 void ClothModelingDemo::initModel()
 {
 
